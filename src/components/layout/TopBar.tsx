@@ -10,11 +10,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Settings, Circle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export function TopBar() {
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    console.log("Logout clicked");
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Berhasil keluar",
+        description: "Anda telah berhasil keluar dari sistem.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat keluar",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -55,8 +71,10 @@ export function TopBar() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">Administrator</span>
-                  <span className="text-xs text-muted-foreground">admin@sekolah.com</span>
+                  <span className="text-sm font-medium">
+                    {user?.email?.split('@')[0] || 'User'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{user?.email}</span>
                 </div>
               </div>
               <DropdownMenuSeparator />
