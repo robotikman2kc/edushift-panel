@@ -362,7 +362,7 @@ export function DataTable({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {formFields.map(renderFormField)}
+            {formFields?.map(renderFormField)}
           </div>
           <DialogFooter>
             <Button
@@ -389,7 +389,7 @@ export function DataTable({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {formFields.map(renderFormField)}
+            {formFields?.map(renderFormField)}
           </div>
           <DialogFooter>
             <Button
