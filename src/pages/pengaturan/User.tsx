@@ -138,14 +138,9 @@ const User = () => {
       </PageHeader>
       
       <DataTable
-        title="Daftar User"
-        columns={columns}
         data={users}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onExport={handleExport}
-        onImport={handleImport}
+        columns={columns}
+        searchPlaceholder="Cari nama, email, atau role..."
       />
     </div>
   );

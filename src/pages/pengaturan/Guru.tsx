@@ -1,94 +1,228 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Guru {
+  id: string;
+  nama_guru: string;
+  nip: string;
+  mata_pelajaran: string;
+  email: string;
+  telepon: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const Guru = () => {
-  const [teachers] = useState([
-    {
-      id: 1,
-      nip: "123456789",
-      nama: "Dr. Ahmad Wijaya",
-      mata_pelajaran: "Matematika",
-      kelas: "X-A, X-B",
-      email: "ahmad.wijaya@sekolah.com",
-      telepon: "081234567890",
-      status: "Aktif"
-    },
-    {
-      id: 2,
-      nip: "987654321",
-      nama: "Siti Nurhaliza, S.Pd",
-      mata_pelajaran: "Bahasa Indonesia",
-      kelas: "XI-A, XI-C",
-      email: "siti.nurhaliza@sekolah.com",
-      telepon: "081987654321",
-      status: "Aktif"
-    },
-  ]);
+  const [data, setData] = useState<Guru[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const columns = [
+    { key: "no", label: "No", sortable: false },
+    { key: "nama_guru", label: "Nama Guru", sortable: true },
     { key: "nip", label: "NIP", sortable: true },
-    { key: "nama", label: "Nama Guru", sortable: true },
     { key: "mata_pelajaran", label: "Mata Pelajaran", sortable: true },
-    { key: "kelas", label: "Kelas", sortable: false },
-    { key: "email", label: "Email", sortable: false },
-    { key: "telepon", label: "Telepon", sortable: false },
-    { key: "status", label: "Status", sortable: true },
+    { key: "email", label: "Email", sortable: true },
+    { key: "telepon", label: "Telepon", sortable: true },
   ];
 
-  const handleAdd = () => {
-    toast({
-      title: "Tambah Guru",
-      description: "Formulir tambah guru akan dibuka",
-    });
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const { data: guru, error } = await supabase
+        .from("guru")
+        .select("*")
+        .order("nama_guru", { ascending: true });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Gagal mengambil data guru",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add row numbers to data
+      const dataWithNumbers = guru?.map((item, index) => ({
+        ...item,
+        no: (index + 1).toString(),
+      })) || [];
+
+      setData(dataWithNumbers);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat mengambil data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (teacher: any) => {
-    toast({
-      title: "Edit Guru",
-      description: `Mengedit data guru: ${teacher.nama}`,
-    });
+  const handleAdd = async (formData: Record<string, string>) => {
+    try {
+      const { error } = await supabase.from("guru").insert([
+        {
+          nama_guru: formData.nama_guru,
+          nip: formData.nip,
+          mata_pelajaran: formData.mata_pelajaran,
+          email: formData.email,
+          telepon: formData.telepon,
+        },
+      ]);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sukses",
+        description: "Data guru berhasil ditambahkan",
+      });
+      
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat menambahkan data",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (teacher: any) => {
-    toast({
-      title: "Hapus Guru",
-      description: `Menghapus data guru: ${teacher.nama}`,
-      variant: "destructive",
-    });
+  const handleEdit = async (id: string, formData: Record<string, string>) => {
+    try {
+      const { error } = await supabase
+        .from("guru")
+        .update({
+          nama_guru: formData.nama_guru,
+          nip: formData.nip,
+          mata_pelajaran: formData.mata_pelajaran,
+          email: formData.email,
+          telepon: formData.telepon,
+        })
+        .eq("id", id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sukses",
+        description: "Data guru berhasil diperbarui",
+      });
+      
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat memperbarui data",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleExport = () => {
-    toast({
-      title: "Export Data",
-      description: "Data guru berhasil diexport",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("guru").delete().eq("id", id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sukses",
+        description: "Data guru berhasil dihapus",
+      });
+      
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat menghapus data",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleImport = () => {
-    toast({
-      title: "Import Data",
-      description: "Memulai proses import data guru",
-    });
-  };
+  const formFields = [
+    {
+      key: "nama_guru",
+      label: "Nama Guru",
+      type: "text" as const,
+      placeholder: "Masukkan nama guru",
+      required: true,
+    },
+    {
+      key: "nip",
+      label: "NIP",
+      type: "text" as const,
+      placeholder: "Masukkan NIP",
+      required: true,
+    },
+    {
+      key: "mata_pelajaran",
+      label: "Mata Pelajaran",
+      type: "text" as const,
+      placeholder: "Masukkan mata pelajaran",
+      required: true,
+    },
+    {
+      key: "email",
+      label: "Email",
+      type: "email" as const,
+      placeholder: "Masukkan email",
+      required: true,
+    },
+    {
+      key: "telepon",
+      label: "Telepon",
+      type: "text" as const,
+      placeholder: "Masukkan nomor telepon",
+      required: false,
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <PageHeader 
         title="Daftar Guru" 
-        description="Kelola data guru dan tenaga pendidik"
+        description="Kelola data guru dan informasi mengajar"
       />
       
       <DataTable
-        title="Data Guru"
+        data={data}
         columns={columns}
-        data={teachers}
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onExport={handleExport}
-        onImport={handleImport}
+        loading={loading}
+        formFields={formFields}
+        searchPlaceholder="Cari nama guru, NIP, atau mata pelajaran..."
       />
     </div>
   );

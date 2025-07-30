@@ -81,14 +81,9 @@ const Kelas = () => {
       />
       
       <DataTable
-        title="Data Kelas"
-        columns={columns}
         data={classes}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onExport={handleExport}
-        onImport={handleImport}
+        columns={columns}
+        searchPlaceholder="Cari nama kelas, tingkat, atau jurusan..."
       />
     </div>
   );

@@ -15,6 +15,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Plus, 
   Search, 
@@ -23,7 +42,9 @@ import {
   Upload, 
   MoreHorizontal,
   Edit,
-  Trash2 
+  Trash2,
+  FileSpreadsheet,
+  FileText
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -33,30 +54,47 @@ interface Column {
   sortable?: boolean;
 }
 
+interface FormField {
+  key: string;
+  label: string;
+  type: "text" | "email" | "number" | "tel";
+  placeholder?: string;
+  required?: boolean;
+}
+
 interface DataTableProps {
-  title: string;
-  columns: Column[];
   data: any[];
-  onAdd?: () => void;
-  onEdit?: (item: any) => void;
-  onDelete?: (item: any) => void;
-  onExport?: () => void;
-  onImport?: () => void;
+  columns: Column[];
+  onAdd?: (formData: Record<string, string>) => void | Promise<void>;
+  onEdit?: (id: string, formData: Record<string, string>) => void | Promise<void>;
+  onDelete?: (id: string) => void | Promise<void>;
+  loading?: boolean;
+  formFields?: FormField[];
+  searchPlaceholder?: string;
+  title?: string;
 }
 
 export function DataTable({
-  title,
-  columns,
   data,
+  columns,
   onAdd,
   onEdit,
   onDelete,
-  onExport,
-  onImport,
+  loading = false,
+  formFields = [],
+  searchPlaceholder = "Cari data...",
+  title,
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  
+  // Dialog states
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [formData, setFormData] = useState<Record<string, string>>({});
 
   const filteredData = data.filter((item) =>
     Object.values(item).some((value) =>
@@ -84,131 +122,310 @@ export function DataTable({
     }
   };
 
+  const openAddDialog = () => {
+    setFormData({});
+    setIsAddDialogOpen(true);
+  };
+
+  const openEditDialog = (item: any) => {
+    setSelectedItem(item);
+    const initialData: Record<string, string> = {};
+    formFields.forEach((field) => {
+      initialData[field.key] = item[field.key] || "";
+    });
+    setFormData(initialData);
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (item: any) => {
+    setSelectedItem(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleAddSubmit = async () => {
+    if (onAdd) {
+      await onAdd(formData);
+      setIsAddDialogOpen(false);
+      setFormData({});
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (onEdit && selectedItem) {
+      await onEdit(selectedItem.id, formData);
+      setIsEditDialogOpen(false);
+      setFormData({});
+      setSelectedItem(null);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (onDelete && selectedItem) {
+      await onDelete(selectedItem.id);
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+    }
+  };
+
+  const handleExportPDF = () => {
+    // Implementation for PDF export
+    console.log("Export PDF functionality");
+  };
+
+  const handleExportExcel = () => {
+    // Implementation for Excel export
+    console.log("Export Excel functionality");
+  };
+
+  const handleImport = () => {
+    // Implementation for import
+    console.log("Import functionality");
+  };
+
+  const renderFormField = (field: FormField) => (
+    <div key={field.key} className="space-y-2">
+      <Label htmlFor={field.key}>
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
+      <Input
+        id={field.key}
+        type={field.type}
+        placeholder={field.placeholder}
+        value={formData[field.key] || ""}
+        onChange={(e) =>
+          setFormData({ ...formData, [field.key]: e.target.value })
+        }
+        required={field.required}
+      />
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Memuat data...</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="p-6">
-      <div className="space-y-4">
-        {/* Header with actions */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <div className="flex items-center gap-2">
-            {onImport && (
-              <Button variant="outline" size="sm" onClick={onImport}>
+    <>
+      <Card className="p-6">
+        <div className="space-y-4">
+          {/* Header with actions */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            {title && <h2 className="text-xl font-semibold">{title}</h2>}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleImport}>
                 <Upload className="mr-2 h-4 w-4" />
                 Import
               </Button>
-            )}
-            {onExport && (
-              <Button variant="outline" size="sm" onClick={onExport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            )}
-            {onAdd && (
-              <Button size="sm" onClick={onAdd}>
-                <Plus className="mr-2 h-4 w-4" />
-                Tambah Data
-              </Button>
-            )}
-          </div>
-        </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleExportPDF}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Export PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportExcel}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Export Excel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-        {/* Search and filter */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Cari data..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+              {onAdd && (
+                <Button size="sm" onClick={openAddDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Data
+                </Button>
+              )}
+            </div>
           </div>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
-        </div>
 
-        {/* Table */}
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableHead
-                    key={column.key}
-                    className={column.sortable ? "cursor-pointer hover:bg-muted/50" : ""}
-                    onClick={() => column.sortable && handleSort(column.key)}
-                  >
-                    <div className="flex items-center">
-                      {column.label}
-                      {column.sortable && sortColumn === column.key && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                ))}
-                <TableHead className="w-20">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedData.length === 0 ? (
+          {/* Search and filter */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="mr-2 h-4 w-4" />
+              Filter
+            </Button>
+          </div>
+
+          {/* Table */}
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length + 1}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    Tidak ada data
-                  </TableCell>
+                  {columns.map((column) => (
+                    <TableHead
+                      key={column.key}
+                      className={column.sortable ? "cursor-pointer hover:bg-muted/50" : ""}
+                      onClick={() => column.sortable && handleSort(column.key)}
+                    >
+                      <div className="flex items-center">
+                        {column.label}
+                        {column.sortable && sortColumn === column.key && (
+                          <span className="ml-1">
+                            {sortDirection === "asc" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                  ))}
+                  <TableHead className="w-20">Aksi</TableHead>
                 </TableRow>
-              ) : (
-                sortedData.map((item, index) => (
-                  <TableRow key={index}>
-                    {columns.map((column) => (
-                      <TableCell key={column.key}>
-                        {item[column.key] || "-"}
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {onEdit && (
-                            <DropdownMenuItem onClick={() => onEdit(item)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
-                          {onDelete && (
-                            <DropdownMenuItem 
-                              onClick={() => onDelete(item)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Hapus
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              </TableHeader>
+              <TableBody>
+                {sortedData.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length + 1}
+                      className="text-center text-muted-foreground py-8"
+                    >
+                      Tidak ada data
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : (
+                  sortedData.map((item, index) => (
+                    <TableRow key={item.id || index}>
+                      {columns.map((column) => (
+                        <TableCell key={column.key}>
+                          {item[column.key] || "-"}
+                        </TableCell>
+                      ))}
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {onEdit && (
+                              <DropdownMenuItem onClick={() => openEditDialog(item)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {onDelete && (
+                              <DropdownMenuItem 
+                                onClick={() => openDeleteDialog(item)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Hapus
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-        {/* Pagination info */}
-        <div className="text-sm text-muted-foreground">
-          Menampilkan {sortedData.length} dari {data.length} data
+          {/* Pagination info */}
+          <div className="text-sm text-muted-foreground">
+            Menampilkan {sortedData.length} dari {data.length} data
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+
+      {/* Add Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Tambah Data</DialogTitle>
+            <DialogDescription>
+              Lengkapi form berikut untuk menambah data baru.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {formFields.map(renderFormField)}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddDialogOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button type="button" onClick={handleAddSubmit}>
+              Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Data</DialogTitle>
+            <DialogDescription>
+              Ubah informasi sesuai kebutuhan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {formFields.map(renderFormField)}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button type="button" onClick={handleEditSubmit}>
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
