@@ -1,146 +1,180 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const User = () => {
-  const [users] = useState([
-    {
-      id: 1,
-      nama: "John Doe",
-      email: "john@example.com",
-      role: "Admin",
-      status: "Aktif",
-      tanggal_dibuat: "2024-01-15"
-    },
-    {
-      id: 2,
-      nama: "Jane Smith",
-      email: "jane@example.com",
-      role: "Guru",
-      status: "Aktif",
-      tanggal_dibuat: "2024-01-20"
-    },
-  ]);
+interface User {
+  id: string;
+  nama: string;
+  email: string;
+  role: 'admin' | 'guru';
+  status: string;
+  created_at: string;
+}
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+const User = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const columns = [
     { key: "nama", label: "Nama", sortable: true },
     { key: "email", label: "Email", sortable: true },
     { key: "role", label: "Role", sortable: true },
     { key: "status", label: "Status", sortable: false },
-    { key: "tanggal_dibuat", label: "Tanggal Dibuat", sortable: true },
+    { key: "created_at", label: "Tanggal Dibuat", sortable: true },
   ];
 
-  const handleAdd = () => {
-    setIsDialogOpen(true);
+  const formFields = [
+    { key: "nama", label: "Nama Lengkap", type: "text" as const, placeholder: "Masukkan nama lengkap", required: true },
+    { key: "email", label: "Email", type: "email" as const, placeholder: "Masukkan email", required: true },
+  ];
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      // Format the data to match the expected structure
+      const formattedData = data?.map(user => ({
+        ...user,
+        created_at: new Date(user.created_at).toLocaleDateString('id-ID')
+      })) || [];
+
+      setUsers(formattedData);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Gagal memuat data user: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (user: any) => {
-    toast({
-      title: "Edit User",
-      description: `Mengedit user: ${user.nama}`,
-    });
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleAdd = async (formData: Record<string, string>) => {
+    try {
+      // First create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: 'TempPass123!', // Temporary password
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Then create user record
+        const { error: userError } = await supabase
+          .from('users')
+          .insert({
+            user_id: authData.user.id,
+            nama: formData.nama,
+            email: formData.email,
+            role: 'guru', // Default role
+          });
+
+        if (userError) throw userError;
+
+        toast({
+          title: "Berhasil",
+          description: "User baru berhasil ditambahkan",
+        });
+
+        fetchUsers();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Gagal menambahkan user: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (user: any) => {
-    toast({
-      title: "Hapus User",
-      description: `Menghapus user: ${user.nama}`,
-      variant: "destructive",
-    });
+  const handleEdit = async (id: string, formData: Record<string, string>) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          nama: formData.nama,
+          email: formData.email,
+          // role cannot be edited through this form
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Berhasil",
+        description: "Data user berhasil diperbarui",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Gagal memperbarui user: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleExport = () => {
-    toast({
-      title: "Export Data",
-      description: "Data user berhasil diexport",
-    });
-  };
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id);
 
-  const handleImport = () => {
-    toast({
-      title: "Import Data",
-      description: "Memulai proses import data user",
-    });
-  };
+      if (error) throw error;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "User Baru",
-      description: "User baru berhasil ditambahkan",
-    });
-    setIsDialogOpen(false);
+      toast({
+        title: "Berhasil",
+        description: "User berhasil dihapus",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Gagal menghapus user: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Management User" 
+        title="Daftar User" 
         description="Kelola data pengguna sistem"
-      >
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleAdd}>Tambah User</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Tambah User Baru</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nama">Nama Lengkap</Label>
-                <Input id="nama" placeholder="Masukkan nama lengkap" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="Masukkan email" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="Masukkan password" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="guru">Guru</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Batal
-                </Button>
-                <Button type="submit">Simpan</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </PageHeader>
+      />
       
       <DataTable
         data={users}
         columns={columns}
         searchPlaceholder="Cari nama, email, atau role..."
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        loading={loading}
+        formFields={formFields}
+        title="User"
       />
     </div>
   );

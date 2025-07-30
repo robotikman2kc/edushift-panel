@@ -44,7 +44,7 @@ const menuItems = [
     title: "PENGATURAN",
     icon: Settings,
     items: [
-      { title: "User", url: "/pengaturan/user", icon: Users },
+      { title: "Daftar User", url: "/pengaturan/user", icon: Users },
       { title: "Daftar Guru", url: "/pengaturan/guru", icon: UserCheck },
       { title: "Kelas", url: "/pengaturan/kelas", icon: GraduationCap },
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
