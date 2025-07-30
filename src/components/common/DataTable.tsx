@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,9 +58,10 @@ interface Column {
 interface FormField {
   key: string;
   label: string;
-  type: "text" | "email" | "number" | "tel";
+  type: "text" | "email" | "number" | "tel" | "select" | "date";
   placeholder?: string;
   required?: boolean;
+  options?: { value: string; label: string; }[];
 }
 
 interface DataTableProps {
@@ -188,16 +190,34 @@ export function DataTable({
         {field.label}
         {field.required && <span className="text-red-500 ml-1">*</span>}
       </Label>
-      <Input
-        id={field.key}
-        type={field.type}
-        placeholder={field.placeholder}
-        value={formData[field.key] || ""}
-        onChange={(e) =>
-          setFormData({ ...formData, [field.key]: e.target.value })
-        }
-        required={field.required}
-      />
+      {field.type === "select" ? (
+        <Select
+          value={formData[field.key] || ""}
+          onValueChange={(value) => setFormData({ ...formData, [field.key]: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={field.placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {field.options?.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          id={field.key}
+          type={field.type}
+          placeholder={field.placeholder}
+          value={formData[field.key] || ""}
+          onChange={(e) =>
+            setFormData({ ...formData, [field.key]: e.target.value })
+          }
+          required={field.required}
+        />
+      )}
     </div>
   );
 

@@ -46,7 +46,8 @@ const menuItems = [
     items: [
       { title: "Daftar User", url: "/pengaturan/user", icon: Users },
       { title: "Daftar Guru", url: "/pengaturan/guru", icon: UserCheck },
-      { title: "Kelas", url: "/pengaturan/kelas", icon: GraduationCap },
+      { title: "Daftar Kelas", url: "/pengaturan/kelas", icon: GraduationCap },
+      { title: "Daftar Siswa", url: "/pengaturan/siswa", icon: Users },
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
       { title: "Kategori Penilaian", url: "/pengaturan/kategori-penilaian", icon: Target },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },

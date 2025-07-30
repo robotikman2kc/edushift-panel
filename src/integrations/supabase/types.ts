@@ -47,6 +47,112 @@ export type Database = {
         }
         Relationships: []
       }
+      kelas: {
+        Row: {
+          created_at: string
+          id: string
+          jurusan: string | null
+          kapasitas: number | null
+          nama_kelas: string
+          status: string
+          tahun_ajaran: string
+          tingkat: string
+          updated_at: string
+          wali_kelas_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jurusan?: string | null
+          kapasitas?: number | null
+          nama_kelas: string
+          status?: string
+          tahun_ajaran: string
+          tingkat: string
+          updated_at?: string
+          wali_kelas_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jurusan?: string | null
+          kapasitas?: number | null
+          nama_kelas?: string
+          status?: string
+          tahun_ajaran?: string
+          tingkat?: string
+          updated_at?: string
+          wali_kelas_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kelas_wali_kelas_id_fkey"
+            columns: ["wali_kelas_id"]
+            isOneToOne: false
+            referencedRelation: "guru"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      siswa: {
+        Row: {
+          alamat: string | null
+          created_at: string
+          email: string | null
+          id: string
+          jenis_kelamin: string | null
+          kelas_id: string | null
+          nama_orang_tua: string | null
+          nama_siswa: string
+          nis: string
+          status: string
+          tanggal_lahir: string | null
+          telepon_orang_tua: string | null
+          tempat_lahir: string | null
+          updated_at: string
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          jenis_kelamin?: string | null
+          kelas_id?: string | null
+          nama_orang_tua?: string | null
+          nama_siswa: string
+          nis: string
+          status?: string
+          tanggal_lahir?: string | null
+          telepon_orang_tua?: string | null
+          tempat_lahir?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          jenis_kelamin?: string | null
+          kelas_id?: string | null
+          nama_orang_tua?: string | null
+          nama_siswa?: string
+          nis?: string
+          status?: string
+          tanggal_lahir?: string | null
+          telepon_orang_tua?: string | null
+          tempat_lahir?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "siswa_kelas_id_fkey"
+            columns: ["kelas_id"]
+            isOneToOne: false
+            referencedRelation: "kelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
