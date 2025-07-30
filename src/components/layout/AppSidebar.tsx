@@ -141,19 +141,14 @@ export function AppSidebar() {
 
       <SidebarContent className="p-2">
         {menuItems.map((group) => {
-          const IconComponent = group.icon;
-          
           return (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel className="px-2 py-2">
-                <div className="flex items-center gap-2">
-                  <IconComponent className="h-4 w-4 text-sidebar-foreground/70" />
-                  {!collapsed && (
-                    <span className="text-xs font-semibold text-sidebar-foreground/70">
-                      {group.title}
-                    </span>
-                  )}
-                </div>
+                {!collapsed && (
+                  <span className="text-xs font-semibold text-sidebar-foreground/70">
+                    {group.title}
+                  </span>
+                )}
               </SidebarGroupLabel>
               
               <SidebarGroupContent>
