@@ -101,10 +101,6 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  // Auto-open groups based on current route
-  const openGroups = menuItems
-    .filter(group => group.items.some(item => currentPath.startsWith(item.url.split('/')[1])))
-    .map(group => group.title);
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
@@ -145,7 +141,6 @@ export function AppSidebar() {
 
       <SidebarContent className="p-2">
         {menuItems.map((group) => {
-          const isGroupOpen = openGroups.includes(group.title);
           const IconComponent = group.icon;
           
           return (
@@ -161,28 +156,26 @@ export function AppSidebar() {
                 </div>
               </SidebarGroupLabel>
               
-              {isGroupOpen && (
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item) => {
-                      const ItemIcon = item.icon;
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild>
-                            <NavLink 
-                              to={item.url} 
-                              className={getNavCls(isActive(item.url))}
-                            >
-                              <ItemIcon className="h-4 w-4" />
-                              {!collapsed && <span className="text-sm">{item.title}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild>
+                          <NavLink 
+                            to={item.url} 
+                            className={getNavCls(isActive(item.url))}
+                          >
+                            <ItemIcon className="h-4 w-4" />
+                            {!collapsed && <span className="text-sm">{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
             </SidebarGroup>
           );
         })}
