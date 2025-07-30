@@ -23,7 +23,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState } from "react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -101,19 +101,10 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  const [openGroups, setOpenGroups] = useState<string[]>(
-    menuItems
-      .filter(group => group.items.some(item => currentPath.startsWith(item.url.split('/')[1])))
-      .map(group => group.title)
-  );
-
-  const toggleGroup = (groupTitle: string) => {
-    setOpenGroups(prev => 
-      prev.includes(groupTitle) 
-        ? prev.filter(title => title !== groupTitle)
-        : [...prev, groupTitle]
-    );
-  };
+  // Auto-open groups based on current route
+  const openGroups = menuItems
+    .filter(group => group.items.some(item => currentPath.startsWith(item.url.split('/')[1])))
+    .map(group => group.title);
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
@@ -159,49 +150,39 @@ export function AppSidebar() {
           
           return (
             <SidebarGroup key={group.title}>
-              <Collapsible open={isGroupOpen} onOpenChange={() => toggleGroup(group.title)}>
-                <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="group/label cursor-pointer hover:bg-sidebar-accent/50 px-2 py-2 rounded-md transition-colors">
-                    <div className="flex items-center gap-2">
-                      <IconComponent className="h-4 w-4 text-sidebar-foreground/70" />
-                      {!collapsed && (
-                        <>
-                          <span className="text-xs font-semibold text-sidebar-foreground/70">
-                            {group.title}
-                          </span>
-                          {isGroupOpen ? 
-                            <ChevronDown className="h-3 w-3 text-sidebar-foreground/50 ml-auto" /> : 
-                            <ChevronRight className="h-3 w-3 text-sidebar-foreground/50 ml-auto" />
-                          }
-                        </>
-                      )}
-                    </div>
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {group.items.map((item) => {
-                        const ItemIcon = item.icon;
-                        return (
-                          <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild>
-                              <NavLink 
-                                to={item.url} 
-                                className={getNavCls(isActive(item.url))}
-                              >
-                                <ItemIcon className="h-4 w-4" />
-                                {!collapsed && <span className="text-sm">{item.title}</span>}
-                              </NavLink>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
+              <SidebarGroupLabel className="px-2 py-2">
+                <div className="flex items-center gap-2">
+                  <IconComponent className="h-4 w-4 text-sidebar-foreground/70" />
+                  {!collapsed && (
+                    <span className="text-xs font-semibold text-sidebar-foreground/70">
+                      {group.title}
+                    </span>
+                  )}
+                </div>
+              </SidebarGroupLabel>
+              
+              {isGroupOpen && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const ItemIcon = item.icon;
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild>
+                            <NavLink 
+                              to={item.url} 
+                              className={getNavCls(isActive(item.url))}
+                            >
+                              <ItemIcon className="h-4 w-4" />
+                              {!collapsed && <span className="text-sm">{item.title}</span>}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
             </SidebarGroup>
           );
         })}
