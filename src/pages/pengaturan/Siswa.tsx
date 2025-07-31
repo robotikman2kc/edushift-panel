@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -26,11 +27,16 @@ interface Siswa {
 interface Kelas {
   id: string;
   nama_kelas: string;
+  tingkat: string;
 }
 
 const Siswa = () => {
   const [siswa, setSiswa] = useState<Siswa[]>([]);
   const [kelas, setKelas] = useState<Kelas[]>([]);
+  const [selectedTingkat, setSelectedTingkat] = useState<string>("");
+  const [selectedKelas, setSelectedKelas] = useState<string>("");
+  const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
+  const [filteredSiswa, setFilteredSiswa] = useState<Siswa[]>([]);
   const [loading, setLoading] = useState(true);
 
   const columns = [
@@ -45,7 +51,6 @@ const Siswa = () => {
   const formFields = [
     { key: "nis", label: "NIS", type: "text" as const, placeholder: "Masukkan NIS", required: true },
     { key: "nama_siswa", label: "Nama Siswa", type: "text" as const, placeholder: "Masukkan nama siswa", required: true },
-    { key: "kelas_id", label: "Kelas", type: "select" as const, placeholder: "Pilih kelas", required: true, options: kelas.map(k => ({ value: k.id, label: k.nama_kelas })) },
     { key: "jenis_kelamin", label: "Jenis Kelamin", type: "select" as const, placeholder: "Pilih jenis kelamin", required: true, options: [
       { value: "Laki-laki", label: "Laki-laki" },
       { value: "Perempuan", label: "Perempuan" }
@@ -62,8 +67,8 @@ const Siswa = () => {
     try {
       const { data, error } = await supabase
         .from('kelas')
-        .select('id, nama_kelas')
-        .order('nama_kelas');
+        .select('id, nama_kelas, tingkat')
+        .order('tingkat, nama_kelas');
 
       if (error) throw error;
       setKelas(data || []);
@@ -101,6 +106,7 @@ const Siswa = () => {
       })) || [];
 
       setSiswa(formattedData);
+      setFilteredSiswa(formattedData);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -117,14 +123,60 @@ const Siswa = () => {
     fetchSiswa();
   }, []);
 
+  // Filter kelas berdasarkan tingkat yang dipilih
+  useEffect(() => {
+    if (selectedTingkat) {
+      const filtered = kelas.filter(k => k.tingkat === selectedTingkat);
+      setFilteredKelas(filtered);
+      
+      // Reset selected kelas jika tidak ada dalam tingkat yang dipilih
+      if (selectedKelas && !filtered.find(k => k.id === selectedKelas)) {
+        setSelectedKelas("");
+      }
+    } else {
+      setFilteredKelas([]);
+      setSelectedKelas("");
+    }
+  }, [selectedTingkat, kelas]);
+
+  // Filter siswa berdasarkan kelas yang dipilih
+  useEffect(() => {
+    if (selectedKelas) {
+      const filtered = siswa.filter(s => s.kelas_id === selectedKelas);
+      setFilteredSiswa(filtered);
+    } else if (selectedTingkat) {
+      // Jika hanya tingkat yang dipilih, tampilkan semua siswa dari tingkat tersebut
+      const kelasIds = filteredKelas.map(k => k.id);
+      const filtered = siswa.filter(s => kelasIds.includes(s.kelas_id));
+      setFilteredSiswa(filtered);
+    } else {
+      setFilteredSiswa([]);
+    }
+  }, [selectedKelas, selectedTingkat, siswa, filteredKelas]);
+
+  // Get unique tingkat values
+  const tingkatOptions = [...new Set(kelas.map(k => k.tingkat))].map(tingkat => ({
+    value: tingkat,
+    label: tingkat
+  }));
+
   const handleAdd = async (formData: Record<string, string>) => {
+    if (!selectedKelas) {
+      toast({
+        title: "Error",
+        description: "Pilih kelas terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('siswa')
         .insert({
           nis: formData.nis,
           nama_siswa: formData.nama_siswa,
-          kelas_id: formData.kelas_id,
+          kelas_id: selectedKelas,
           jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
           tanggal_lahir: formData.tanggal_lahir || null,
           tempat_lahir: formData.tempat_lahir || null,
@@ -158,7 +210,6 @@ const Siswa = () => {
         .update({
           nis: formData.nis,
           nama_siswa: formData.nama_siswa,
-          kelas_id: formData.kelas_id,
           jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
           tanggal_lahir: formData.tanggal_lahir || null,
           tempat_lahir: formData.tempat_lahir || null,
@@ -214,20 +265,68 @@ const Siswa = () => {
     <div className="space-y-6">
       <PageHeader 
         title="Daftar Siswa" 
-        description="Kelola data siswa berdasarkan kelas"
+        description="Kelola siswa berdasarkan tingkat dan kelas"
       />
       
-      <DataTable
-        data={siswa}
-        columns={columns}
-        searchPlaceholder="Cari nama siswa, NIS, atau kelas..."
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        loading={loading}
-        formFields={formFields}
-        title="Siswa"
-      />
+      {/* Dropdown Filters */}
+      <div className="flex gap-4 p-4 bg-card rounded-lg border">
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-2 block">Tingkat Kelas</label>
+          <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih tingkat kelas" />
+            </SelectTrigger>
+            <SelectContent>
+              {tingkatOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-2 block">Nama Kelas</label>
+          <Select 
+            value={selectedKelas} 
+            onValueChange={setSelectedKelas}
+            disabled={!selectedTingkat}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih nama kelas" />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredKelas.map((kelas) => (
+                <SelectItem key={kelas.id} value={kelas.id}>
+                  {kelas.nama_kelas}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Student Table */}
+      {(selectedTingkat || selectedKelas) && (
+        <DataTable
+          data={filteredSiswa}
+          columns={columns}
+          searchPlaceholder="Cari nama siswa, NIS..."
+          onAdd={selectedKelas ? handleAdd : undefined}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          loading={loading}
+          formFields={formFields}
+          title="Siswa"
+        />
+      )}
+
+      {!selectedTingkat && (
+        <div className="text-center py-8 text-muted-foreground">
+          Pilih tingkat kelas untuk melihat daftar siswa
+        </div>
+      )}
     </div>
   );
 };
