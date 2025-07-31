@@ -374,17 +374,19 @@ export function DataTable({
 
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Tambah Data</DialogTitle>
             <DialogDescription>
               Lengkapi form berikut untuk menambah data baru.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {formFields?.map(renderFormField)}
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="grid gap-4 px-1">
+              {formFields?.map(renderFormField)}
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
@@ -401,17 +403,19 @@ export function DataTable({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Edit Data</DialogTitle>
             <DialogDescription>
               Ubah informasi sesuai kebutuhan.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {formFields?.map(renderFormField)}
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="grid gap-4 px-1">
+              {formFields?.map(renderFormField)}
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
