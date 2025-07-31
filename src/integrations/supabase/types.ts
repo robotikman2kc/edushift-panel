@@ -94,6 +94,36 @@ export type Database = {
           },
         ]
       }
+      mata_pelajaran: {
+        Row: {
+          created_at: string
+          deskripsi: string | null
+          id: string
+          kode_mata_pelajaran: string
+          nama_mata_pelajaran: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deskripsi?: string | null
+          id?: string
+          kode_mata_pelajaran: string
+          nama_mata_pelajaran: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deskripsi?: string | null
+          id?: string
+          kode_mata_pelajaran?: string
+          nama_mata_pelajaran?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       siswa: {
         Row: {
           alamat: string | null
