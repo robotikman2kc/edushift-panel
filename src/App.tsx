@@ -23,6 +23,7 @@ import InputNilai from "./pages/penilaian/InputNilai";
 
 // Kehadiran Pages
 import InputKehadiran from "./pages/kehadiran/InputKehadiran";
+import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -69,10 +70,7 @@ const App = () => (
 
                     {/* Kehadiran Routes */}
                     <Route path="/kehadiran/input-kehadiran" element={<InputKehadiran />} />
-                    <Route 
-                      path="/kehadiran/rekap-kehadiran" 
-                      element={<PlaceholderPage title="Rekap Kehadiran" description="Lihat rekap kehadiran siswa" />} 
-                    />
+                    <Route path="/kehadiran/rekap-kehadiran" element={<RekapKehadiran />} />
                     <Route 
                       path="/kehadiran/statistik-kehadiran" 
                       element={<PlaceholderPage title="Statistik Kehadiran" description="Lihat statistik kehadiran" />} 

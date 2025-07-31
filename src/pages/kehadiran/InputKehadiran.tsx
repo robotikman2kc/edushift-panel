@@ -344,15 +344,6 @@ const InputKehadiran = () => {
                       <CheckCheck className="mr-2 h-4 w-4" />
                       Semua Hadir
                     </Button>
-                    <Button 
-                      size="sm" 
-                      className="w-full" 
-                      onClick={() => handleBulkAttendance('Alpha')}
-                      variant="outline"
-                    >
-                      <UserX className="mr-2 h-4 w-4" />
-                      Semua Alpha
-                    </Button>
                   </div>
                 </div>
 
