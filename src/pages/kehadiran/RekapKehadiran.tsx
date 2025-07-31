@@ -31,15 +31,22 @@ interface Siswa {
   kelas_id: string;
 }
 
+interface KehadiranData {
+  id: string;
+  siswa_id: string;
+  tanggal: string;
+  status_kehadiran: string;
+}
+
 interface KehadiranReport {
   siswa_id: string;
   nama_siswa: string;
   nis: string;
-  total_hari: number;
-  hadir: number;
-  sakit: number;
-  izin: number;
-  alpha: number;
+  kehadiran_per_tanggal: { [tanggal: string]: string };
+  total_hadir: number;
+  total_sakit: number;
+  total_izin: number;
+  total_alpha: number;
   persentase_kehadiran: number;
 }
 
@@ -54,6 +61,7 @@ const RekapKehadiran = () => {
   const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
   const [mataPelajaran, setMataPelajaran] = useState<MataPelajaran[]>([]);
   const [reportData, setReportData] = useState<KehadiranReport[]>([]);
+  const [uniqueDates, setUniqueDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
@@ -172,40 +180,44 @@ const RekapKehadiran = () => {
         .select("*")
         .eq("kelas_id", selectedKelas)
         .gte("tanggal", startDateStr)
-        .lte("tanggal", endDateStr);
+        .lte("tanggal", endDateStr)
+        .order("tanggal", { ascending: true });
 
       if (attendanceError) throw attendanceError;
 
-      // Calculate total working days in the month (excluding weekends)
-      const totalDays = [];
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dayOfWeek = d.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sunday (0) and Saturday (6)
-          totalDays.push(new Date(d));
-        }
-      }
+      // Get unique dates from attendance data
+      const dates = [...new Set(attendance?.map(a => a.tanggal) || [])].sort();
+      setUniqueDates(dates);
 
       // Process report data for each student
       const report: KehadiranReport[] = students?.map(student => {
         const studentAttendance = attendance?.filter(a => a.siswa_id === student.id) || [];
         
-        const hadir = studentAttendance.filter(a => a.status_kehadiran === 'Hadir').length;
-        const sakit = studentAttendance.filter(a => a.status_kehadiran === 'Sakit').length;
-        const izin = studentAttendance.filter(a => a.status_kehadiran === 'Izin').length;
-        const alpha = studentAttendance.filter(a => a.status_kehadiran === 'Alpha').length;
+        // Create attendance map by date
+        const kehadiranPerTanggal: { [tanggal: string]: string } = {};
+        dates.forEach(date => {
+          const attendanceRecord = studentAttendance.find(a => a.tanggal === date);
+          kehadiranPerTanggal[date] = attendanceRecord ? attendanceRecord.status_kehadiran : '-';
+        });
+
+        // Calculate totals
+        const totalHadir = studentAttendance.filter(a => a.status_kehadiran === 'Hadir').length;
+        const totalSakit = studentAttendance.filter(a => a.status_kehadiran === 'Sakit').length;
+        const totalIzin = studentAttendance.filter(a => a.status_kehadiran === 'Izin').length;
+        const totalAlpha = studentAttendance.filter(a => a.status_kehadiran === 'Alpha').length;
         
-        const totalKehadiran = hadir + sakit + izin;
-        const persentaseKehadiran = totalDays.length > 0 ? Math.round((totalKehadiran / totalDays.length) * 100) : 0;
+        const totalKehadiran = totalHadir + totalSakit + totalIzin;
+        const persentaseKehadiran = dates.length > 0 ? Math.round((totalKehadiran / dates.length) * 100) : 0;
 
         return {
           siswa_id: student.id,
           nama_siswa: student.nama_siswa,
           nis: student.nis,
-          total_hari: totalDays.length,
-          hadir,
-          sakit,
-          izin,
-          alpha,
+          kehadiran_per_tanggal: kehadiranPerTanggal,
+          total_hadir: totalHadir,
+          total_sakit: totalSakit,
+          total_izin: totalIzin,
+          total_alpha: totalAlpha,
           persentase_kehadiran: persentaseKehadiran,
         };
       }) || [];
@@ -221,6 +233,26 @@ const RekapKehadiran = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getStatusSymbol = (status: string) => {
+    switch (status) {
+      case 'Hadir':
+        return <span className="inline-flex items-center justify-center w-8 h-8 bg-green-100 text-green-800 rounded-full text-sm font-bold">H</span>;
+      case 'Sakit':
+        return <span className="inline-flex items-center justify-center w-8 h-8 bg-yellow-100 text-yellow-800 rounded-full text-sm font-bold">S</span>;
+      case 'Izin':
+        return <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">I</span>;
+      case 'Alpha':
+        return <span className="inline-flex items-center justify-center w-8 h-8 bg-red-100 text-red-800 rounded-full text-sm font-bold">A</span>;
+      default:
+        return <span className="inline-flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-500 rounded-full text-sm">-</span>;
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return `${date.getDate()}/${date.getMonth() + 1}`;
   };
 
   const getStatusBadge = (percentage: number) => {
@@ -256,10 +288,10 @@ const RekapKehadiran = () => {
   const totalStats = reportData.reduce(
     (acc, curr) => ({
       totalSiswa: acc.totalSiswa + 1,
-      totalHadir: acc.totalHadir + curr.hadir,
-      totalSakit: acc.totalSakit + curr.sakit,
-      totalIzin: acc.totalIzin + curr.izin,
-      totalAlpha: acc.totalAlpha + curr.alpha,
+      totalHadir: acc.totalHadir + curr.total_hadir,
+      totalSakit: acc.totalSakit + curr.total_sakit,
+      totalIzin: acc.totalIzin + curr.total_izin,
+      totalAlpha: acc.totalAlpha + curr.total_alpha,
     }),
     { totalSiswa: 0, totalHadir: 0, totalSakit: 0, totalIzin: 0, totalAlpha: 0 }
   );
@@ -471,12 +503,12 @@ const RekapKehadiran = () => {
                         <TableHead>No</TableHead>
                         <TableHead>NIS</TableHead>
                         <TableHead>Nama Siswa</TableHead>
-                        <TableHead className="text-center">Total Hari</TableHead>
-                        <TableHead className="text-center">Hadir</TableHead>
-                        <TableHead className="text-center">Sakit</TableHead>
-                        <TableHead className="text-center">Izin</TableHead>
-                        <TableHead className="text-center">Alpha</TableHead>
-                        <TableHead className="text-center">Persentase</TableHead>
+                        {uniqueDates.map((date) => (
+                          <TableHead key={date} className="text-center min-w-[60px]">
+                            {formatDate(date)}
+                          </TableHead>
+                        ))}
+                        <TableHead className="text-center">%</TableHead>
                         <TableHead className="text-center">Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -486,27 +518,11 @@ const RekapKehadiran = () => {
                           <TableCell className="font-medium">{index + 1}</TableCell>
                           <TableCell className="font-medium">{student.nis}</TableCell>
                           <TableCell>{student.nama_siswa}</TableCell>
-                          <TableCell className="text-center">{student.total_hari}</TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                              {student.hadir}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                              {student.sakit}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                              {student.izin}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 bg-red-100 text-red-800 rounded-full text-sm font-medium">
-                              {student.alpha}
-                            </span>
-                          </TableCell>
+                          {uniqueDates.map((date) => (
+                            <TableCell key={date} className="text-center">
+                              {getStatusSymbol(student.kehadiran_per_tanggal[date])}
+                            </TableCell>
+                          ))}
                           <TableCell className="text-center font-semibold">
                             {student.persentase_kehadiran}%
                           </TableCell>
@@ -517,6 +533,34 @@ const RekapKehadiran = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  
+                  {uniqueDates.length > 0 && (
+                    <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2">Keterangan Status:</h4>
+                      <div className="flex flex-wrap gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-800 rounded-full text-xs font-bold">H</span>
+                          <span>Hadir</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">S</span>
+                          <span>Sakit</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">I</span>
+                          <span>Izin</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-red-100 text-red-800 rounded-full text-xs font-bold">A</span>
+                          <span>Alpha</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-100 text-gray-500 rounded-full text-xs">-</span>
+                          <span>Tidak ada data</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
