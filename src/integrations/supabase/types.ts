@@ -47,6 +47,39 @@ export type Database = {
         }
         Relationships: []
       }
+      kehadiran: {
+        Row: {
+          created_at: string
+          id: string
+          kelas_id: string
+          keterangan: string | null
+          siswa_id: string
+          status_kehadiran: string
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kelas_id: string
+          keterangan?: string | null
+          siswa_id: string
+          status_kehadiran?: string
+          tanggal: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kelas_id?: string
+          keterangan?: string | null
+          siswa_id?: string
+          status_kehadiran?: string
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kelas: {
         Row: {
           created_at: string
