@@ -53,6 +53,7 @@ export type Database = {
           id: string
           kelas_id: string
           keterangan: string | null
+          mata_pelajaran_id: string | null
           siswa_id: string
           status_kehadiran: string
           tanggal: string
@@ -63,6 +64,7 @@ export type Database = {
           id?: string
           kelas_id: string
           keterangan?: string | null
+          mata_pelajaran_id?: string | null
           siswa_id: string
           status_kehadiran?: string
           tanggal: string
@@ -73,6 +75,7 @@ export type Database = {
           id?: string
           kelas_id?: string
           keterangan?: string | null
+          mata_pelajaran_id?: string | null
           siswa_id?: string
           status_kehadiran?: string
           tanggal?: string

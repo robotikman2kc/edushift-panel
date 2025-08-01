@@ -18,6 +18,13 @@ interface Kelas {
   tahun_ajaran: string;
 }
 
+interface MataPelajaran {
+  id: string;
+  nama_mata_pelajaran: string;
+  kode_mata_pelajaran: string;
+  status: string;
+}
+
 interface Siswa {
   id: string;
   nis: string;
@@ -29,6 +36,7 @@ interface Kehadiran {
   id?: string;
   siswa_id: string;
   kelas_id: string;
+  mata_pelajaran_id?: string;
   tanggal: string;
   status_kehadiran: string;
   keterangan?: string;
@@ -37,9 +45,11 @@ interface Kehadiran {
 const InputKehadiran = () => {
   const [selectedTingkat, setSelectedTingkat] = useState("");
   const [selectedKelas, setSelectedKelas] = useState("");
+  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [allKelas, setAllKelas] = useState<Kelas[]>([]);
   const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
+  const [mataPelajaran, setMataPelajaran] = useState<MataPelajaran[]>([]);
   const [students, setStudents] = useState<Siswa[]>([]);
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: Kehadiran}>({});
@@ -47,9 +57,10 @@ const InputKehadiran = () => {
 
   const tingkatOptions = ["X", "XI", "XII"];
 
-  // Fetch all kelas
+  // Fetch all kelas and mata pelajaran
   useEffect(() => {
     fetchKelas();
+    fetchMataPelajaran();
   }, []);
 
   // Filter kelas by tingkat
@@ -65,9 +76,9 @@ const InputKehadiran = () => {
     setAttendance({});
   }, [selectedTingkat, allKelas]);
 
-  // Fetch students when kelas is selected
+  // Fetch students when kelas and mata pelajaran are selected
   useEffect(() => {
-    if (selectedKelas) {
+    if (selectedKelas && selectedMataPelajaran) {
       fetchStudents();
       fetchExistingAttendance();
     } else {
@@ -75,7 +86,7 @@ const InputKehadiran = () => {
       setAttendance({});
       setExistingAttendance({});
     }
-  }, [selectedKelas, selectedDate]);
+  }, [selectedKelas, selectedMataPelajaran, selectedDate]);
 
   const fetchKelas = async () => {
     try {
@@ -93,6 +104,26 @@ const InputKehadiran = () => {
       toast({
         title: "Error",
         description: "Gagal memuat data kelas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchMataPelajaran = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("mata_pelajaran")
+        .select("*")
+        .eq("status", "Aktif")
+        .order("nama_mata_pelajaran", { ascending: true });
+
+      if (error) throw error;
+      setMataPelajaran(data || []);
+    } catch (error) {
+      console.error("Error fetching mata pelajaran:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat data mata pelajaran",
         variant: "destructive",
       });
     }
@@ -135,6 +166,7 @@ const InputKehadiran = () => {
         .from("kehadiran")
         .select("*")
         .eq("kelas_id", selectedKelas)
+        .eq("mata_pelajaran_id", selectedMataPelajaran)
         .eq("tanggal", selectedDate);
 
       if (error) throw error;
@@ -174,6 +206,15 @@ const InputKehadiran = () => {
       return;
     }
 
+    if (!selectedMataPelajaran) {
+      toast({
+        title: "Pilih Mata Pelajaran",
+        description: "Silakan pilih mata pelajaran terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -202,6 +243,7 @@ const InputKehadiran = () => {
           .insert(toInsert.map(record => ({
             siswa_id: record.siswa_id,
             kelas_id: record.kelas_id,
+            mata_pelajaran_id: selectedMataPelajaran,
             tanggal: record.tanggal,
             status_kehadiran: record.status_kehadiran,
             keterangan: record.keterangan,
@@ -276,7 +318,7 @@ const InputKehadiran = () => {
     <div className="space-y-6">
       <PageHeader 
         title="Input Kehadiran" 
-        description="Catat kehadiran siswa berdasarkan kelas dan tanggal"
+        description="Catat kehadiran siswa berdasarkan kelas, mata pelajaran, dan tanggal"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -330,7 +372,23 @@ const InputKehadiran = () => {
               </Select>
             </div>
 
-            {selectedKelas && (
+            <div className="space-y-2">
+              <Label htmlFor="mata-pelajaran">Mata Pelajaran</Label>
+              <Select value={selectedMataPelajaran} onValueChange={setSelectedMataPelajaran} disabled={!selectedKelas}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih mata pelajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mataPelajaran.map((mapel) => (
+                    <SelectItem key={mapel.id} value={mapel.id}>
+                      {mapel.nama_mata_pelajaran} ({mapel.kode_mata_pelajaran})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedKelas && selectedMataPelajaran && (
               <>
                 <div className="pt-4 border-t">
                   <h4 className="font-medium text-sm mb-2">Aksi Massal</h4>
@@ -350,7 +408,7 @@ const InputKehadiran = () => {
                 <Button 
                   onClick={handleSave} 
                   className="w-full"
-                  disabled={loading || !selectedKelas}
+                  disabled={loading || !selectedKelas || !selectedMataPelajaran}
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {loading ? "Menyimpan..." : "Simpan Kehadiran"}
@@ -400,10 +458,10 @@ const InputKehadiran = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {!selectedKelas ? (
+              {!selectedKelas || !selectedMataPelajaran ? (
                 <div className="text-center py-8">
                   <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Pilih tingkat dan nama kelas untuk menampilkan daftar siswa</p>
+                  <p className="text-muted-foreground">Pilih tingkat, nama kelas, dan mata pelajaran untuk menampilkan daftar siswa</p>
                 </div>
               ) : loading ? (
                 <div className="text-center py-8">
