@@ -179,6 +179,7 @@ const RekapKehadiran = () => {
         .from("kehadiran")
         .select("*")
         .eq("kelas_id", selectedKelas)
+        .eq("mata_pelajaran_id", selectedMataPelajaran)
         .gte("tanggal", startDateStr)
         .lte("tanggal", endDateStr)
         .order("tanggal", { ascending: true });
