@@ -79,8 +79,7 @@ const InputKehadiran = () => {
   // Fetch students when kelas and mata pelajaran are selected
   useEffect(() => {
     if (selectedKelas && selectedMataPelajaran) {
-      fetchStudents();
-      fetchExistingAttendance();
+      fetchStudentsAndAttendance();
     } else {
       setStudents([]);
       setAttendance({});
@@ -126,6 +125,55 @@ const InputKehadiran = () => {
         description: "Gagal memuat data mata pelajaran",
         variant: "destructive",
       });
+    }
+  };
+
+  const fetchStudentsAndAttendance = async () => {
+    try {
+      setLoading(true);
+      
+      // First fetch existing attendance
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from("kehadiran")
+        .select("*")
+        .eq("kelas_id", selectedKelas)
+        .eq("mata_pelajaran_id", selectedMataPelajaran)
+        .eq("tanggal", selectedDate);
+
+      if (attendanceError) throw attendanceError;
+      
+      const attendanceMap: {[key: string]: Kehadiran} = {};
+      attendanceData?.forEach(record => {
+        attendanceMap[record.siswa_id] = record;
+      });
+      setExistingAttendance(attendanceMap);
+
+      // Then fetch students
+      const { data: studentsData, error: studentsError } = await supabase
+        .from("siswa")
+        .select("*")
+        .eq("kelas_id", selectedKelas)
+        .eq("status", "Aktif")
+        .order("nama_siswa", { ascending: true });
+
+      if (studentsError) throw studentsError;
+      setStudents(studentsData || []);
+      
+      // Initialize attendance with existing data
+      const initialAttendance: {[key: string]: string} = {};
+      studentsData?.forEach(student => {
+        initialAttendance[student.id] = attendanceMap[student.id]?.status_kehadiran || "";
+      });
+      setAttendance(initialAttendance);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat data siswa dan kehadiran",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -270,8 +318,8 @@ const InputKehadiran = () => {
         description: "Data kehadiran berhasil disimpan",
       });
 
-      // Refresh existing attendance
-      fetchExistingAttendance();
+      // Refresh data to show updated attendance
+      await fetchStudentsAndAttendance();
     } catch (error) {
       console.error("Error saving attendance:", error);
       toast({
