@@ -207,7 +207,7 @@ const RekapKehadiran = () => {
         const totalIzin = studentAttendance.filter(a => a.status_kehadiran === 'Izin').length;
         const totalAlpha = studentAttendance.filter(a => a.status_kehadiran === 'Alpha').length;
         
-        const totalKehadiran = totalHadir + totalSakit + totalIzin;
+        const totalKehadiran = totalHadir; // Hanya status "Hadir" yang dihitung sebagai kehadiran
         const persentaseKehadiran = dates.length > 0 ? Math.round((totalKehadiran / dates.length) * 100) : 0;
 
         return {
