@@ -47,6 +47,71 @@ export type Database = {
         }
         Relationships: []
       }
+      jenis_kegiatan: {
+        Row: {
+          created_at: string
+          deskripsi: string | null
+          id: string
+          nama_kegiatan: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deskripsi?: string | null
+          id?: string
+          nama_kegiatan: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deskripsi?: string | null
+          id?: string
+          nama_kegiatan?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      jurnal: {
+        Row: {
+          created_at: string
+          guru_id: string | null
+          id: string
+          jenis_kegiatan_id: string
+          jumlah_jp: number | null
+          keterangan: string | null
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guru_id?: string | null
+          id?: string
+          jenis_kegiatan_id: string
+          jumlah_jp?: number | null
+          keterangan?: string | null
+          tanggal: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guru_id?: string | null
+          id?: string
+          jenis_kegiatan_id?: string
+          jumlah_jp?: number | null
+          keterangan?: string | null
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jurnal_jenis_kegiatan_id_fkey"
+            columns: ["jenis_kegiatan_id"]
+            isOneToOne: false
+            referencedRelation: "jenis_kegiatan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kehadiran: {
         Row: {
           created_at: string

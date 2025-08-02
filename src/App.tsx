@@ -28,6 +28,9 @@ import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 // Data Pages
 import BackupRestore from "./pages/data/BackupRestore";
 
+// Jurnal Pages
+import JurnalGuru from "./pages/jurnal/JurnalGuru";
+
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
 
@@ -80,10 +83,7 @@ const App = () => (
                     />
 
                     {/* Jurnal Routes */}
-                    <Route 
-                      path="/jurnal/jurnal-guru" 
-                      element={<PlaceholderPage title="Jurnal Guru" description="Lihat jurnal mengajar guru" />} 
-                    />
+                    <Route path="/jurnal/jurnal-guru" element={<JurnalGuru />} />
                     <Route 
                       path="/jurnal/input-jurnal" 
                       element={<PlaceholderPage title="Input Jurnal" description="Input jurnal mengajar" />} 
