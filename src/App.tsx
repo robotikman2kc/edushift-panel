@@ -25,6 +25,9 @@ import InputNilai from "./pages/penilaian/InputNilai";
 import InputKehadiran from "./pages/kehadiran/InputKehadiran";
 import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 
+// Data Pages
+import BackupRestore from "./pages/data/BackupRestore";
+
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
 
@@ -93,7 +96,7 @@ const App = () => (
                     />
                     <Route 
                       path="/data/backup-restore" 
-                      element={<PlaceholderPage title="Backup dan Restore" description="Backup dan restore data" />} 
+                      element={<BackupRestore />} 
                     />
 
                     {/* Akun Routes */}
