@@ -85,7 +85,7 @@ const JurnalGuru = () => {
   const [selectedJurnal, setSelectedJurnal] = useState<JurnalEntry | null>(null);
   const [showJurnalDialog, setShowJurnalDialog] = useState(false);
   const [showKegiatanDialog, setShowKegiatanDialog] = useState(false);
-  const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("");
+  const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("all");
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -101,7 +101,7 @@ const JurnalGuru = () => {
   });
 
   // Filter jurnal based on selected jenis kegiatan
-  const filteredJurnal = filterJenisKegiatan 
+  const filteredJurnal = filterJenisKegiatan && filterJenisKegiatan !== "all"
     ? jurnal.filter(item => 
         jenisKegiatan.find(k => k.id === filterJenisKegiatan)?.nama_kegiatan === 
         item.jenis_kegiatan.nama_kegiatan
@@ -299,7 +299,7 @@ const JurnalGuru = () => {
               <SelectValue placeholder="Filter Jenis Kegiatan" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Kegiatan</SelectItem>
+              <SelectItem value="all">Semua Kegiatan</SelectItem>
               {jenisKegiatan.map((kegiatan) => (
                 <SelectItem key={kegiatan.id} value={kegiatan.id}>
                   {kegiatan.nama_kegiatan}
