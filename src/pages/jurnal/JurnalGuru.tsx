@@ -48,8 +48,9 @@ const jurnalSchema = z.object({
     required_error: "Tanggal harus diisi",
   }),
   jenis_kegiatan_id: z.string().min(1, "Jenis kegiatan harus dipilih"),
-  jumlah_jp: z.number().min(0, "Jumlah JP harus 0 atau lebih").optional(),
-  keterangan: z.string().optional(),
+  uraian_kegiatan: z.string().min(1, "Uraian kegiatan harus diisi"),
+  volume: z.number().min(0, "Volume harus 0 atau lebih"),
+  satuan_hasil: z.string().min(1, "Satuan hasil harus diisi"),
 });
 
 const jenisKegiatanSchema = z.object({
@@ -66,8 +67,9 @@ interface JurnalEntry {
   jenis_kegiatan: {
     nama_kegiatan: string;
   };
-  jumlah_jp: number;
-  keterangan: string;
+  uraian_kegiatan: string;
+  volume: number;
+  satuan_hasil: string;
 }
 
 interface JenisKegiatan {
@@ -83,13 +85,14 @@ const JurnalGuru = () => {
   const [selectedJurnal, setSelectedJurnal] = useState<JurnalEntry | null>(null);
   const [showJurnalDialog, setShowJurnalDialog] = useState(false);
   const [showKegiatanDialog, setShowKegiatanDialog] = useState(false);
+  const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("");
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
     resolver: zodResolver(jurnalSchema),
     defaultValues: {
       tanggal: new Date(),
-      jumlah_jp: 0,
+      volume: 0,
     },
   });
 
@@ -97,10 +100,13 @@ const JurnalGuru = () => {
     resolver: zodResolver(jenisKegiatanSchema),
   });
 
-  const selectedKegiatanName = jurnalForm.watch("jenis_kegiatan_id");
-  const isKegiatanBelajar = jenisKegiatan.find(
-    (k) => k.id === selectedKegiatanName
-  )?.nama_kegiatan === "Kegiatan Belajar Mengajar";
+  // Filter jurnal based on selected jenis kegiatan
+  const filteredJurnal = filterJenisKegiatan 
+    ? jurnal.filter(item => 
+        jenisKegiatan.find(k => k.id === filterJenisKegiatan)?.nama_kegiatan === 
+        item.jenis_kegiatan.nama_kegiatan
+      )
+    : jurnal;
 
   useEffect(() => {
     fetchData();
@@ -114,8 +120,9 @@ const JurnalGuru = () => {
         .select(`
           id,
           tanggal,
-          jumlah_jp,
-          keterangan,
+          uraian_kegiatan,
+          volume,
+          satuan_hasil,
           jenis_kegiatan:jenis_kegiatan_id (
             nama_kegiatan
           )
@@ -151,8 +158,9 @@ const JurnalGuru = () => {
       const jurnalData = {
         tanggal: format(data.tanggal, "yyyy-MM-dd"),
         jenis_kegiatan_id: data.jenis_kegiatan_id,
-        jumlah_jp: isKegiatanBelajar ? (data.jumlah_jp || 0) : 0,
-        keterangan: data.keterangan || "",
+        uraian_kegiatan: data.uraian_kegiatan,
+        volume: data.volume,
+        satuan_hasil: data.satuan_hasil,
       };
 
       if (selectedJurnal) {
@@ -232,8 +240,9 @@ const JurnalGuru = () => {
       jenis_kegiatan_id: jenisKegiatan.find(
         (k) => k.nama_kegiatan === jurnalEntry.jenis_kegiatan.nama_kegiatan
       )?.id || "",
-      jumlah_jp: jurnalEntry.jumlah_jp,
-      keterangan: jurnalEntry.keterangan,
+      uraian_kegiatan: jurnalEntry.uraian_kegiatan,
+      volume: jurnalEntry.volume,
+      satuan_hasil: jurnalEntry.satuan_hasil,
     });
     setShowJurnalDialog(true);
   };
@@ -264,16 +273,16 @@ const JurnalGuru = () => {
 
   const columns = [
     { key: "tanggal", label: "Tanggal", sortable: true },
-    { key: "jenis_kegiatan.nama_kegiatan", label: "Jenis Kegiatan", sortable: true },
-    { key: "jumlah_jp", label: "Jumlah JP", sortable: true },
-    { key: "keterangan", label: "Keterangan", sortable: false },
+    { key: "uraian_kegiatan", label: "Uraian Kegiatan", sortable: true },
+    { key: "volume", label: "Volume", sortable: true },
+    { key: "satuan_hasil", label: "Satuan Hasil", sortable: false },
   ];
 
   const handleAddNew = () => {
     setSelectedJurnal(null);
     jurnalForm.reset({
       tanggal: new Date(),
-      jumlah_jp: 0,
+      volume: 0,
     });
     setShowJurnalDialog(true);
   };
@@ -285,6 +294,19 @@ const JurnalGuru = () => {
         description="Kelola jurnal kegiatan mengajar"
       >
         <div className="flex gap-2">
+          <Select value={filterJenisKegiatan} onValueChange={setFilterJenisKegiatan}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filter Jenis Kegiatan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Semua Kegiatan</SelectItem>
+              {jenisKegiatan.map((kegiatan) => (
+                <SelectItem key={kegiatan.id} value={kegiatan.id}>
+                  {kegiatan.nama_kegiatan}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Dialog open={showKegiatanDialog} onOpenChange={setShowKegiatanDialog}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -353,8 +375,14 @@ const JurnalGuru = () => {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={jurnal}
-            columns={columns}
+            data={filteredJurnal.map((item, index) => ({
+              ...item,
+              no: index + 1
+            }))}
+            columns={[
+              { key: "no", label: "No.", sortable: false },
+              ...columns
+            ]}
             loading={loading}
             onEdit={(id) => handleEdit(id)}
             onDelete={handleDelete}
@@ -438,35 +466,46 @@ const JurnalGuru = () => {
                   </FormItem>
                 )}
               />
-              {isKegiatanBelajar && (
-                <FormField
-                  control={jurnalForm.control}
-                  name="jumlah_jp"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Jumlah JP (Jam Pelajaran)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="Masukkan jumlah JP"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
               <FormField
                 control={jurnalForm.control}
-                name="keterangan"
+                name="uraian_kegiatan"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Keterangan</FormLabel>
+                    <FormLabel>Uraian Kegiatan</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Masukkan keterangan kegiatan" {...field} />
+                      <Textarea placeholder="Masukkan uraian kegiatan" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={jurnalForm.control}
+                name="volume"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Volume</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="Masukkan volume"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={jurnalForm.control}
+                name="satuan_hasil"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Satuan Hasil</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Masukkan satuan hasil" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

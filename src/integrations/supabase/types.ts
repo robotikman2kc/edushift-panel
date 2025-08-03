@@ -77,30 +77,33 @@ export type Database = {
           guru_id: string | null
           id: string
           jenis_kegiatan_id: string
-          jumlah_jp: number | null
-          keterangan: string | null
+          satuan_hasil: string | null
           tanggal: string
           updated_at: string
+          uraian_kegiatan: string | null
+          volume: number | null
         }
         Insert: {
           created_at?: string
           guru_id?: string | null
           id?: string
           jenis_kegiatan_id: string
-          jumlah_jp?: number | null
-          keterangan?: string | null
+          satuan_hasil?: string | null
           tanggal: string
           updated_at?: string
+          uraian_kegiatan?: string | null
+          volume?: number | null
         }
         Update: {
           created_at?: string
           guru_id?: string | null
           id?: string
           jenis_kegiatan_id?: string
-          jumlah_jp?: number | null
-          keterangan?: string | null
+          satuan_hasil?: string | null
           tanggal?: string
           updated_at?: string
+          uraian_kegiatan?: string | null
+          volume?: number | null
         }
         Relationships: [
           {

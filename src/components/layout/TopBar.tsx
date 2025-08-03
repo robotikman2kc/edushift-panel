@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,25 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings, Circle } from "lucide-react";
+import { LogOut, User, Settings, Circle, Clock, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 export function TopBar() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -38,11 +50,23 @@ export function TopBar() {
       <div className="flex h-full items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="h-8 w-8" />
-          <div className="flex items-center gap-2">
-            <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-            <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-              Online
-            </Badge>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                Online
+              </Badge>
+            </div>
+            <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                <span>{format(currentTime, "EEEE, dd MMMM yyyy", { locale: id })}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>{format(currentTime, "HH:mm:ss")}</span>
+              </div>
+            </div>
           </div>
         </div>
 
