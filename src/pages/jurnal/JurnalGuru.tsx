@@ -86,6 +86,8 @@ const JurnalGuru = () => {
   const [showJurnalDialog, setShowJurnalDialog] = useState(false);
   const [showKegiatanDialog, setShowKegiatanDialog] = useState(false);
   const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("all");
+  const [filterMonth, setFilterMonth] = useState<string>(new Date().getMonth().toString());
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -100,13 +102,23 @@ const JurnalGuru = () => {
     resolver: zodResolver(jenisKegiatanSchema),
   });
 
-  // Filter jurnal based on selected jenis kegiatan
-  const filteredJurnal = filterJenisKegiatan && filterJenisKegiatan !== "all"
-    ? jurnal.filter(item => 
-        jenisKegiatan.find(k => k.id === filterJenisKegiatan)?.nama_kegiatan === 
-        item.jenis_kegiatan.nama_kegiatan
-      )
-    : jurnal;
+  // Filter jurnal based on selected filters
+  const filteredJurnal = jurnal.filter(item => {
+    const itemDate = new Date(item.tanggal);
+    const itemMonth = itemDate.getMonth();
+    const itemYear = itemDate.getFullYear();
+    
+    // Filter by month and year
+    const monthMatch = parseInt(filterMonth) === itemMonth;
+    const yearMatch = parseInt(filterYear) === itemYear;
+    
+    // Filter by jenis kegiatan
+    const jenisKegiatanMatch = filterJenisKegiatan === "all" || 
+      jenisKegiatan.find(k => k.id === filterJenisKegiatan)?.nama_kegiatan === 
+      item.jenis_kegiatan.nama_kegiatan;
+    
+    return monthMatch && yearMatch && jenisKegiatanMatch;
+  });
 
   useEffect(() => {
     fetchData();
@@ -293,7 +305,41 @@ const JurnalGuru = () => {
         title="Jurnal Guru" 
         description="Kelola jurnal kegiatan mengajar"
       >
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Bulan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">Januari</SelectItem>
+              <SelectItem value="1">Februari</SelectItem>
+              <SelectItem value="2">Maret</SelectItem>
+              <SelectItem value="3">April</SelectItem>
+              <SelectItem value="4">Mei</SelectItem>
+              <SelectItem value="5">Juni</SelectItem>
+              <SelectItem value="6">Juli</SelectItem>
+              <SelectItem value="7">Agustus</SelectItem>
+              <SelectItem value="8">September</SelectItem>
+              <SelectItem value="9">Oktober</SelectItem>
+              <SelectItem value="10">November</SelectItem>
+              <SelectItem value="11">Desember</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Tahun" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 10 }, (_, i) => {
+                const year = new Date().getFullYear() - 5 + i;
+                return (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
           <Select value={filterJenisKegiatan} onValueChange={setFilterJenisKegiatan}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filter Jenis Kegiatan" />
