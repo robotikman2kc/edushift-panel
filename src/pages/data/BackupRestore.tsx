@@ -4,11 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, Database, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, BarChart3, Trash2, Eye } from "lucide-react";
+import { Download, Upload, Database, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, BarChart3 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface DataStats {
   guru: number;
@@ -18,11 +17,6 @@ interface DataStats {
   kehadiran: number;
   jenis_kegiatan: number;
   jurnal: number;
-}
-
-interface DataItem {
-  id: string;
-  [key: string]: any;
 }
 
 const BackupRestore = () => {
@@ -38,11 +32,6 @@ const BackupRestore = () => {
     jurnal: 0
   });
   const [loading, setLoading] = useState(true);
-  const [kelasData, setKelasData] = useState<DataItem[]>([]);
-  const [siswaData, setSiswaData] = useState<DataItem[]>([]);
-  const [kehadiranData, setKehadiranData] = useState<DataItem[]>([]);
-  const [jurnalData, setJurnalData] = useState<DataItem[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
   const { toast } = useToast();
 
   // Fetch data statistics
@@ -74,55 +63,8 @@ const BackupRestore = () => {
     }
   };
 
-  // Fetch data for management lists
-  const fetchManagementData = async () => {
-    setLoadingData(true);
-    try {
-      const [kelasRes, siswaRes, kehadiranRes, jurnalRes] = await Promise.all([
-        supabase.from('kelas').select('*, wali_kelas:wali_kelas_id(nama_guru)').order('nama_kelas'),
-        supabase.from('siswa').select('*, kelas:kelas_id(nama_kelas)').order('nama_siswa'),
-        supabase.from('kehadiran').select('*, siswa:siswa_id(nama_siswa), kelas:kelas_id(nama_kelas)').order('tanggal', { ascending: false }).limit(50),
-        supabase.from('jurnal').select('*, jenis_kegiatan:jenis_kegiatan_id(nama_kegiatan)').order('tanggal', { ascending: false }).limit(50)
-      ]);
-
-      setKelasData(kelasRes.data || []);
-      setSiswaData(siswaRes.data || []);
-      setKehadiranData(kehadiranRes.data || []);
-      setJurnalData(jurnalRes.data || []);
-    } catch (error) {
-      console.error('Error fetching management data:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  // Delete item function
-  const deleteItem = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', id: string, displayName: string) => {
-    try {
-      const { error } = await supabase.from(tableName).delete().eq('id', id);
-      if (error) throw error;
-
-      toast({
-        title: "Berhasil Dihapus",
-        description: `${displayName} berhasil dihapus`
-      });
-
-      // Refresh data
-      fetchStats();
-      fetchManagementData();
-    } catch (error) {
-      console.error('Delete error:', error);
-      toast({
-        title: "Error",
-        description: `Gagal menghapus ${displayName}`,
-        variant: "destructive"
-      });
-    }
-  };
-
   useEffect(() => {
     fetchStats();
-    fetchManagementData();
   }, []);
 
   // Export individual table
@@ -264,285 +206,16 @@ const BackupRestore = () => {
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Manajemen Data" 
-        description="Kelola data sistem, backup, restore, dan statistik"
+        title="Backup dan Restore" 
+        description="Backup dan pulihkan data sistem"
       />
 
-      <Tabs defaultValue="management" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="management">Manajemen Data</TabsTrigger>
-          <TabsTrigger value="statistics">Statistik</TabsTrigger>
-          <TabsTrigger value="export">Export</TabsTrigger>
-          <TabsTrigger value="backup">Backup</TabsTrigger>
+      <Tabs defaultValue="statistics" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="statistics">Statistik Data</TabsTrigger>
+          <TabsTrigger value="export">Export Data</TabsTrigger>
+          <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
-
-        {/* Management Tab */}
-        <TabsContent value="management" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Daftar Kelas */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <School className="h-5 w-5" />
-                  Daftar Kelas
-                </CardTitle>
-                <CardDescription>
-                  {stats.kelas} kelas terdaftar
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingData ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-muted animate-pulse rounded" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {kelasData.slice(0, 10).map((kelas) => (
-                      <div key={kelas.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{kelas.nama_kelas}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {kelas.tingkat} {kelas.jurusan} - {kelas.wali_kelas?.nama_guru || 'Belum ada wali kelas'}
-                          </p>
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Kelas</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Yakin ingin menghapus kelas {kelas.nama_kelas}? Tindakan ini tidak dapat dibatalkan.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => deleteItem('kelas', kelas.id, `kelas ${kelas.nama_kelas}`)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Hapus
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ))}
-                    {kelasData.length > 10 && (
-                      <p className="text-sm text-muted-foreground text-center">
-                        Dan {kelasData.length - 10} kelas lainnya...
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Daftar Siswa */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Daftar Siswa
-                </CardTitle>
-                <CardDescription>
-                  {stats.siswa} siswa terdaftar
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingData ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-muted animate-pulse rounded" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {siswaData.slice(0, 10).map((siswa) => (
-                      <div key={siswa.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{siswa.nama_siswa}</p>
-                          <p className="text-sm text-muted-foreground">
-                            NIS: {siswa.nis} - {siswa.kelas?.nama_kelas || 'Belum ada kelas'}
-                          </p>
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Siswa</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Yakin ingin menghapus siswa {siswa.nama_siswa}? Tindakan ini tidak dapat dibatalkan.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => deleteItem('siswa', siswa.id, `siswa ${siswa.nama_siswa}`)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Hapus
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ))}
-                    {siswaData.length > 10 && (
-                      <p className="text-sm text-muted-foreground text-center">
-                        Dan {siswaData.length - 10} siswa lainnya...
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Data Kehadiran */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Data Kehadiran
-                </CardTitle>
-                <CardDescription>
-                  {stats.kehadiran} record kehadiran
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingData ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-muted animate-pulse rounded" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {kehadiranData.slice(0, 10).map((kehadiran) => (
-                      <div key={kehadiran.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{kehadiran.siswa?.nama_siswa}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {kehadiran.tanggal} - {kehadiran.kelas?.nama_kelas} - {kehadiran.status_kehadiran}
-                          </p>
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Data Kehadiran</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Yakin ingin menghapus data kehadiran {kehadiran.siswa?.nama_siswa} pada {kehadiran.tanggal}?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => deleteItem('kehadiran', kehadiran.id, 'data kehadiran')}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Hapus
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ))}
-                    {kehadiranData.length > 10 && (
-                      <p className="text-sm text-muted-foreground text-center">
-                        Dan {kehadiranData.length - 10} record lainnya...
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Data Jurnal Guru */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Data Jurnal Guru
-                </CardTitle>
-                <CardDescription>
-                  {stats.jurnal} jurnal tersimpan
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingData ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-muted animate-pulse rounded" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {jurnalData.slice(0, 10).map((jurnal) => (
-                      <div key={jurnal.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{jurnal.jenis_kegiatan?.nama_kegiatan}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {jurnal.tanggal} - {jurnal.uraian_kegiatan}
-                          </p>
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Jurnal</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Yakin ingin menghapus jurnal {jurnal.jenis_kegiatan?.nama_kegiatan} pada {jurnal.tanggal}?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => deleteItem('jurnal', jurnal.id, 'jurnal')}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Hapus
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ))}
-                    {jurnalData.length > 10 && (
-                      <p className="text-sm text-muted-foreground text-center">
-                        Dan {jurnalData.length - 10} jurnal lainnya...
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Peringatan:</strong> Fitur hapus data bersifat permanen dan tidak dapat dibatalkan. Pastikan untuk melakukan backup sebelum menghapus data penting.
-            </AlertDescription>
-          </Alert>
-        </TabsContent>
 
         {/* Statistics Tab */}
         <TabsContent value="statistics" className="space-y-6">

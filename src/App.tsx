@@ -26,6 +26,7 @@ import InputKehadiran from "./pages/kehadiran/InputKehadiran";
 import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 
 // Data Pages
+import ManajemenData from "./pages/data/ManajemenData";
 import BackupRestore from "./pages/data/BackupRestore";
 
 // Jurnal Pages
@@ -90,14 +91,8 @@ const App = () => (
                     />
 
                     {/* Data Routes */}
-                    <Route 
-                      path="/data/manajemen-data" 
-                      element={<PlaceholderPage title="Manajemen Data" description="Kelola data sistem" />} 
-                    />
-                    <Route 
-                      path="/data/backup-restore" 
-                      element={<BackupRestore />} 
-                    />
+                    <Route path="/data/manajemen-data" element={<ManajemenData />} />
+                    <Route path="/data/backup-restore" element={<BackupRestore />} />
 
                     {/* Akun Routes */}
                     <Route 
