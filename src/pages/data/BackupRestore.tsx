@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DataStats {
-  guru: number;
   kelas: number;
   mata_pelajaran: number;
   siswa: number;
@@ -23,7 +22,6 @@ const BackupRestore = () => {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [stats, setStats] = useState<DataStats>({
-    guru: 0,
     kelas: 0,
     mata_pelajaran: 0,
     siswa: 0,
@@ -37,8 +35,7 @@ const BackupRestore = () => {
   // Fetch data statistics
   const fetchStats = async () => {
     try {
-      const [guruRes, kelasRes, matpelRes, siswaRes, kehadiranRes, jenisKegiatanRes, jurnalRes] = await Promise.all([
-        supabase.from('guru').select('id', { count: 'exact', head: true }),
+      const [kelasRes, matpelRes, siswaRes, kehadiranRes, jenisKegiatanRes, jurnalRes] = await Promise.all([
         supabase.from('kelas').select('id', { count: 'exact', head: true }),
         supabase.from('mata_pelajaran').select('id', { count: 'exact', head: true }),
         supabase.from('siswa').select('id', { count: 'exact', head: true }),
@@ -48,7 +45,6 @@ const BackupRestore = () => {
       ]);
 
       setStats({
-        guru: guruRes.count || 0,
         kelas: kelasRes.count || 0,
         mata_pelajaran: matpelRes.count || 0,
         siswa: siswaRes.count || 0,
@@ -68,7 +64,7 @@ const BackupRestore = () => {
   }, []);
 
   // Export individual table
-  const exportTable = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
+  const exportTable = async (tableName: 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
     try {
       const { data, error } = await supabase.from(tableName).select('*');
       if (error) throw error;
@@ -106,8 +102,8 @@ const BackupRestore = () => {
       // Fetch data from all tables except users
       const backupData: any = {};
       
-      const tables: ('guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
-        ['guru', 'kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
+      const tables: ('kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
+        ['kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
       
       for (const table of tables) {
         const { data, error } = await supabase.from(table).select('*');
@@ -167,8 +163,8 @@ const BackupRestore = () => {
       }
 
       // Clear existing data and restore each table
-      const tables: ('guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
-        ['guru', 'kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
+      const tables: ('kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
+        ['kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
       
       for (const table of tables) {
         if (backupData[table]) {
@@ -231,22 +227,13 @@ const BackupRestore = () => {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="grid gap-4 md:grid-cols-4">
-                  {Array.from({ length: 7 }).map((_, i) => (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
                   ))}
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold text-blue-900 dark:text-blue-100">Guru</h3>
-                    </div>
-                    <p className="text-2xl font-bold text-blue-600">{stats.guru}</p>
-                    <p className="text-sm text-blue-600/70">Total guru</p>
-                  </div>
-
+                <div className="grid gap-4 md:grid-cols-3">
                   <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg border border-green-200 dark:border-green-800">
                     <div className="flex items-center gap-2 mb-2">
                       <School className="h-5 w-5 text-green-600" />
@@ -320,23 +307,6 @@ const BackupRestore = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4" />
-                    <h4 className="font-medium">Data Guru</h4>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">{stats.guru} record</p>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => exportTable('guru', 'Guru')}
-                    className="w-full"
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Export
-                  </Button>
-                </div>
-
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <School className="h-4 w-4" />
@@ -469,7 +439,6 @@ const BackupRestore = () => {
                 <div className="text-sm text-muted-foreground">
                   Data yang akan dibackup:
                   <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Data Guru ({stats.guru} record)</li>
                     <li>Data Kelas ({stats.kelas} record)</li>
                     <li>Data Mata Pelajaran ({stats.mata_pelajaran} record)</li>
                     <li>Data Siswa ({stats.siswa} record)</li>
@@ -538,7 +507,7 @@ const BackupRestore = () => {
           <div className="bg-muted p-4 rounded-lg">
             <h3 className="font-semibold mb-2">Catatan Penting:</h3>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Backup tidak menyertakan data pengguna (login) untuk keamanan</li>
+              <li>• Backup tidak menyertakan data pengguna (login) dan data guru untuk keamanan</li>
               <li>• File backup disimpan dalam format JSON</li>
               <li>• Lakukan backup secara berkala untuk menjaga keamanan data</li>
               <li>• Pastikan file backup disimpan di tempat yang aman</li>
