@@ -32,6 +32,9 @@ import BackupRestore from "./pages/data/BackupRestore";
 // Jurnal Pages
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
 
+// Akun Pages
+import Profil from "./pages/akun/Profil";
+
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
 
@@ -95,10 +98,7 @@ const App = () => (
                     <Route path="/data/backup-restore" element={<BackupRestore />} />
 
                     {/* Akun Routes */}
-                    <Route 
-                      path="/akun/profil" 
-                      element={<PlaceholderPage title="Profil" description="Kelola profil pengguna" />} 
-                    />
+                    <Route path="/akun/profil" element={<Profil />} />
                     <Route 
                       path="/akun/bantuan" 
                       element={<PlaceholderPage title="Bantuan" description="Panduan penggunaan sistem" />} 
