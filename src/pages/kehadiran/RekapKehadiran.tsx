@@ -269,17 +269,115 @@ const RekapKehadiran = () => {
   };
 
   const handleExportPDF = () => {
-    toast({
-      title: "Export PDF",
-      description: "Fitur export PDF akan segera tersedia",
-    });
+    try {
+      const { exportToPDF } = require('@/lib/exportUtils');
+      
+      // Prepare export data with attendance details
+      const exportData = reportData.map(student => {
+        const baseData = {
+          NIS: student.nis,
+          'Nama Siswa': student.nama_siswa,
+          'Total Hadir': student.total_hadir,
+          'Total Sakit': student.total_sakit,
+          'Total Izin': student.total_izin,
+          'Total Alpha': student.total_alpha,
+          'Persentase': `${student.persentase_kehadiran}%`,
+        };
+        
+        // Add daily attendance
+        uniqueDates.forEach(date => {
+          baseData[formatDate(date)] = student.kehadiran_per_tanggal[date] || '-';
+        });
+        
+        return baseData;
+      });
+      
+      const exportColumns = [
+        { key: 'NIS', label: 'NIS' },
+        { key: 'Nama Siswa', label: 'Nama Siswa' },
+        ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
+        { key: 'Total Hadir', label: 'Hadir' },
+        { key: 'Total Sakit', label: 'Sakit' },
+        { key: 'Total Izin', label: 'Izin' },
+        { key: 'Total Alpha', label: 'Alpha' },
+        { key: 'Persentase', label: 'Persentase' },
+      ];
+      
+      const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${selectedMonthLabel} ${selectedYear}`;
+      
+      const success = exportToPDF(exportData, exportColumns, title, `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`);
+      
+      if (success) {
+        toast({
+          title: "Export Berhasil",
+          description: "Rekap kehadiran berhasil diekspor ke PDF",
+        });
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Export Gagal",
+        description: "Terjadi kesalahan saat mengekspor data",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportExcel = () => {
-    toast({
-      title: "Export Excel",
-      description: "Fitur export Excel akan segera tersedia",
-    });
+    try {
+      const { exportToExcel } = require('@/lib/exportUtils');
+      
+      // Prepare export data with attendance details
+      const exportData = reportData.map(student => {
+        const baseData = {
+          NIS: student.nis,
+          'Nama Siswa': student.nama_siswa,
+          'Total Hadir': student.total_hadir,
+          'Total Sakit': student.total_sakit,
+          'Total Izin': student.total_izin,
+          'Total Alpha': student.total_alpha,
+          'Persentase': `${student.persentase_kehadiran}%`,
+        };
+        
+        // Add daily attendance
+        uniqueDates.forEach(date => {
+          baseData[formatDate(date)] = student.kehadiran_per_tanggal[date] || '-';
+        });
+        
+        return baseData;
+      });
+      
+      const exportColumns = [
+        { key: 'NIS', label: 'NIS' },
+        { key: 'Nama Siswa', label: 'Nama Siswa' },
+        ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
+        { key: 'Total Hadir', label: 'Hadir' },
+        { key: 'Total Sakit', label: 'Sakit' },
+        { key: 'Total Izin', label: 'Izin' },
+        { key: 'Total Alpha', label: 'Alpha' },
+        { key: 'Persentase', label: 'Persentase' },
+      ];
+      
+      const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${selectedMonthLabel} ${selectedYear}`;
+      
+      const success = exportToExcel(exportData, exportColumns, title, `rekap_kehadiran_${selectedYear}_${selectedMonth}.xlsx`);
+      
+      if (success) {
+        toast({
+          title: "Export Berhasil",
+          description: "Rekap kehadiran berhasil diekspor ke Excel",
+        });
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Export Gagal",
+        description: "Terjadi kesalahan saat mengekspor data",
+        variant: "destructive",
+      });
+    }
   };
 
   const selectedKelasData = allKelas.find(k => k.id === selectedKelas);

@@ -48,6 +48,7 @@ import {
   FileText
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 
 interface Column {
   key: string;
@@ -170,13 +171,59 @@ export function DataTable({
   };
 
   const handleExportPDF = () => {
-    // Implementation for PDF export
-    console.log("Export PDF functionality");
+    try {
+      const { exportToPDF } = require('@/lib/exportUtils');
+      const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
+      const success = exportToPDF(
+        sortedData,
+        exportColumns,
+        title || 'Data Export',
+        `${title || 'data'}_${new Date().toISOString().split('T')[0]}.pdf`
+      );
+      
+      if (success) {
+        toast({
+          title: "Export Berhasil",
+          description: "Data berhasil diekspor ke PDF",
+        });
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Export Gagal",
+        description: "Terjadi kesalahan saat mengekspor data ke PDF",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportExcel = () => {
-    // Implementation for Excel export
-    console.log("Export Excel functionality");
+    try {
+      const { exportToExcel } = require('@/lib/exportUtils');
+      const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
+      const success = exportToExcel(
+        sortedData,
+        exportColumns,
+        title || 'Data Export',
+        `${title || 'data'}_${new Date().toISOString().split('T')[0]}.xlsx`
+      );
+      
+      if (success) {
+        toast({
+          title: "Export Berhasil",
+          description: "Data berhasil diekspor ke Excel",
+        });
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Export Gagal",
+        description: "Terjadi kesalahan saat mengekspor data ke Excel",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleImport = () => {
