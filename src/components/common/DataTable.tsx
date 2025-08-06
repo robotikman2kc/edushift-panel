@@ -50,6 +50,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
+import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
+import { defaultTemplate, PDFTemplate } from "@/lib/pdfTemplates";
 
 interface Column {
   key: string;

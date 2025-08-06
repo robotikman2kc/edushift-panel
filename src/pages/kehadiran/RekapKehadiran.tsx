@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, Users, BookOpen, BarChart3 } from "lucide-react";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
+import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
+import { attendanceTemplate, PDFTemplate } from "@/lib/pdfTemplates";
 
 interface Kelas {
   id: string;

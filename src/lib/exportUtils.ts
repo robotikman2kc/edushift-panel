@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { PDFTemplate, defaultTemplate } from './pdfTemplates';
 
 export interface ExportColumn {
   key: string;
@@ -11,19 +12,78 @@ export const exportToPDF = (
   data: any[],
   columns: ExportColumn[],
   title: string = 'Data Export',
-  filename: string = 'export.pdf'
+  filename: string = 'export.pdf',
+  template: PDFTemplate = defaultTemplate
 ) => {
   try {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: template.layout.orientation,
+      unit: 'mm',
+      format: template.layout.pageSize,
+    });
+
+    // Set font
+    doc.setFont(template.styling.fontFamily);
     
-    // Add title
-    doc.setFontSize(16);
-    doc.text(title, 14, 15);
-    
-    // Add timestamp
-    doc.setFontSize(10);
-    doc.text(`Exported on: ${new Date().toLocaleString('id-ID')}`, 14, 25);
-    
+    let currentY = template.layout.margins.top;
+
+    // Add header section
+    if (template.header) {
+      // Main title
+      doc.setFontSize(template.styling.fontSize.title);
+      doc.setTextColor(...template.styling.primaryColor);
+      const titleWidth = doc.getTextWidth(template.header.title);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.text(template.header.title, (pageWidth - titleWidth) / 2, currentY);
+      currentY += 8;
+
+      // Subtitle
+      if (template.header.subtitle) {
+        doc.setFontSize(template.styling.fontSize.subtitle);
+        doc.setTextColor(0, 0, 0);
+        const subtitleWidth = doc.getTextWidth(template.header.subtitle);
+        doc.text(template.header.subtitle, (pageWidth - subtitleWidth) / 2, currentY);
+        currentY += 6;
+      }
+
+      // Address
+      if (template.header.address) {
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(100, 100, 100);
+        const addressWidth = doc.getTextWidth(template.header.address);
+        doc.text(template.header.address, (pageWidth - addressWidth) / 2, currentY);
+        currentY += 6;
+      }
+
+      // Date
+      if (template.header.showDate) {
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(0, 0, 0);
+        const dateText = `Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
+        doc.text(dateText, template.layout.margins.left, currentY);
+        currentY += 6;
+      }
+
+      // Add separator line
+      doc.setDrawColor(...template.styling.primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
+      currentY += 8;
+    }
+
+    // Add watermark if specified
+    if (template.watermark) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setTextColor(200, 200, 200);
+      doc.setFontSize(50);
+      doc.text(template.watermark.text, pageWidth / 2, doc.internal.pageSize.getHeight() / 2, {
+        align: 'center',
+        angle: 45,
+        renderingMode: 'stroke'
+      });
+      doc.setTextColor(0, 0, 0); // Reset text color
+    }
+
     // Prepare table data
     const tableHeaders = columns.map(col => col.label);
     const tableData = data.map(item => 
@@ -32,27 +92,61 @@ export const exportToPDF = (
         return value !== null && value !== undefined ? String(value) : '-';
       })
     );
-    
+
     // Generate table
     autoTable(doc, {
       head: [tableHeaders],
       body: tableData,
-      startY: 35,
+      startY: currentY,
       styles: { 
-        fontSize: 8,
+        fontSize: template.styling.fontSize.body,
         cellPadding: 2,
+        font: template.styling.fontFamily,
       },
       headStyles: {
-        fillColor: [59, 130, 246], // Blue
+        fillColor: template.styling.primaryColor,
         textColor: 255,
         fontStyle: 'bold'
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252] // Light gray
+        fillColor: template.styling.secondaryColor
       },
-      margin: { top: 35, right: 14, bottom: 20, left: 14 },
+      margin: template.layout.margins,
+      didDrawPage: (data) => {
+        // Add footer
+        if (template.footer) {
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const pageWidth = doc.internal.pageSize.getWidth();
+          
+          // Footer text
+          if (template.footer.text) {
+            doc.setFontSize(template.styling.fontSize.header);
+            doc.setTextColor(100, 100, 100);
+            doc.text(template.footer.text, template.layout.margins.left, pageHeight - 25);
+          }
+
+          // Page numbers
+          if (template.footer.showPageNumbers) {
+            doc.setFontSize(template.styling.fontSize.header);
+            doc.setTextColor(0, 0, 0);
+            const pageText = `Halaman ${data.pageNumber}`;
+            const pageTextWidth = doc.getTextWidth(pageText);
+            doc.text(pageText, pageWidth - template.layout.margins.right - pageTextWidth, pageHeight - 25);
+          }
+
+          // Signature section
+          if (template.footer.signatureSection) {
+            doc.setFontSize(template.styling.fontSize.header);
+            doc.setTextColor(0, 0, 0);
+            const signatureY = pageHeight - 40;
+            doc.text('Mengetahui,', pageWidth - 60, signatureY);
+            doc.text('Kepala Sekolah', pageWidth - 60, signatureY + 5);
+            doc.text('(_________________)', pageWidth - 60, signatureY + 20);
+          }
+        }
+      },
     });
-    
+
     // Save the PDF
     doc.save(filename);
     
