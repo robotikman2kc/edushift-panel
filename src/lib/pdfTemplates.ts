@@ -42,6 +42,7 @@ export interface PDFTemplate {
     name: string;
     nip: string;
     subject: string;
+    jabatan: string;
   };
 }
 

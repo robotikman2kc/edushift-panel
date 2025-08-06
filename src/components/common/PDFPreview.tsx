@@ -15,6 +15,7 @@ interface PDFPreviewProps {
       name: string;
       nip: string;
       subject: string;
+      jabatan: string;
     };
     format: {
       showLogo: boolean;
@@ -164,8 +165,11 @@ export const PDFPreview: React.FC<PDFPreviewProps> = ({ settings, title, sampleD
               {format.showSignature && (
                 <div className="mt-2 text-right">
                   <div className="text-xs">Mengetahui,</div>
-                  <div className="text-xs">Kepala Sekolah</div>
-                  <div className="mt-4 text-xs">(_________________)</div>
+                  <div className="text-xs">{defaultTeacher?.jabatan || 'Kepala Sekolah'}</div>
+                  <div className="mt-4 text-xs">({defaultTeacher?.name || '_________________'})</div>
+                  {defaultTeacher?.nip && (
+                    <div className="text-xs">NIP: {defaultTeacher.nip}</div>
+                  )}
                 </div>
               )}
             </div>

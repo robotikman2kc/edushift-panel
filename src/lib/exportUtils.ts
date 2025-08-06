@@ -217,10 +217,20 @@ export const exportToPDF = (
           if (template.footer.signatureSection) {
             doc.setFontSize(template.styling.fontSize.header);
             doc.setTextColor(0, 0, 0);
-            const signatureY = pageHeight - 40;
-            doc.text('Mengetahui,', pageWidth - 60, signatureY);
-            doc.text('Kepala Sekolah', pageWidth - 60, signatureY + 5);
-            doc.text('(_________________)', pageWidth - 60, signatureY + 20);
+            const signatureY = pageHeight - 50;
+            
+            // Use teacher info if available, otherwise use default
+            const signerName = template.teacherInfo?.name || 'Kepala Sekolah';
+            const signerPosition = template.teacherInfo?.jabatan || 'Kepala Sekolah';
+            const signerNIP = template.teacherInfo?.nip;
+            
+            doc.text('Mengetahui,', pageWidth - 70, signatureY);
+            doc.text(signerPosition, pageWidth - 70, signatureY + 5);
+            doc.text('', pageWidth - 70, signatureY + 20); // Space for signature
+            doc.text(`(${signerName})`, pageWidth - 70, signatureY + 25);
+            if (signerNIP) {
+              doc.text(`NIP: ${signerNIP}`, pageWidth - 70, signatureY + 30);
+            }
           }
         }
       },

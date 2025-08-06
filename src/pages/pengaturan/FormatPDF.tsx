@@ -24,6 +24,7 @@ interface PDFFormatSettings {
     name: string;
     nip: string;
     subject: string;
+    jabatan: string;
   };
   attendanceFormat: {
     showLogo: boolean;
@@ -61,6 +62,7 @@ const FormatPDF: React.FC = () => {
       name: '',
       nip: '',
       subject: '',
+      jabatan: '',
     },
     attendanceFormat: {
       showLogo: true,
@@ -349,17 +351,18 @@ const FormatPDF: React.FC = () => {
         <TabsContent value="teacher">
           <Card>
             <CardHeader>
-              <CardTitle>Data Guru Default</CardTitle>
+              <CardTitle>Data Guru & Penandatangan</CardTitle>
               <CardDescription>
-                Atur data guru default yang akan ditampilkan di laporan
+                Atur data guru dan penandatangan yang akan ditampilkan di laporan
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-name">Nama Guru</Label>
+                  <Label htmlFor="teacher-name">Nama Guru/Penandatangan</Label>
                   <Input
                     id="teacher-name"
+                    placeholder="Masukkan nama lengkap"
                     value={settings.defaultTeacher.name}
                     onChange={(e) =>
                       setSettings(prev => ({
@@ -374,6 +377,7 @@ const FormatPDF: React.FC = () => {
                   <Label htmlFor="teacher-nip">NIP</Label>
                   <Input
                     id="teacher-nip"
+                    placeholder="Masukkan NIP"
                     value={settings.defaultTeacher.nip}
                     onChange={(e) =>
                       setSettings(prev => ({
@@ -384,15 +388,31 @@ const FormatPDF: React.FC = () => {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="teacher-subject">Mata Pelajaran</Label>
                   <Input
                     id="teacher-subject"
+                    placeholder="Masukkan mata pelajaran"
                     value={settings.defaultTeacher.subject}
                     onChange={(e) =>
                       setSettings(prev => ({
                         ...prev,
                         defaultTeacher: { ...prev.defaultTeacher, subject: e.target.value },
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-position">Jabatan</Label>
+                  <Input
+                    id="teacher-position"
+                    placeholder="Misal: Kepala Sekolah, Wali Kelas, dll"
+                    value={settings.defaultTeacher.jabatan}
+                    onChange={(e) =>
+                      setSettings(prev => ({
+                        ...prev,
+                        defaultTeacher: { ...prev.defaultTeacher, jabatan: e.target.value },
                       }))
                     }
                   />
