@@ -79,8 +79,7 @@ export const PDFPreview: React.FC<PDFPreviewProps> = ({ settings, title, sampleD
           >
             {/* Header Section */}
             <div 
-              className="p-2 text-white text-center"
-              style={{ backgroundColor: format.headerColor }}
+              className="p-2 bg-white border-b border-gray-200 text-center text-black"
             >
               <div className="flex items-center justify-between">
                 {format.showLogo && schoolInfo.logo && (
@@ -91,22 +90,22 @@ export const PDFPreview: React.FC<PDFPreviewProps> = ({ settings, title, sampleD
                   />
                 )}
                 <div className="flex-1">
-                  <div className="font-bold text-xs">{schoolInfo.name}</div>
-                  <div className="text-xs opacity-90">{title.toUpperCase()}</div>
+                  <div className="font-bold text-sm">{schoolInfo.name}</div>
+                  <div className="text-xs text-gray-600">{title.toUpperCase()}</div>
                 </div>
                 {format.showLogo && !schoolInfo.logo && (
-                  <div className="h-6 w-6 bg-white/20 rounded flex items-center justify-center">
-                    <span className="text-xs">LOGO</span>
+                  <div className="h-6 w-6 bg-gray-200 rounded flex items-center justify-center">
+                    <span className="text-xs text-gray-600">LOGO</span>
                   </div>
                 )}
               </div>
               
               {schoolInfo.address && (
-                <div className="text-xs opacity-80 mt-1">{schoolInfo.address}</div>
+                <div className="text-xs text-gray-600 mt-1">{schoolInfo.address}</div>
               )}
               
               {format.showDate && (
-                <div className="text-xs opacity-80 mt-1">
+                <div className="text-xs text-gray-600 mt-1">
                   Tanggal: {new Date().toLocaleDateString('id-ID')}
                 </div>
               )}
