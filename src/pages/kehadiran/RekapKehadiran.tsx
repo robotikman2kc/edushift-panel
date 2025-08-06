@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, Users, BookOpen, BarChart3 } from "lucide-react";
+import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 
 interface Kelas {
   id: string;
@@ -270,8 +271,6 @@ const RekapKehadiran = () => {
 
   const handleExportPDF = () => {
     try {
-      const { exportToPDF } = require('@/lib/exportUtils');
-      
       // Prepare export data with attendance details
       const exportData = reportData.map(student => {
         const baseData = {
@@ -326,8 +325,6 @@ const RekapKehadiran = () => {
 
   const handleExportExcel = () => {
     try {
-      const { exportToExcel } = require('@/lib/exportUtils');
-      
       // Prepare export data with attendance details
       const exportData = reportData.map(student => {
         const baseData = {

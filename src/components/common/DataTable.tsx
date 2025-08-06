@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 
 interface Column {
   key: string;
@@ -172,7 +173,6 @@ export function DataTable({
 
   const handleExportPDF = () => {
     try {
-      const { exportToPDF } = require('@/lib/exportUtils');
       const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
       const success = exportToPDF(
         sortedData,
@@ -200,7 +200,6 @@ export function DataTable({
 
   const handleExportExcel = () => {
     try {
-      const { exportToExcel } = require('@/lib/exportUtils');
       const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
       const success = exportToExcel(
         sortedData,
