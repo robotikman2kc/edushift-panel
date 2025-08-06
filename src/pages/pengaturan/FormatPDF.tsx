@@ -86,8 +86,15 @@ const FormatPDF: React.FC = () => {
   });
 
   const handleSave = () => {
-    // Save settings to localStorage or backend
+    console.log('Saving PDF format settings:', settings); // Debug log
+    
+    // Save settings to localStorage
     localStorage.setItem('pdfFormatSettings', JSON.stringify(settings));
+    
+    // Also log what was saved
+    const saved = localStorage.getItem('pdfFormatSettings');
+    console.log('Settings saved to localStorage:', saved); // Debug log
+    
     toast({
       title: "Pengaturan disimpan",
       description: "Format PDF telah berhasil disimpan.",

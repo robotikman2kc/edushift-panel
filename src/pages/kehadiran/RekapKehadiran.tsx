@@ -273,6 +273,8 @@ const RekapKehadiran = () => {
 
   const handleExportPDF = () => {
     try {
+      console.log('Starting PDF export for attendance report'); // Debug log
+      
       // Prepare export data with attendance details
       const exportData = reportData.map(student => {
         const baseData = {
@@ -308,6 +310,7 @@ const RekapKehadiran = () => {
       
       // Use custom template from settings
       const customTemplate = getCustomPDFTemplate('attendance');
+      console.log('Using custom template for attendance:', customTemplate); // Debug log
       
       const success = exportToPDF(exportData, exportColumns, title, `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`, customTemplate);
       

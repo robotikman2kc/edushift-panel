@@ -11,43 +11,54 @@ export interface ExportColumn {
 export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'journal'): PDFTemplate => {
   try {
     const savedSettings = localStorage.getItem('pdfFormatSettings');
-    if (!savedSettings) return defaultTemplate;
+    console.log('Saved PDF settings:', savedSettings); // Debug log
+    
+    if (!savedSettings) {
+      console.log('No saved settings found, using default template');
+      return defaultTemplate;
+    }
     
     const settings = JSON.parse(savedSettings);
-    const baseTemplate = defaultTemplate;
+    console.log('Parsed settings:', settings); // Debug log
     
     // Get format based on type
     const formatKey = templateType === 'attendance' ? 'attendanceFormat' 
                     : templateType === 'grade' ? 'gradeFormat' 
                     : 'journalFormat';
     const format = settings[formatKey];
+    console.log(`Using ${formatKey}:`, format); // Debug log
     
-    return {
-      ...baseTemplate,
+    const customTemplate = {
+      ...defaultTemplate,
+      id: `custom-${templateType}`,
+      name: `Custom ${templateType} Template`,
       header: {
-        title: settings.schoolInfo?.name || baseTemplate.header?.title,
+        title: settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
         subtitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
                 : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
                 : 'JURNAL GURU',
-        address: settings.schoolInfo?.address,
+        address: settings.schoolInfo?.address || '',
         showDate: format?.showDate ?? true,
         logo: settings.schoolInfo?.logo,
       },
       footer: {
-        text: `${settings.schoolInfo?.name || 'Sistem Informasi Sekolah'} - ${settings.schoolInfo?.email || ''}`,
+        text: settings.schoolInfo?.email ? `${settings.schoolInfo.name} - ${settings.schoolInfo.email}` : settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
         showPageNumbers: true,
         signatureSection: format?.showSignature ?? true,
       },
       styling: {
-        ...baseTemplate.styling,
-        primaryColor: format?.headerColor ? hexToRgb(format.headerColor) : baseTemplate.styling.primaryColor,
+        ...defaultTemplate.styling,
+        primaryColor: format?.headerColor ? hexToRgb(format.headerColor) : defaultTemplate.styling.primaryColor,
       },
       layout: {
-        ...baseTemplate.layout,
+        ...defaultTemplate.layout,
         orientation: format?.orientation || 'portrait',
       },
-      teacherInfo: settings.defaultTeacher,
+      teacherInfo: settings.defaultTeacher && settings.defaultTeacher.name ? settings.defaultTeacher : undefined,
     };
+    
+    console.log('Generated custom template:', customTemplate); // Debug log
+    return customTemplate;
   } catch (error) {
     console.error('Error loading PDF settings:', error);
     return defaultTemplate;
@@ -69,6 +80,8 @@ export const exportToPDF = (
   template: PDFTemplate = defaultTemplate
 ) => {
   try {
+    console.log('Exporting PDF with template:', template); // Debug log
+    
     const doc = new jsPDF({
       orientation: template.layout.orientation,
       unit: 'mm',
@@ -79,14 +92,16 @@ export const exportToPDF = (
     doc.setFont(template.styling.fontFamily);
     
     let currentY = template.layout.margins.top;
+    const pageWidth = doc.internal.pageSize.getWidth();
 
     // Add header section
     if (template.header) {
+      console.log('Adding header:', template.header); // Debug log
+      
       // Main title
       doc.setFontSize(template.styling.fontSize.title);
-      doc.setTextColor(...template.styling.primaryColor);
+      doc.setTextColor(0, 0, 0); // Always black for header
       const titleWidth = doc.getTextWidth(template.header.title);
-      const pageWidth = doc.internal.pageSize.getWidth();
       doc.text(template.header.title, (pageWidth - titleWidth) / 2, currentY);
       currentY += 8;
 
