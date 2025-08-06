@@ -34,6 +34,7 @@ import JurnalGuru from "./pages/jurnal/JurnalGuru";
 
 // Akun Pages
 import Profil from "./pages/akun/Profil";
+import FormatPDF from "./pages/pengaturan/FormatPDF";
 
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -70,6 +71,7 @@ const App = () => (
                       path="/pengaturan/bobot-penilaian" 
                       element={<PlaceholderPage title="Bobot Penilaian" description="Kelola bobot penilaian" />} 
                     />
+                    <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
 
                     {/* Penilaian Routes */}
                     <Route path="/penilaian/input-nilai" element={<InputNilai />} />

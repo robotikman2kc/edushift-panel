@@ -51,6 +51,7 @@ const menuItems = [
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
       { title: "Kategori Penilaian", url: "/pengaturan/kategori-penilaian", icon: Target },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
+      { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
     ],
   },
   {
