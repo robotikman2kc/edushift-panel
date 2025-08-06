@@ -38,6 +38,11 @@ export interface PDFTemplate {
     text: string;
     opacity: number;
   };
+  teacherInfo?: {
+    name: string;
+    nip: string;
+    subject: string;
+  };
 }
 
 export const defaultTemplate: PDFTemplate = {

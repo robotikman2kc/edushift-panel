@@ -423,7 +423,9 @@ const JurnalGuru = () => {
           <DataTable
             data={filteredJurnal.map((item, index) => ({
               ...item,
-              no: index + 1
+              no: index + 1,
+              tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
+              jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
             }))}
             columns={[
               { key: "no", label: "No.", sortable: false },
@@ -433,6 +435,7 @@ const JurnalGuru = () => {
             onEdit={(id) => handleEdit(id)}
             onDelete={handleDelete}
             searchPlaceholder="Cari jurnal..."
+            title="Jurnal Guru"
           />
         </CardContent>
       </Card>

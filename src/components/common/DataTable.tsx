@@ -49,7 +49,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
+import { exportToPDF, exportToExcel, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
 import { defaultTemplate, PDFTemplate } from "@/lib/pdfTemplates";
 
@@ -176,11 +176,19 @@ export function DataTable({
   const handleExportPDF = () => {
     try {
       const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
+      
+      // Use custom template for jurnal data
+      let template = defaultTemplate;
+      if (title?.toLowerCase().includes('jurnal')) {
+        template = getCustomPDFTemplate('journal');
+      }
+      
       const success = exportToPDF(
         sortedData,
         exportColumns,
         title || 'Data Export',
-        `${title || 'data'}_${new Date().toISOString().split('T')[0]}.pdf`
+        `${title || 'data'}_${new Date().toISOString().split('T')[0]}.pdf`,
+        template
       );
       
       if (success) {

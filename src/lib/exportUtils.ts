@@ -8,6 +8,59 @@ export interface ExportColumn {
   label: string;
 }
 
+export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'journal'): PDFTemplate => {
+  try {
+    const savedSettings = localStorage.getItem('pdfFormatSettings');
+    if (!savedSettings) return defaultTemplate;
+    
+    const settings = JSON.parse(savedSettings);
+    const baseTemplate = defaultTemplate;
+    
+    // Get format based on type
+    const formatKey = templateType === 'attendance' ? 'attendanceFormat' 
+                    : templateType === 'grade' ? 'gradeFormat' 
+                    : 'journalFormat';
+    const format = settings[formatKey];
+    
+    return {
+      ...baseTemplate,
+      header: {
+        title: settings.schoolInfo?.name || baseTemplate.header?.title,
+        subtitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
+                : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
+                : 'JURNAL GURU',
+        address: settings.schoolInfo?.address,
+        showDate: format?.showDate ?? true,
+        logo: settings.schoolInfo?.logo,
+      },
+      footer: {
+        text: `${settings.schoolInfo?.name || 'Sistem Informasi Sekolah'} - ${settings.schoolInfo?.email || ''}`,
+        showPageNumbers: true,
+        signatureSection: format?.showSignature ?? true,
+      },
+      styling: {
+        ...baseTemplate.styling,
+        primaryColor: format?.headerColor ? hexToRgb(format.headerColor) : baseTemplate.styling.primaryColor,
+      },
+      layout: {
+        ...baseTemplate.layout,
+        orientation: format?.orientation || 'portrait',
+      },
+      teacherInfo: settings.defaultTeacher,
+    };
+  } catch (error) {
+    console.error('Error loading PDF settings:', error);
+    return defaultTemplate;
+  }
+};
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result 
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [59, 130, 246]; // default blue
+};
+
 export const exportToPDF = (
   data: any[],
   columns: ExportColumn[],
@@ -62,6 +115,17 @@ export const exportToPDF = (
         const dateText = `Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
         doc.text(dateText, template.layout.margins.left, currentY);
         currentY += 6;
+      }
+
+      // Add teacher info if available (for grade and journal reports)
+      if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(0, 0, 0);
+        const teacherY = currentY;
+        doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
+        doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 4);
+        doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
+        currentY += 16;
       }
 
       // Add separator line

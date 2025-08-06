@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, Users, BookOpen, BarChart3 } from "lucide-react";
-import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
+import { exportToPDF, exportToExcel, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
 import { attendanceTemplate, PDFTemplate } from "@/lib/pdfTemplates";
 
@@ -306,7 +306,10 @@ const RekapKehadiran = () => {
       
       const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${selectedMonthLabel} ${selectedYear}`;
       
-      const success = exportToPDF(exportData, exportColumns, title, `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`);
+      // Use custom template from settings
+      const customTemplate = getCustomPDFTemplate('attendance');
+      
+      const success = exportToPDF(exportData, exportColumns, title, `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`, customTemplate);
       
       if (success) {
         toast({
