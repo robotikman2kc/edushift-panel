@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Save, FileText, Calendar, BookOpen } from 'lucide-react';
+import { PDFPreview } from '@/components/common/PDFPreview';
 
 interface PDFFormatSettings {
   schoolInfo: {
@@ -213,6 +214,15 @@ const FormatPDF: React.FC = () => {
           </div>
         </div>
       </CardContent>
+      
+      <PDFPreview 
+        settings={{
+          schoolInfo: settings.schoolInfo,
+          defaultTeacher: settings.defaultTeacher,
+          format: format,
+        }}
+        title={title}
+      />
     </Card>
   );
 
