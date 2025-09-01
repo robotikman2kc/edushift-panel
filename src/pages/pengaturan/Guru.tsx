@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { useToast } from "@/hooks/use-toast";
 
 interface Guru {
@@ -36,25 +36,13 @@ const Guru = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: guru, error } = await supabase
-        .from("guru")
-        .select("*")
-        .order("nama_guru", { ascending: true });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Gagal mengambil data guru",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      const guru = localDB.select('guru');
+      
       // Add row numbers to data
-      const dataWithNumbers = guru?.map((item, index) => ({
+      const dataWithNumbers = guru.map((item, index) => ({
         ...item,
         no: (index + 1).toString(),
-      })) || [];
+      }));
 
       setData(dataWithNumbers);
     } catch (error) {
@@ -70,20 +58,18 @@ const Guru = () => {
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
-      const { error } = await supabase.from("guru").insert([
-        {
-          nama_guru: formData.nama_guru,
-          nip: formData.nip,
-          mata_pelajaran: formData.mata_pelajaran,
-          email: formData.email,
-          telepon: formData.telepon,
-        },
-      ]);
+      const result = localDB.insert('guru', {
+        nama_guru: formData.nama_guru,
+        nip: formData.nip,
+        mata_pelajaran: formData.mata_pelajaran,
+        email: formData.email,
+        telepon: formData.telepon,
+      });
 
-      if (error) {
+      if (result.error) {
         toast({
           title: "Error",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
         return;
@@ -106,21 +92,18 @@ const Guru = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const { error } = await supabase
-        .from("guru")
-        .update({
-          nama_guru: formData.nama_guru,
-          nip: formData.nip,
-          mata_pelajaran: formData.mata_pelajaran,
-          email: formData.email,
-          telepon: formData.telepon,
-        })
-        .eq("id", id);
+      const result = localDB.update('guru', id, {
+        nama_guru: formData.nama_guru,
+        nip: formData.nip,
+        mata_pelajaran: formData.mata_pelajaran,
+        email: formData.email,
+        telepon: formData.telepon,
+      });
 
-      if (error) {
+      if (result.error) {
         toast({
           title: "Error",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
         return;
@@ -143,12 +126,12 @@ const Guru = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase.from("guru").delete().eq("id", id);
+      const result = localDB.delete('guru', id);
 
-      if (error) {
+      if (result.error) {
         toast({
           title: "Error",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
         return;

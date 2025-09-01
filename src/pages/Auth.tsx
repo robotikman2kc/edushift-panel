@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { localAuth } from "@/lib/localAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,51 +16,41 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
-      }
-    };
-    checkUser();
+    const currentSession = localAuth.getSession();
+    if (currentSession.user) {
+      navigate("/");
+    }
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
+
     setLoading(true);
-
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
-
-      if (error) {
-        if (error.message.includes("already registered")) {
-          toast({
-            title: "Email sudah terdaftar",
-            description: "Silakan gunakan email lain atau masuk dengan akun yang sudah ada.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      } else {
+      // Check if user already exists
+      const existingUsers = localAuth.getAllUsers();
+      if (existingUsers.find(u => u.email === email)) {
         toast({
-          title: "Berhasil mendaftar",
-          description: "Silakan periksa email Anda untuk verifikasi akun.",
+          title: "Email sudah terdaftar",
+          description: "Silakan gunakan email lain atau masuk dengan akun yang sudah ada.",
+          variant: "destructive",
         });
+        return;
       }
+
+      // For demo purposes, create user with email as name
+      const userName = email.split('@')[0];
+      localAuth.registerUser(email, userName, 'guru');
+      
+      toast({
+        title: "Berhasil mendaftar",
+        description: "Akun berhasil dibuat! Silakan masuk dengan akun baru.",
+      });
+      
+      // Clear form
+      setEmail("");
+      setPassword("");
     } catch (error) {
       toast({
         title: "Error",
@@ -74,18 +64,16 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
+
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
+      const result = localAuth.signIn(email, password);
+      
+      if (result.error) {
         toast({
           title: "Error",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
       } else {
@@ -94,6 +82,7 @@ const Auth = () => {
           description: "Selamat datang!",
         });
         navigate("/");
+        window.location.reload(); // Refresh to update auth state
       }
     } catch (error) {
       toast({

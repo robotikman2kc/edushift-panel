@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { supabase } from "@/integrations/supabase/client";
+import { localAuth } from "@/lib/localAuth";
 import { toast } from "@/hooks/use-toast";
 
 interface User {
@@ -33,26 +33,20 @@ const User = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
+      const authUsers = localAuth.getAllUsers();
+      
       // Format the data to match the expected structure
-      const formattedData = data?.map(user => ({
+      const formattedData = authUsers.map(user => ({
         ...user,
-        created_at: new Date(user.created_at).toLocaleDateString('id-ID')
-      })) || [];
+        created_at: new Date().toLocaleDateString('id-ID'),
+        status: 'Aktif'
+      }));
 
       setUsers(formattedData);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal memuat data user: " + error.message,
+        description: "Gagal memuat data user: " + error,
         variant: "destructive",
       });
     } finally {
@@ -66,41 +60,30 @@ const User = () => {
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
-      // First create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: 'TempPass123!', // Temporary password
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-        }
+      // Check if user already exists
+      const existingUsers = localAuth.getAllUsers();
+      if (existingUsers.find(u => u.email === formData.email)) {
+        toast({
+          title: "Error",
+          description: "Email sudah terdaftar",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create new user
+      localAuth.registerUser(formData.email, formData.nama, 'guru');
+
+      toast({
+        title: "Berhasil",
+        description: "User baru berhasil ditambahkan",
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Then create user record
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            user_id: authData.user.id,
-            nama: formData.nama,
-            email: formData.email,
-            role: 'guru', // Default role
-          });
-
-        if (userError) throw userError;
-
-        toast({
-          title: "Berhasil",
-          description: "User baru berhasil ditambahkan",
-        });
-
-        fetchUsers();
-      }
+      fetchUsers();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal menambahkan user: " + error.message,
+        description: "Gagal menambahkan user: " + error,
         variant: "destructive",
       });
     }
@@ -108,16 +91,14 @@ const User = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          nama: formData.nama,
-          email: formData.email,
-          // role cannot be edited through this form
-        })
-        .eq('id', id);
+      const result = localAuth.updateUser(id, {
+        nama: formData.nama,
+        email: formData.email,
+      });
 
-      if (error) throw error;
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       toast({
         title: "Berhasil",
@@ -136,12 +117,11 @@ const User = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', id);
+      const result = localAuth.deleteUser(id);
 
-      if (error) throw error;
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       toast({
         title: "Berhasil",
@@ -152,7 +132,7 @@ const User = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal menghapus user: " + error.message,
+        description: "Gagal menghapus user: " + error,
         variant: "destructive",
       });
     }

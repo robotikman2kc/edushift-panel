@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { toast } from "@/hooks/use-toast";
 
 interface Siswa {
@@ -65,17 +65,12 @@ const Siswa = () => {
 
   const fetchKelas = async () => {
     try {
-      const { data, error } = await supabase
-        .from('kelas')
-        .select('id, nama_kelas, tingkat')
-        .order('tingkat, nama_kelas');
-
-      if (error) throw error;
-      setKelas(data || []);
+      const data = localDB.select('kelas');
+      setKelas(data);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal memuat data kelas: " + error.message,
+        description: "Gagal memuat data kelas: " + error,
         variant: "destructive",
       });
     }
@@ -84,33 +79,27 @@ const Siswa = () => {
   const fetchSiswa = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('siswa')
-        .select(`
-          *,
-          kelas:kelas_id (
-            nama_kelas
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = localDB.select('siswa');
+      const allKelas = localDB.select('kelas');
 
       // Format the data to match the expected structure
-      const formattedData = data?.map(item => ({
-        ...item,
-        jenis_kelamin: item.jenis_kelamin as 'Laki-laki' | 'Perempuan',
-        kelas_nama: item.kelas?.nama_kelas || 'Tidak ada kelas',
-        tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toLocaleDateString('id-ID') : '',
-        created_at: new Date(item.created_at).toLocaleDateString('id-ID')
-      })) || [];
+      const formattedData = data.map(item => {
+        const kelas = allKelas.find(k => k.id === item.kelas_id);
+        return {
+          ...item,
+          jenis_kelamin: item.jenis_kelamin as 'Laki-laki' | 'Perempuan',
+          kelas_nama: kelas?.nama_kelas || 'Tidak ada kelas',
+          tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toLocaleDateString('id-ID') : '',
+          created_at: new Date(item.created_at).toLocaleDateString('id-ID')
+        };
+      });
 
       setSiswa(formattedData);
       setFilteredSiswa(formattedData);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal memuat data siswa: " + error.message,
+        description: "Gagal memuat data siswa: " + error,
         variant: "destructive",
       });
     } finally {
@@ -171,22 +160,21 @@ const Siswa = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('siswa')
-        .insert({
-          nis: formData.nis,
-          nama_siswa: formData.nama_siswa,
-          kelas_id: selectedKelas,
-          jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
-          tanggal_lahir: formData.tanggal_lahir || null,
-          tempat_lahir: formData.tempat_lahir || null,
-          alamat: formData.alamat || null,
-          nama_orang_tua: formData.nama_orang_tua || null,
-          telepon_orang_tua: formData.telepon_orang_tua || null,
-          email: formData.email || null,
-        });
+      const result = localDB.insert('siswa', {
+        nis: formData.nis,
+        nama_siswa: formData.nama_siswa,
+        kelas_id: selectedKelas,
+        jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
+        tanggal_lahir: formData.tanggal_lahir || undefined,
+        tempat_lahir: formData.tempat_lahir || undefined,
+        alamat: formData.alamat || undefined,
+        nama_orang_tua: formData.nama_orang_tua || undefined,
+        telepon_orang_tua: formData.telepon_orang_tua || undefined,
+        email: formData.email || undefined,
+        status: 'Aktif'
+      });
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -205,22 +193,19 @@ const Siswa = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const { error } = await supabase
-        .from('siswa')
-        .update({
-          nis: formData.nis,
-          nama_siswa: formData.nama_siswa,
-          jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
-          tanggal_lahir: formData.tanggal_lahir || null,
-          tempat_lahir: formData.tempat_lahir || null,
-          alamat: formData.alamat || null,
-          nama_orang_tua: formData.nama_orang_tua || null,
-          telepon_orang_tua: formData.telepon_orang_tua || null,
-          email: formData.email || null,
-        })
-        .eq('id', id);
+      const result = localDB.update('siswa', id, {
+        nis: formData.nis,
+        nama_siswa: formData.nama_siswa,
+        jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
+        tanggal_lahir: formData.tanggal_lahir || undefined,
+        tempat_lahir: formData.tempat_lahir || undefined,
+        alamat: formData.alamat || undefined,
+        nama_orang_tua: formData.nama_orang_tua || undefined,
+        telepon_orang_tua: formData.telepon_orang_tua || undefined,
+        email: formData.email || undefined,
+      });
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -239,12 +224,9 @@ const Siswa = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('siswa')
-        .delete()
-        .eq('id', id);
+      const result = localDB.delete('siswa', id);
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",

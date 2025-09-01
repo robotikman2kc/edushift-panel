@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { toast } from "@/hooks/use-toast";
 
 interface Kelas {
@@ -58,17 +58,13 @@ const Kelas = () => {
 
   const fetchGuru = async () => {
     try {
-      const { data, error } = await supabase
-        .from('guru')
-        .select('id, nama_guru')
-        .order('nama_guru');
-
-      if (error) throw error;
-      setGuru(data || []);
+      const data = localDB.select('guru');
+      const guruData = data.map(g => ({ id: g.id, nama_guru: g.nama_guru }));
+      setGuru(guruData);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal memuat data guru: " + error.message,
+        description: "Gagal memuat data guru: " + error,
         variant: "destructive",
       });
     }
@@ -77,30 +73,24 @@ const Kelas = () => {
   const fetchKelas = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('kelas')
-        .select(`
-          *,
-          wali_kelas:wali_kelas_id (
-            nama_guru
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = localDB.select('kelas');
+      const allGuru = localDB.select('guru');
 
       // Format the data to match the expected structure
-      const formattedData = data?.map(item => ({
-        ...item,
-        wali_kelas_nama: item.wali_kelas?.nama_guru || 'Belum ditentukan',
-        created_at: new Date(item.created_at).toLocaleDateString('id-ID')
-      })) || [];
+      const formattedData = data.map(item => {
+        const waliKelas = allGuru.find(g => g.id === item.wali_kelas_id);
+        return {
+          ...item,
+          wali_kelas_nama: waliKelas?.nama_guru || 'Belum ditentukan',
+          created_at: new Date(item.created_at).toLocaleDateString('id-ID')
+        };
+      });
 
       setKelas(formattedData);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal memuat data kelas: " + error.message,
+        description: "Gagal memuat data kelas: " + error,
         variant: "destructive",
       });
     } finally {
@@ -115,18 +105,17 @@ const Kelas = () => {
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
-      const { error } = await supabase
-        .from('kelas')
-        .insert({
-          nama_kelas: formData.nama_kelas,
-          tingkat: formData.tingkat,
-          jurusan: formData.jurusan || null,
-          wali_kelas_id: formData.wali_kelas_id || null,
-          tahun_ajaran: formData.tahun_ajaran,
-          kapasitas: parseInt(formData.kapasitas),
-        });
+      const result = localDB.insert('kelas', {
+        nama_kelas: formData.nama_kelas,
+        tingkat: formData.tingkat,
+        jurusan: formData.jurusan || undefined,
+        wali_kelas_id: formData.wali_kelas_id || undefined,
+        tahun_ajaran: formData.tahun_ajaran,
+        kapasitas: parseInt(formData.kapasitas),
+        status: 'Aktif'
+      });
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -145,19 +134,16 @@ const Kelas = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const { error } = await supabase
-        .from('kelas')
-        .update({
-          nama_kelas: formData.nama_kelas,
-          tingkat: formData.tingkat,
-          jurusan: formData.jurusan || null,
-          wali_kelas_id: formData.wali_kelas_id || null,
-          tahun_ajaran: formData.tahun_ajaran,
-          kapasitas: parseInt(formData.kapasitas),
-        })
-        .eq('id', id);
+      const result = localDB.update('kelas', id, {
+        nama_kelas: formData.nama_kelas,
+        tingkat: formData.tingkat,
+        jurusan: formData.jurusan || undefined,
+        wali_kelas_id: formData.wali_kelas_id || undefined,
+        tahun_ajaran: formData.tahun_ajaran,
+        kapasitas: parseInt(formData.kapasitas),
+      });
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -176,12 +162,9 @@ const Kelas = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('kelas')
-        .delete()
-        .eq('id', id);
+      const result = localDB.delete('kelas', id);
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
