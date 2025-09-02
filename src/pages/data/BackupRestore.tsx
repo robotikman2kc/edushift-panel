@@ -13,6 +13,7 @@ interface DataStats {
   kelas: number;
   mata_pelajaran: number;
   siswa: number;
+  guru: number;
   kehadiran: number;
   jenis_kegiatan: number;
   jurnal: number;
@@ -25,6 +26,7 @@ const BackupRestore = () => {
     kelas: 0,
     mata_pelajaran: 0,
     siswa: 0,
+    guru: 0,
     kehadiran: 0,
     jenis_kegiatan: 0,
     jurnal: 0
@@ -39,6 +41,7 @@ const BackupRestore = () => {
         kelas: localDB.select('kelas').length,
         mata_pelajaran: localDB.select('mata_pelajaran').length,
         siswa: localDB.select('siswa').length,
+        guru: localDB.select('guru').length,
         kehadiran: localDB.select('kehadiran').length,
         jenis_kegiatan: localDB.select('jenis_kegiatan').length,
         jurnal: localDB.select('jurnal').length
@@ -55,7 +58,7 @@ const BackupRestore = () => {
   }, []);
 
   // Export individual table
-  const exportTable = async (tableName: 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
+  const exportTable = async (tableName: 'kelas' | 'mata_pelajaran' | 'siswa' | 'guru' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
     try {
       const data = localDB.select(tableName);
 
@@ -92,18 +95,30 @@ const BackupRestore = () => {
       // Fetch data from all tables except users
       const backupData: any = {};
       
-      const tables: ('kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
-        ['kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
+      const tables: ('kelas' | 'mata_pelajaran' | 'siswa' | 'guru' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
+        ['kelas', 'mata_pelajaran', 'siswa', 'guru', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
       
       for (const table of tables) {
         const data = localDB.select(table);
         backupData[table] = data;
       }
 
+      // Add settings (PDF format settings)
+      backupData.settings = {
+        pdfFormatSettings: (() => {
+          try {
+            const settings = localStorage.getItem('pdfFormatSettings');
+            return settings ? JSON.parse(settings) : null;
+          } catch {
+            return null;
+          }
+        })()
+      };
+
       // Add timestamp to backup
       backupData.backup_info = {
         created_at: new Date().toISOString(),
-        version: "2.0",
+        version: "2.1",
         tables: tables
       };
 
@@ -152,8 +167,8 @@ const BackupRestore = () => {
       }
 
       // Clear existing data and restore each table
-      const tables: ('kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
-        ['kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
+      const tables: ('kelas' | 'mata_pelajaran' | 'siswa' | 'guru' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal')[] = 
+        ['kelas', 'mata_pelajaran', 'siswa', 'guru', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
       
       for (const table of tables) {
         if (backupData[table]) {
@@ -172,6 +187,15 @@ const BackupRestore = () => {
               }
             }
           }
+        }
+      }
+
+      // Restore PDF format settings if available
+      if (backupData.settings?.pdfFormatSettings) {
+        try {
+          localStorage.setItem('pdfFormatSettings', JSON.stringify(backupData.settings.pdfFormatSettings));
+        } catch (error) {
+          console.warn('Warning: Could not restore PDF format settings:', error);
         }
       }
 
@@ -231,9 +255,11 @@ const BackupRestore = () => {
                     <li>Data Kelas ({stats.kelas} record)</li>
                     <li>Data Mata Pelajaran ({stats.mata_pelajaran} record)</li>
                     <li>Data Siswa ({stats.siswa} record)</li>
+                    <li>Data Guru ({stats.guru} record)</li>
                     <li>Data Kehadiran ({stats.kehadiran} record)</li>
                     <li>Data Jenis Kegiatan ({stats.jenis_kegiatan} record)</li>
                     <li>Data Jurnal ({stats.jurnal} record)</li>
+                    <li>Pengaturan Format PDF</li>
                   </ul>
                 </div>
                 <Button 
@@ -296,7 +322,7 @@ const BackupRestore = () => {
           <div className="bg-muted p-4 rounded-lg">
             <h3 className="font-semibold mb-2">Catatan Penting:</h3>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Backup tidak menyertakan data pengguna (login) dan data guru untuk keamanan</li>
+              <li>• Backup tidak menyertakan data pengguna (login) untuk keamanan</li>
               <li>• File backup disimpan dalam format JSON</li>
               <li>• Lakukan backup secara berkala untuk menjaga keamanan data</li>
               <li>• Pastikan file backup disimpan di tempat yang aman</li>
