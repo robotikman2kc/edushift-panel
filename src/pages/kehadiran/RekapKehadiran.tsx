@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -117,15 +117,16 @@ const RekapKehadiran = () => {
 
   const fetchKelas = async () => {
     try {
-      const { data, error } = await supabase
-        .from("kelas")
-        .select("*")
-        .eq("status", "Aktif")
-        .order("tingkat", { ascending: true })
-        .order("nama_kelas", { ascending: true });
+      const data = localDB.select("kelas")
+        .filter(kelas => kelas.status === "Aktif")
+        .sort((a, b) => {
+          if (a.tingkat !== b.tingkat) {
+            return a.tingkat.localeCompare(b.tingkat);
+          }
+          return a.nama_kelas.localeCompare(b.nama_kelas);
+        });
 
-      if (error) throw error;
-      setAllKelas(data || []);
+      setAllKelas(data);
     } catch (error) {
       console.error("Error fetching kelas:", error);
       toast({
@@ -138,14 +139,11 @@ const RekapKehadiran = () => {
 
   const fetchMataPelajaran = async () => {
     try {
-      const { data, error } = await supabase
-        .from("mata_pelajaran")
-        .select("*")
-        .eq("status", "Aktif")
-        .order("nama_mata_pelajaran", { ascending: true });
+      const data = localDB.select("mata_pelajaran")
+        .filter(mp => mp.status === "Aktif")
+        .sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
 
-      if (error) throw error;
-      setMataPelajaran(data || []);
+      setMataPelajaran(data);
     } catch (error) {
       console.error("Error fetching mata pelajaran:", error);
       toast({
@@ -168,38 +166,34 @@ const RekapKehadiran = () => {
       const endDateStr = endDate.toISOString().split('T')[0];
 
       // Fetch students in the selected class
-      const { data: students, error: studentsError } = await supabase
-        .from("siswa")
-        .select("*")
-        .eq("kelas_id", selectedKelas)
-        .eq("status", "Aktif")
-        .order("nama_siswa", { ascending: true });
-
-      if (studentsError) throw studentsError;
+      const students = localDB.select("siswa")
+        .filter(student => 
+          student.kelas_id === selectedKelas &&
+          student.status === "Aktif"
+        )
+        .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
       // Fetch attendance data for the date range
-      const { data: attendance, error: attendanceError } = await supabase
-        .from("kehadiran")
-        .select("*")
-        .eq("kelas_id", selectedKelas)
-        .eq("mata_pelajaran_id", selectedMataPelajaran)
-        .gte("tanggal", startDateStr)
-        .lte("tanggal", endDateStr)
-        .order("tanggal", { ascending: true });
-
-      if (attendanceError) throw attendanceError;
+      const attendance = localDB.select("kehadiran")
+        .filter(record => 
+          record.kelas_id === selectedKelas &&
+          record.mata_pelajaran_id === selectedMataPelajaran &&
+          record.tanggal >= startDateStr &&
+          record.tanggal <= endDateStr
+        )
+        .sort((a, b) => a.tanggal.localeCompare(b.tanggal));
 
       // Get unique dates from attendance data
-      const dates = [...new Set(attendance?.map(a => a.tanggal) || [])].sort();
-      setUniqueDates(dates);
+      const dates = [...new Set(attendance.map(a => a.tanggal))].sort();
+      setUniqueDates(dates as string[]);
 
       // Process report data for each student
-      const report: KehadiranReport[] = students?.map(student => {
-        const studentAttendance = attendance?.filter(a => a.siswa_id === student.id) || [];
+      const report: KehadiranReport[] = students.map(student => {
+        const studentAttendance = attendance.filter(a => a.siswa_id === student.id);
         
         // Create attendance map by date
         const kehadiranPerTanggal: { [tanggal: string]: string } = {};
-        dates.forEach(date => {
+        dates.forEach((date: string) => {
           const attendanceRecord = studentAttendance.find(a => a.tanggal === date);
           kehadiranPerTanggal[date] = attendanceRecord ? attendanceRecord.status_kehadiran : '-';
         });
@@ -224,7 +218,7 @@ const RekapKehadiran = () => {
           total_alpha: totalAlpha,
           persentase_kehadiran: persentaseKehadiran,
         };
-      }) || [];
+      });
 
       setReportData(report);
     } catch (error) {

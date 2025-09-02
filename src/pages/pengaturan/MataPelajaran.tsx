@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { useToast } from "@/hooks/use-toast";
@@ -30,13 +30,10 @@ const MataPelajaran = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: mataPelajaran, error } = await supabase
-        .from("mata_pelajaran")
-        .select("*")
-        .order("nama_mata_pelajaran", { ascending: true });
+      const mataPelajaran = localDB.select("mata_pelajaran")
+        .sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
 
-      if (error) throw error;
-      setData(mataPelajaran || []);
+      setData(mataPelajaran);
     } catch (error) {
       console.error("Error fetching mata pelajaran:", error);
       toast({
@@ -55,16 +52,14 @@ const MataPelajaran = () => {
 
   const handleAdd = async (formData: any) => {
     try {
-      const { error } = await supabase.from("mata_pelajaran").insert([
-        {
-          nama_mata_pelajaran: formData.nama_mata_pelajaran,
-          kode_mata_pelajaran: formData.kode_mata_pelajaran,
-          deskripsi: formData.deskripsi,
-          status: formData.status || "Aktif",
-        },
-      ]);
+      const result = localDB.insert("mata_pelajaran", {
+        nama_mata_pelajaran: formData.nama_mata_pelajaran,
+        kode_mata_pelajaran: formData.kode_mata_pelajaran,
+        deskripsi: formData.deskripsi,
+        status: formData.status || "Aktif",
+      });
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -84,17 +79,14 @@ const MataPelajaran = () => {
 
   const handleEdit = async (id: string, formData: any) => {
     try {
-      const { error } = await supabase
-        .from("mata_pelajaran")
-        .update({
-          nama_mata_pelajaran: formData.nama_mata_pelajaran,
-          kode_mata_pelajaran: formData.kode_mata_pelajaran,
-          deskripsi: formData.deskripsi,
-          status: formData.status,
-        })
-        .eq("id", id);
+      const result = localDB.update("mata_pelajaran", id, {
+        nama_mata_pelajaran: formData.nama_mata_pelajaran,
+        kode_mata_pelajaran: formData.kode_mata_pelajaran,
+        deskripsi: formData.deskripsi,
+        status: formData.status,
+      });
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -114,12 +106,9 @@ const MataPelajaran = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("mata_pelajaran")
-        .delete()
-        .eq("id", id);
+      const result = localDB.delete("mata_pelajaran", id);
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",

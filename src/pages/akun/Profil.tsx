@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { User, Mail, Save, Eye, EyeOff, Camera, Upload } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,18 +44,15 @@ const Profil = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const userData = localDB.selectById('users', user.id);
+      if (!userData) {
+        throw new Error('Profile not found');
+      }
 
-      if (error) throw error;
-
-      setProfile(data);
+      setProfile(userData);
       setFormData({
-        nama: data.nama,
-        email: data.email,
+        nama: userData.nama,
+        email: userData.email,
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
@@ -75,37 +72,18 @@ const Profil = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Update profile data
-      const { error: profileError } = await supabase
-        .from('users')
-        .update({
-          nama: formData.nama,
-          email: formData.email
-        })
-        .eq('user_id', user?.id);
-
-      if (profileError) throw profileError;
-
-      // Update password if provided
-      if (formData.newPassword) {
-        if (formData.newPassword !== formData.confirmPassword) {
-          throw new Error("Password baru dan konfirmasi password tidak sama");
-        }
-
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: formData.newPassword
-        });
-
-        if (passwordError) throw passwordError;
+      if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+        throw new Error("Password baru dan konfirmasi password tidak sama");
       }
 
-      // Update auth email if changed
-      if (formData.email !== profile?.email) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: formData.email
-        });
+      // Update profile data
+      const result = localDB.update('users', user?.id!, {
+        nama: formData.nama,
+        email: formData.email
+      });
 
-        if (emailError) throw emailError;
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       await fetchProfile();
@@ -139,36 +117,39 @@ const Profil = () => {
 
     setIsUploadingAvatar(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      // Simple file to base64 conversion for local storage
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+        
+        // Update user profile with avatar URL (base64)
+        const result = localDB.update('users', user.id, { avatar_url: base64 });
+        
+        if (result.error) {
+          throw new Error(result.error);
+        }
 
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        // Refresh profile
+        await fetchProfile();
 
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      // Update user profile with avatar URL
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ avatar_url: publicUrl })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Refresh profile
-      await fetchProfile();
-
-      toast({
-        title: "Berhasil",
-        description: "Foto profil berhasil diperbarui"
-      });
+        toast({
+          title: "Berhasil",
+          description: "Foto profil berhasil diperbarui"
+        });
+        
+        setIsUploadingAvatar(false);
+      };
+      
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Gagal membaca file gambar",
+          variant: "destructive"
+        });
+        setIsUploadingAvatar(false);
+      };
+      
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
@@ -176,8 +157,8 @@ const Profil = () => {
         description: "Gagal mengunggah foto profil",
         variant: "destructive"
       });
-    } finally {
       setIsUploadingAvatar(false);
+    } finally {
       // Reset file input
       event.target.value = '';
     }

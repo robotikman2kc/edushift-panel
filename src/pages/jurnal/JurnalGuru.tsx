@@ -40,7 +40,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { cn } from "@/lib/utils";
 
 const jurnalSchema = z.object({
@@ -127,32 +127,23 @@ const JurnalGuru = () => {
   const fetchData = async () => {
     try {
       // Fetch jurnal entries
-      const { data: jurnalData, error: jurnalError } = await supabase
-        .from("jurnal")
-        .select(`
-          id,
-          tanggal,
-          uraian_kegiatan,
-          volume,
-          satuan_hasil,
-          jenis_kegiatan:jenis_kegiatan_id (
-            nama_kegiatan
-          )
-        `)
-        .order("tanggal", { ascending: false });
-
-      if (jurnalError) throw jurnalError;
+      const jurnalData = localDB.select("jurnal").map(jurnal => {
+        const jenisKegiatan = localDB.selectById("jenis_kegiatan", jurnal.jenis_kegiatan_id);
+        return {
+          ...jurnal,
+          jenis_kegiatan: {
+            nama_kegiatan: jenisKegiatan?.nama_kegiatan || ""
+          }
+        };
+      }).sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
 
       // Fetch jenis kegiatan
-      const { data: kegiatanData, error: kegiatanError } = await supabase
-        .from("jenis_kegiatan")
-        .select("*")
-        .order("nama_kegiatan");
+      const kegiatanData = localDB.select("jenis_kegiatan").sort((a, b) => 
+        a.nama_kegiatan.localeCompare(b.nama_kegiatan)
+      );
 
-      if (kegiatanError) throw kegiatanError;
-
-      setJurnal(jurnalData || []);
-      setJenisKegiatan(kegiatanData || []);
+      setJurnal(jurnalData);
+      setJenisKegiatan(kegiatanData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -176,22 +167,17 @@ const JurnalGuru = () => {
       };
 
       if (selectedJurnal) {
-        const { error } = await supabase
-          .from("jurnal")
-          .update(jurnalData)
-          .eq("id", selectedJurnal.id);
-
-        if (error) throw error;
+        const result = localDB.update("jurnal", selectedJurnal.id, jurnalData);
+        if (result.error) throw new Error(result.error);
+        
         toast({
           title: "Berhasil",
           description: "Jurnal berhasil diperbarui",
         });
       } else {
-        const { error } = await supabase
-          .from("jurnal")
-          .insert([jurnalData]);
-
-        if (error) throw error;
+        const result = localDB.insert("jurnal", jurnalData);
+        if (result.error) throw new Error(result.error);
+        
         toast({
           title: "Berhasil",
           description: "Jurnal berhasil ditambahkan",
@@ -219,11 +205,8 @@ const JurnalGuru = () => {
         deskripsi: data.deskripsi || "",
       };
       
-      const { error } = await supabase
-        .from("jenis_kegiatan")
-        .insert([kegiatanData]);
-
-      if (error) throw error;
+      const result = localDB.insert("jenis_kegiatan", kegiatanData);
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",
@@ -261,12 +244,8 @@ const JurnalGuru = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("jurnal")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      const result = localDB.delete("jurnal", id);
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Berhasil",

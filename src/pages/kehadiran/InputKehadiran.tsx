@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,15 +89,16 @@ const InputKehadiran = () => {
 
   const fetchKelas = async () => {
     try {
-      const { data, error } = await supabase
-        .from("kelas")
-        .select("*")
-        .eq("status", "Aktif")
-        .order("tingkat", { ascending: true })
-        .order("nama_kelas", { ascending: true });
+      const data = localDB.select("kelas")
+        .filter(kelas => kelas.status === "Aktif")
+        .sort((a, b) => {
+          if (a.tingkat !== b.tingkat) {
+            return a.tingkat.localeCompare(b.tingkat);
+          }
+          return a.nama_kelas.localeCompare(b.nama_kelas);
+        });
 
-      if (error) throw error;
-      setAllKelas(data || []);
+      setAllKelas(data);
     } catch (error) {
       console.error("Error fetching kelas:", error);
       toast({
@@ -110,14 +111,11 @@ const InputKehadiran = () => {
 
   const fetchMataPelajaran = async () => {
     try {
-      const { data, error } = await supabase
-        .from("mata_pelajaran")
-        .select("*")
-        .eq("status", "Aktif")
-        .order("nama_mata_pelajaran", { ascending: true });
+      const data = localDB.select("mata_pelajaran")
+        .filter(mp => mp.status === "Aktif")
+        .sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
 
-      if (error) throw error;
-      setMataPelajaran(data || []);
+      setMataPelajaran(data);
     } catch (error) {
       console.error("Error fetching mata pelajaran:", error);
       toast({
@@ -133,35 +131,32 @@ const InputKehadiran = () => {
       setLoading(true);
       
       // First fetch existing attendance
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from("kehadiran")
-        .select("*")
-        .eq("kelas_id", selectedKelas)
-        .eq("mata_pelajaran_id", selectedMataPelajaran)
-        .eq("tanggal", selectedDate);
-
-      if (attendanceError) throw attendanceError;
+      const attendanceData = localDB.select("kehadiran")
+        .filter(record => 
+          record.kelas_id === selectedKelas &&
+          record.mata_pelajaran_id === selectedMataPelajaran &&
+          record.tanggal === selectedDate
+        );
       
       const attendanceMap: {[key: string]: Kehadiran} = {};
-      attendanceData?.forEach(record => {
+      attendanceData.forEach(record => {
         attendanceMap[record.siswa_id] = record;
       });
       setExistingAttendance(attendanceMap);
 
       // Then fetch students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from("siswa")
-        .select("*")
-        .eq("kelas_id", selectedKelas)
-        .eq("status", "Aktif")
-        .order("nama_siswa", { ascending: true });
+      const studentsData = localDB.select("siswa")
+        .filter(student => 
+          student.kelas_id === selectedKelas &&
+          student.status === "Aktif"
+        )
+        .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
-      if (studentsError) throw studentsError;
-      setStudents(studentsData || []);
+      setStudents(studentsData);
       
       // Initialize attendance with existing data
       const initialAttendance: {[key: string]: string} = {};
-      studentsData?.forEach(student => {
+      studentsData.forEach(student => {
         initialAttendance[student.id] = attendanceMap[student.id]?.status_kehadiran || "";
       });
       setAttendance(initialAttendance);
@@ -177,57 +172,6 @@ const InputKehadiran = () => {
     }
   };
 
-  const fetchStudents = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("siswa")
-        .select("*")
-        .eq("kelas_id", selectedKelas)
-        .eq("status", "Aktif")
-        .order("nama_siswa", { ascending: true });
-
-      if (error) throw error;
-      setStudents(data || []);
-      
-      // Initialize attendance for new students
-      const initialAttendance: {[key: string]: string} = {};
-      data?.forEach(student => {
-        initialAttendance[student.id] = existingAttendance[student.id]?.status_kehadiran || "";
-      });
-      setAttendance(initialAttendance);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      toast({
-        title: "Error",
-        description: "Gagal memuat data siswa",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchExistingAttendance = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("kehadiran")
-        .select("*")
-        .eq("kelas_id", selectedKelas)
-        .eq("mata_pelajaran_id", selectedMataPelajaran)
-        .eq("tanggal", selectedDate);
-
-      if (error) throw error;
-      
-      const attendanceMap: {[key: string]: Kehadiran} = {};
-      data?.forEach(record => {
-        attendanceMap[record.siswa_id] = record;
-      });
-      setExistingAttendance(attendanceMap);
-    } catch (error) {
-      console.error("Error fetching existing attendance:", error);
-    }
-  };
 
   const handleAttendanceChange = (studentId: string, status: string) => {
     setAttendance(prev => ({
@@ -285,32 +229,25 @@ const InputKehadiran = () => {
       const toUpdate = attendanceRecords.filter(record => record.id);
 
       // Insert new records
-      if (toInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from("kehadiran")
-          .insert(toInsert.map(record => ({
-            siswa_id: record.siswa_id,
-            kelas_id: record.kelas_id,
-            mata_pelajaran_id: selectedMataPelajaran,
-            tanggal: record.tanggal,
-            status_kehadiran: record.status_kehadiran,
-            keterangan: record.keterangan,
-          })));
-
-        if (insertError) throw insertError;
+      for (const record of toInsert) {
+        const result = localDB.insert("kehadiran", {
+          siswa_id: record.siswa_id,
+          kelas_id: record.kelas_id,
+          mata_pelajaran_id: selectedMataPelajaran,
+          tanggal: record.tanggal,
+          status_kehadiran: record.status_kehadiran,
+          keterangan: record.keterangan,
+        });
+        if (result.error) throw new Error(result.error);
       }
 
       // Update existing records
       for (const record of toUpdate) {
-        const { error: updateError } = await supabase
-          .from("kehadiran")
-          .update({
-            status_kehadiran: record.status_kehadiran,
-            keterangan: record.keterangan,
-          })
-          .eq("id", record.id);
-
-        if (updateError) throw updateError;
+        const result = localDB.update("kehadiran", record.id!, {
+          status_kehadiran: record.status_kehadiran,
+          keterangan: record.keterangan,
+        });
+        if (result.error) throw new Error(result.error);
       }
 
       toast({

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { Trash2, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, Database } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -35,24 +35,14 @@ const ManajemenData = () => {
   // Fetch data statistics
   const fetchStats = async () => {
     try {
-      const [guruRes, kelasRes, matpelRes, siswaRes, kehadiranRes, jenisKegiatanRes, jurnalRes] = await Promise.all([
-        supabase.from('guru').select('id', { count: 'exact', head: true }),
-        supabase.from('kelas').select('id', { count: 'exact', head: true }),
-        supabase.from('mata_pelajaran').select('id', { count: 'exact', head: true }),
-        supabase.from('siswa').select('id', { count: 'exact', head: true }),
-        supabase.from('kehadiran').select('id', { count: 'exact', head: true }),
-        supabase.from('jenis_kegiatan').select('id', { count: 'exact', head: true }),
-        supabase.from('jurnal').select('id', { count: 'exact', head: true })
-      ]);
-
       setStats({
-        guru: guruRes.count || 0,
-        kelas: kelasRes.count || 0,
-        mata_pelajaran: matpelRes.count || 0,
-        siswa: siswaRes.count || 0,
-        kehadiran: kehadiranRes.count || 0,
-        jenis_kegiatan: jenisKegiatanRes.count || 0,
-        jurnal: jurnalRes.count || 0
+        guru: localDB.select('guru').length,
+        kelas: localDB.select('kelas').length,
+        mata_pelajaran: localDB.select('mata_pelajaran').length,
+        siswa: localDB.select('siswa').length,
+        kehadiran: localDB.select('kehadiran').length,
+        jenis_kegiatan: localDB.select('jenis_kegiatan').length,
+        jurnal: localDB.select('jurnal').length
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -69,8 +59,10 @@ const ManajemenData = () => {
   const deleteAllData = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
     setDeleting(tableName);
     try {
-      const { error } = await supabase.from(tableName).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (error) throw error;
+      const result = localDB.clear(tableName);
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       toast({
         title: "Berhasil Dihapus",

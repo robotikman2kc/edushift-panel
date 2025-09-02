@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { localDB } from "@/lib/localDB";
 import { Download, Upload, Database, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, BarChart3 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -35,22 +35,13 @@ const BackupRestore = () => {
   // Fetch data statistics
   const fetchStats = async () => {
     try {
-      const [kelasRes, matpelRes, siswaRes, kehadiranRes, jenisKegiatanRes, jurnalRes] = await Promise.all([
-        supabase.from('kelas').select('id', { count: 'exact', head: true }),
-        supabase.from('mata_pelajaran').select('id', { count: 'exact', head: true }),
-        supabase.from('siswa').select('id', { count: 'exact', head: true }),
-        supabase.from('kehadiran').select('id', { count: 'exact', head: true }),
-        supabase.from('jenis_kegiatan').select('id', { count: 'exact', head: true }),
-        supabase.from('jurnal').select('id', { count: 'exact', head: true })
-      ]);
-
       setStats({
-        kelas: kelasRes.count || 0,
-        mata_pelajaran: matpelRes.count || 0,
-        siswa: siswaRes.count || 0,
-        kehadiran: kehadiranRes.count || 0,
-        jenis_kegiatan: jenisKegiatanRes.count || 0,
-        jurnal: jurnalRes.count || 0
+        kelas: localDB.select('kelas').length,
+        mata_pelajaran: localDB.select('mata_pelajaran').length,
+        siswa: localDB.select('siswa').length,
+        kehadiran: localDB.select('kehadiran').length,
+        jenis_kegiatan: localDB.select('jenis_kegiatan').length,
+        jurnal: localDB.select('jurnal').length
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -66,8 +57,7 @@ const BackupRestore = () => {
   // Export individual table
   const exportTable = async (tableName: 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
     try {
-      const { data, error } = await supabase.from(tableName).select('*');
-      if (error) throw error;
+      const data = localDB.select(tableName);
 
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: 'application/json'
@@ -106,8 +96,7 @@ const BackupRestore = () => {
         ['kelas', 'mata_pelajaran', 'siswa', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
       
       for (const table of tables) {
-        const { data, error } = await supabase.from(table).select('*');
-        if (error) throw new Error(`Error backing up ${table}: ${error.message}`);
+        const data = localDB.select(table);
         backupData[table] = data;
       }
 
@@ -168,12 +157,20 @@ const BackupRestore = () => {
       
       for (const table of tables) {
         if (backupData[table]) {
-          const { error: deleteError } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-          if (deleteError) console.warn(`Warning deleting ${table}:`, deleteError.message);
+          // Clear existing data
+          const clearResult = localDB.clear(table);
+          if (clearResult.error) {
+            console.warn(`Warning clearing ${table}:`, clearResult.error);
+          }
           
+          // Restore data
           if (backupData[table].length > 0) {
-            const { error: insertError } = await supabase.from(table).insert(backupData[table]);
-            if (insertError) throw new Error(`Error restoring ${table}: ${insertError.message}`);
+            for (const item of backupData[table]) {
+              const insertResult = localDB.insert(table, item);
+              if (insertResult.error) {
+                throw new Error(`Error restoring ${table}: ${insertResult.error}`);
+              }
+            }
           }
         }
       }
