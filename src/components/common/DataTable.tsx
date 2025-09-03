@@ -45,11 +45,13 @@ import {
   Edit,
   Trash2,
   FileSpreadsheet,
-  FileText
+  FileText,
+  FileDown
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { exportToPDF, exportToExcel, getCustomPDFTemplate } from "@/lib/exportUtils";
+import * as XLSX from 'xlsx';
 import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
 import { defaultTemplate, PDFTemplate } from "@/lib/pdfTemplates";
 
@@ -101,6 +103,7 @@ export function DataTable({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
 
@@ -237,12 +240,46 @@ export function DataTable({
     }
   };
 
-  const handleImport = () => {
+  const handleDownloadTemplate = () => {
+    try {
+      // Create template data with column headers
+      const templateData = [{}];
+      formFields.forEach(field => {
+        templateData[0][field.label] = '';
+      });
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(templateData);
+      
+      // Add the worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Template');
+      
+      // Generate file name
+      const fileName = `template_${title?.toLowerCase().replace(/\s+/g, '_') || 'data'}.xlsx`;
+      
+      // Save file
+      XLSX.writeFile(wb, fileName);
+      
+      toast({
+        title: "Template Downloaded",
+        description: `Template Excel berhasil diunduh: ${fileName}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal membuat template Excel",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFileUpload = () => {
     if (!onImport) return;
     
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.csv,.xlsx,.xls';
+    input.accept = '.xlsx,.xls';
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
@@ -250,58 +287,52 @@ export function DataTable({
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const data = event.target?.result as string;
-          let parsedData: Record<string, string>[] = [];
-
-          if (file.name.endsWith('.csv')) {
-            // Parse CSV
-            const lines = data.split('\n').filter(line => line.trim());
-            if (lines.length < 2) {
-              toast({
-                title: "Error",
-                description: "File CSV harus memiliki header dan minimal 1 baris data",
-                variant: "destructive",
-              });
-              return;
-            }
-
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            parsedData = lines.slice(1).map(line => {
-              const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-              const row: Record<string, string> = {};
-              headers.forEach((header, index) => {
-                row[header] = values[index] || '';
-              });
-              return row;
-            });
-          } else {
+          const data = event.target?.result as ArrayBuffer;
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          // Get first worksheet
+          const worksheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[worksheetName];
+          
+          // Convert to JSON
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          
+          if (jsonData.length === 0) {
             toast({
               title: "Error",
-              description: "Format file tidak didukung. Gunakan file CSV",
+              description: "File Excel tidak mengandung data",
               variant: "destructive",
             });
             return;
           }
 
-          if (parsedData.length === 0) {
-            toast({
-              title: "Error",
-              description: "File tidak mengandung data yang valid",
-              variant: "destructive",
+          // Convert to the expected format (map field labels to field keys)
+          const parsedData: Record<string, string>[] = jsonData.map((row: any) => {
+            const mappedRow: Record<string, string> = {};
+            formFields.forEach(field => {
+              // Try to find the value using both label and key
+              const value = row[field.label] || row[field.key] || '';
+              mappedRow[field.key] = String(value).trim();
             });
-            return;
-          }
+            return mappedRow;
+          });
 
           onImport(parsedData);
+          setIsImportDialogOpen(false);
+          
+          toast({
+            title: "Import Berhasil",
+            description: `${parsedData.length} data berhasil diimpor dari Excel`,
+          });
         } catch (error) {
           toast({
             title: "Error",
-            description: "Gagal membaca file. Pastikan format file benar",
+            description: "Gagal membaca file Excel. Pastikan format file benar",
             variant: "destructive",
           });
         }
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     };
     input.click();
   };
@@ -363,7 +394,7 @@ export function DataTable({
             {title && <h2 className="text-xl font-semibold">{title}</h2>}
             <div className="flex items-center gap-2">
               {onImport && (
-                <Button variant="outline" size="sm" onClick={handleImport}>
+                <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
                   <Upload className="mr-2 h-4 w-4" />
                   Import
                 </Button>
@@ -574,6 +605,58 @@ export function DataTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Import Data dari Excel</DialogTitle>
+            <DialogDescription>
+              Unduh template Excel terlebih dahulu, isi data, lalu upload file yang sudah diisi.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3">
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <h4 className="font-medium mb-2">Langkah 1: Unduh Template</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Unduh template Excel yang sudah berisi kolom-kolom yang diperlukan.
+                </p>
+                <Button onClick={handleDownloadTemplate} variant="outline" className="w-full">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Unduh Template Excel
+                </Button>
+              </div>
+              
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-medium mb-2">Langkah 2: Upload File</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upload file Excel (.xlsx) yang sudah diisi dengan data.
+                </p>
+                <Button onClick={handleFileUpload} className="w-full">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload File Excel
+                </Button>
+              </div>
+            </div>
+            
+            <div className="text-xs text-muted-foreground p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h5 className="font-medium mb-1">Petunjuk:</h5>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Pastikan menggunakan template yang sudah diunduh</li>
+                <li>Jangan mengubah nama kolom di baris pertama</li>
+                <li>Isi data mulai dari baris kedua</li>
+                <li>Format file harus .xlsx atau .xls</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
