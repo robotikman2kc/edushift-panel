@@ -51,6 +51,9 @@ const Siswa = () => {
   const formFields = [
     { key: "nis", label: "NIS", type: "text" as const, placeholder: "Masukkan NIS", required: true },
     { key: "nama_siswa", label: "Nama Siswa", type: "text" as const, placeholder: "Masukkan nama siswa", required: true },
+    { key: "kelas_id", label: "Kelas", type: "select" as const, placeholder: "Pilih kelas", required: true, options: 
+      filteredKelas.map(k => ({ value: k.id, label: k.nama_kelas }))
+    },
     { key: "jenis_kelamin", label: "Jenis Kelamin", type: "select" as const, placeholder: "Pilih jenis kelamin", required: true, options: [
       { value: "Laki-laki", label: "Laki-laki" },
       { value: "Perempuan", label: "Perempuan" }
@@ -150,20 +153,21 @@ const Siswa = () => {
   }));
 
   const handleAdd = async (formData: Record<string, string>) => {
-    if (!selectedKelas) {
-      toast({
-        title: "Error",
-        description: "Pilih kelas terlebih dahulu",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
+      const kelasId = formData.kelas_id || selectedKelas;
+      if (!kelasId) {
+        toast({
+          title: "Error",
+          description: "Pilih kelas terlebih dahulu",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const result = localDB.insert('siswa', {
         nis: formData.nis,
         nama_siswa: formData.nama_siswa,
-        kelas_id: selectedKelas,
+        kelas_id: kelasId,
         jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
         tanggal_lahir: formData.tanggal_lahir || undefined,
         tempat_lahir: formData.tempat_lahir || undefined,
@@ -243,6 +247,107 @@ const Siswa = () => {
     }
   };
 
+  const handleImport = async (data: Record<string, string>[]) => {
+    if (!selectedKelas) {
+      toast({
+        title: "Error",
+        description: "Pilih kelas terlebih dahulu sebelum import",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      for (const row of data) {
+        try {
+          // Validasi data yang diperlukan
+          if (!row.nis || !row.nama_siswa) {
+            errors.push(`Baris dengan NIS "${row.nis || 'kosong'}" - NIS dan Nama Siswa harus diisi`);
+            errorCount++;
+            continue;
+          }
+
+          // Cek apakah NIS sudah ada
+          const existingSiswa = localDB.select('siswa').find(s => s.nis === row.nis);
+          if (existingSiswa) {
+            errors.push(`NIS "${row.nis}" sudah ada dalam database`);
+            errorCount++;
+            continue;
+          }
+
+          // Tentukan kelas_id dari data import atau dari filter yang dipilih
+          let kelasId = selectedKelas;
+          if (row.kelas_nama) {
+            // Cari kelas berdasarkan nama kelas
+            const foundKelas = kelas.find(k => k.nama_kelas === row.kelas_nama);
+            if (foundKelas) {
+              kelasId = foundKelas.id;
+            }
+          }
+
+          if (!kelasId) {
+            errors.push(`NIS "${row.nis}" - Kelas tidak ditemukan`);
+            errorCount++;
+            continue;
+          }
+
+          const result = localDB.insert('siswa', {
+            nis: row.nis,
+            nama_siswa: row.nama_siswa,
+            kelas_id: kelasId,
+            jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
+            tanggal_lahir: row.tanggal_lahir || undefined,
+            tempat_lahir: row.tempat_lahir || undefined,
+            alamat: row.alamat || undefined,
+            nama_orang_tua: row.nama_orang_tua || undefined,
+            telepon_orang_tua: row.telepon_orang_tua || undefined,
+            email: row.email || undefined,
+            status: row.status || 'Aktif'
+          });
+
+          if (result.error) {
+            errors.push(`NIS "${row.nis}" - ${result.error}`);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (error: any) {
+          errors.push(`NIS "${row.nis}" - ${error.message}`);
+          errorCount++;
+        }
+      }
+
+      // Tampilkan hasil import
+      if (successCount > 0) {
+        toast({
+          title: "Import Berhasil",
+          description: `${successCount} siswa berhasil diimport${errorCount > 0 ? `, ${errorCount} gagal` : ''}`,
+        });
+      }
+
+      if (errorCount > 0 && errors.length > 0) {
+        console.error('Import errors:', errors);
+        toast({
+          title: "Beberapa Data Gagal Diimport",
+          description: `${errorCount} data gagal diimport. Periksa konsol untuk detail error.`,
+          variant: "destructive",
+        });
+      }
+
+      fetchSiswa();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Gagal mengimport data: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -298,6 +403,7 @@ const Siswa = () => {
           onAdd={selectedKelas ? handleAdd : undefined}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onImport={selectedKelas ? handleImport : undefined}
           loading={loading}
           formFields={formFields}
           title="Siswa"

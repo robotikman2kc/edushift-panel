@@ -74,6 +74,7 @@ interface DataTableProps {
   onAdd?: (formData: Record<string, string>) => void | Promise<void>;
   onEdit?: (id: string, formData: Record<string, string>) => void | Promise<void>;
   onDelete?: (id: string) => void | Promise<void>;
+  onImport?: (data: Record<string, string>[]) => void | Promise<void>;
   loading?: boolean;
   formFields?: FormField[];
   searchPlaceholder?: string;
@@ -86,6 +87,7 @@ export function DataTable({
   onAdd,
   onEdit,
   onDelete,
+  onImport,
   loading = false,
   formFields = [],
   searchPlaceholder = "Cari data...",
@@ -236,8 +238,72 @@ export function DataTable({
   };
 
   const handleImport = () => {
-    // Implementation for import
-    console.log("Import functionality");
+    if (!onImport) return;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,.xlsx,.xls';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = event.target?.result as string;
+          let parsedData: Record<string, string>[] = [];
+
+          if (file.name.endsWith('.csv')) {
+            // Parse CSV
+            const lines = data.split('\n').filter(line => line.trim());
+            if (lines.length < 2) {
+              toast({
+                title: "Error",
+                description: "File CSV harus memiliki header dan minimal 1 baris data",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            parsedData = lines.slice(1).map(line => {
+              const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+              const row: Record<string, string> = {};
+              headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+              });
+              return row;
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: "Format file tidak didukung. Gunakan file CSV",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          if (parsedData.length === 0) {
+            toast({
+              title: "Error",
+              description: "File tidak mengandung data yang valid",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          onImport(parsedData);
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Gagal membaca file. Pastikan format file benar",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   };
 
   const renderFormField = (field: FormField) => (
@@ -296,10 +362,12 @@ export function DataTable({
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             {title && <h2 className="text-xl font-semibold">{title}</h2>}
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleImport}>
-                <Upload className="mr-2 h-4 w-4" />
-                Import
-              </Button>
+              {onImport && (
+                <Button variant="outline" size="sm" onClick={handleImport}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import
+                </Button>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -152,6 +152,76 @@ const Guru = () => {
     }
   };
 
+  const handleImport = async (data: Record<string, string>[]) => {
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      for (const row of data) {
+        try {
+          // Validasi data yang diperlukan
+          if (!row.nama_guru || !row.nip) {
+            errors.push(`Baris dengan NIP "${row.nip || 'kosong'}" - Nama Guru dan NIP harus diisi`);
+            errorCount++;
+            continue;
+          }
+
+          // Cek apakah NIP sudah ada
+          const existingGuru = localDB.select('guru').find(g => g.nip === row.nip);
+          if (existingGuru) {
+            errors.push(`NIP "${row.nip}" sudah ada dalam database`);
+            errorCount++;
+            continue;
+          }
+
+          const result = localDB.insert('guru', {
+            nama_guru: row.nama_guru,
+            nip: row.nip,
+            mata_pelajaran: row.mata_pelajaran || '',
+            email: row.email || '',
+            telepon: row.telepon || '',
+          });
+
+          if (result.error) {
+            errors.push(`NIP "${row.nip}" - ${result.error}`);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (error: any) {
+          errors.push(`NIP "${row.nip}" - ${error.message}`);
+          errorCount++;
+        }
+      }
+
+      // Tampilkan hasil import
+      if (successCount > 0) {
+        toast({
+          title: "Import Berhasil",
+          description: `${successCount} guru berhasil diimport${errorCount > 0 ? `, ${errorCount} gagal` : ''}`,
+        });
+      }
+
+      if (errorCount > 0 && errors.length > 0) {
+        console.error('Import errors:', errors);
+        toast({
+          title: "Beberapa Data Gagal Diimport",
+          description: `${errorCount} data gagal diimport. Periksa konsol untuk detail error.`,
+          variant: "destructive",
+        });
+      }
+
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Gagal mengimport data: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const formFields = [
     {
       key: "nama_guru",
@@ -203,6 +273,7 @@ const Guru = () => {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onImport={handleImport}
         loading={loading}
         formFields={formFields}
         searchPlaceholder="Cari nama guru, NIP, atau mata pelajaran..."
