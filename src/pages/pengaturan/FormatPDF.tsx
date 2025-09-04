@@ -25,6 +25,8 @@ interface PDFFormatSettings {
     nip: string;
     subject: string;
     jabatan: string;
+    kepala_sekolah_nama: string;
+    kepala_sekolah_nip: string;
   };
   attendanceFormat: {
     showLogo: boolean;
@@ -51,19 +53,73 @@ interface PDFFormatSettings {
 
 const FormatPDF: React.FC = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<PDFFormatSettings>({
-    schoolInfo: {
-      name: 'Sistem Informasi Sekolah',
-      address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
-      phone: '(021) 1234-5678',
-      email: 'info@sekolah.ac.id',
-    },
-    defaultTeacher: {
-      name: '',
-      nip: '',
-      subject: '',
-      jabatan: '',
-    },
+  
+  // Load settings from localStorage on component mount
+  const loadSettings = (): PDFFormatSettings => {
+    try {
+      const saved = localStorage.getItem('pdfFormatSettings');
+      if (saved) {
+        const parsedSettings = JSON.parse(saved);
+        // Ensure all required fields exist
+        return {
+          schoolInfo: {
+            name: parsedSettings.schoolInfo?.name || 'Sistem Informasi Sekolah',
+            address: parsedSettings.schoolInfo?.address || 'Jl. Pendidikan No. 123, Kota Pendidikan',
+            phone: parsedSettings.schoolInfo?.phone || '(021) 1234-5678',
+            email: parsedSettings.schoolInfo?.email || 'info@sekolah.ac.id',
+            logo: parsedSettings.schoolInfo?.logo,
+          },
+          defaultTeacher: {
+            name: parsedSettings.defaultTeacher?.name || '',
+            nip: parsedSettings.defaultTeacher?.nip || '',
+            subject: parsedSettings.defaultTeacher?.subject || '',
+            jabatan: parsedSettings.defaultTeacher?.jabatan || '',
+            kepala_sekolah_nama: parsedSettings.defaultTeacher?.kepala_sekolah_nama || '',
+            kepala_sekolah_nip: parsedSettings.defaultTeacher?.kepala_sekolah_nip || '',
+          },
+          attendanceFormat: parsedSettings.attendanceFormat || {
+            showLogo: true,
+            showDate: true,
+            showSignature: true,
+            headerColor: '#22c55e',
+            orientation: 'portrait',
+          },
+          gradeFormat: parsedSettings.gradeFormat || {
+            showLogo: true,
+            showDate: true,
+            showSignature: true,
+            headerColor: '#a855f7',
+            orientation: 'portrait',
+          },
+          journalFormat: parsedSettings.journalFormat || {
+            showLogo: true,
+            showDate: true,
+            showSignature: true,
+            headerColor: '#3b82f6',
+            orientation: 'portrait',
+          },
+        };
+      }
+    } catch (error) {
+      console.error('Error loading PDF format settings:', error);
+    }
+    
+    // Return default settings if nothing saved or error
+    return {
+      schoolInfo: {
+        name: 'Sistem Informasi Sekolah',
+        address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
+        phone: '(021) 1234-5678',
+        email: 'info@sekolah.ac.id',
+      },
+      defaultTeacher: {
+        name: '',
+        nip: '',
+        subject: '',
+        jabatan: '',
+        kepala_sekolah_nama: '',
+        kepala_sekolah_nip: '',
+      },
     attendanceFormat: {
       showLogo: true,
       showDate: true,
@@ -85,7 +141,10 @@ const FormatPDF: React.FC = () => {
       headerColor: '#3b82f6',
       orientation: 'portrait',
     },
-  });
+    };
+  };
+
+  const [settings, setSettings] = useState<PDFFormatSettings>(loadSettings);
 
   const handleSave = () => {
     console.log('Saving PDF format settings:', settings); // Debug log
@@ -416,6 +475,77 @@ const FormatPDF: React.FC = () => {
                       }))
                     }
                   />
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium mb-4">Data Kepala Sekolah</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="principal-name">Nama Kepala Sekolah</Label>
+                    <Input
+                      id="principal-name"
+                      placeholder="Masukkan nama kepala sekolah"
+                      value={settings.defaultTeacher.kepala_sekolah_nama}
+                      onChange={(e) =>
+                        setSettings(prev => ({
+                          ...prev,
+                          defaultTeacher: { ...prev.defaultTeacher, kepala_sekolah_nama: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="principal-nip">NIP Kepala Sekolah</Label>
+                    <Input
+                      id="principal-nip"
+                      placeholder="Masukkan NIP kepala sekolah"
+                      value={settings.defaultTeacher.kepala_sekolah_nip}
+                      onChange={(e) =>
+                        setSettings(prev => ({
+                          ...prev,
+                          defaultTeacher: { ...prev.defaultTeacher, kepala_sekolah_nip: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Pengaturan Tanda Tangan</CardTitle>
+              <CardDescription>
+                Konfigurasi siapa yang menandatangani setiap jenis laporan
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium text-sm mb-2">Laporan Kehadiran</h5>
+                  <p className="text-xs text-muted-foreground">
+                    Ditandatangani oleh: <strong>Guru dengan jabatan tertentu</strong> 
+                    (sesuai data guru di atas)
+                  </p>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium text-sm mb-2">Laporan Penilaian</h5>
+                  <p className="text-xs text-muted-foreground">
+                    Ditandatangani oleh: <strong>Guru dengan jabatan tertentu</strong> 
+                    (sesuai data guru di atas)
+                  </p>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium text-sm mb-2">Laporan Jurnal</h5>
+                  <p className="text-xs text-muted-foreground">
+                    Ditandatangani oleh: <strong>Kepala Sekolah</strong> 
+                    (sesuai data kepala sekolah di atas)
+                  </p>
                 </div>
               </div>
             </CardContent>

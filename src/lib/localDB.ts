@@ -22,6 +22,9 @@ export interface Guru extends BaseRecord {
   mata_pelajaran: string;
   email: string;
   telepon?: string;
+  jabatan?: string;
+  kepala_sekolah_nama?: string;
+  kepala_sekolah_nip?: string;
 }
 
 export interface MataPelajaran extends BaseRecord {
