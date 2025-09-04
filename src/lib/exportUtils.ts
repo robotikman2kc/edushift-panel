@@ -98,19 +98,30 @@ export const exportToPDF = (
     if (template.header) {
       console.log('Adding header:', template.header); // Debug log
       
-      // Main title
+      // Add logo if available
+      if (template.header.logo) {
+        try {
+          console.log('Adding logo to PDF'); // Debug log
+          // Add logo on the left side
+          doc.addImage(template.header.logo, 'JPEG', template.layout.margins.left, currentY - 5, 20, 20);
+        } catch (error) {
+          console.error('Error adding logo to PDF:', error);
+        }
+      }
+      
+      // Main title - adjust position if logo exists
+      const titleStartX = template.header.logo ? template.layout.margins.left + 25 : (pageWidth - doc.getTextWidth(template.header.title)) / 2;
       doc.setFontSize(template.styling.fontSize.title);
       doc.setTextColor(0, 0, 0); // Always black for header
-      const titleWidth = doc.getTextWidth(template.header.title);
-      doc.text(template.header.title, (pageWidth - titleWidth) / 2, currentY);
+      doc.text(template.header.title, titleStartX, currentY);
       currentY += 8;
 
       // Subtitle
       if (template.header.subtitle) {
         doc.setFontSize(template.styling.fontSize.subtitle);
         doc.setTextColor(0, 0, 0);
-        const subtitleWidth = doc.getTextWidth(template.header.subtitle);
-        doc.text(template.header.subtitle, (pageWidth - subtitleWidth) / 2, currentY);
+        const subtitleStartX = template.header.logo ? template.layout.margins.left + 25 : (pageWidth - doc.getTextWidth(template.header.subtitle)) / 2;
+        doc.text(template.header.subtitle, subtitleStartX, currentY);
         currentY += 6;
       }
 
@@ -118,8 +129,8 @@ export const exportToPDF = (
       if (template.header.address) {
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(100, 100, 100);
-        const addressWidth = doc.getTextWidth(template.header.address);
-        doc.text(template.header.address, (pageWidth - addressWidth) / 2, currentY);
+        const addressStartX = template.header.logo ? template.layout.margins.left + 25 : (pageWidth - doc.getTextWidth(template.header.address)) / 2;
+        doc.text(template.header.address, addressStartX, currentY);
         currentY += 6;
       }
 
@@ -173,6 +184,7 @@ export const exportToPDF = (
     );
 
     // Generate table
+    let tableEndY = currentY;
     autoTable(doc, {
       head: [tableHeaders],
       body: tableData,
@@ -192,6 +204,9 @@ export const exportToPDF = (
       },
       margin: template.layout.margins,
       didDrawPage: (data) => {
+        // Track the final Y position after table
+        tableEndY = data.cursor?.y || currentY;
+        
         // Add footer
         if (template.footer) {
           const pageHeight = doc.internal.pageSize.getHeight();
@@ -212,29 +227,47 @@ export const exportToPDF = (
             const pageTextWidth = doc.getTextWidth(pageText);
             doc.text(pageText, pageWidth - template.layout.margins.right - pageTextWidth, pageHeight - 25);
           }
-
-          // Signature section
-          if (template.footer.signatureSection) {
-            doc.setFontSize(template.styling.fontSize.header);
-            doc.setTextColor(0, 0, 0);
-            const signatureY = pageHeight - 50;
-            
-            // Use teacher info if available, otherwise use default
-            const signerName = template.teacherInfo?.name || 'Kepala Sekolah';
-            const signerPosition = template.teacherInfo?.jabatan || 'Kepala Sekolah';
-            const signerNIP = template.teacherInfo?.nip;
-            
-            doc.text('Mengetahui,', pageWidth - 70, signatureY);
-            doc.text(signerPosition, pageWidth - 70, signatureY + 5);
-            doc.text('', pageWidth - 70, signatureY + 20); // Space for signature
-            doc.text(`(${signerName})`, pageWidth - 70, signatureY + 25);
-            if (signerNIP) {
-              doc.text(`NIP: ${signerNIP}`, pageWidth - 70, signatureY + 30);
-            }
-          }
         }
       },
     });
+
+    // Add signature section right after the table
+    if (template.footer?.signatureSection) {
+      doc.setFontSize(template.styling.fontSize.header);
+      doc.setTextColor(0, 0, 0);
+      
+      // Position signature section right below the table with some spacing
+      const signatureStartY = tableEndY + 15;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Determine signer based on report type
+      let signerName, signerPosition, signerNIP;
+      
+      if (title.includes('Jurnal')) {
+        // Journal reports are signed by Principal
+        signerName = template.teacherInfo?.kepala_sekolah_nama || 'Kepala Sekolah';
+        signerPosition = 'Kepala Sekolah';
+        signerNIP = template.teacherInfo?.kepala_sekolah_nip;
+      } else {
+        // Attendance and Grade reports are signed by Teacher
+        signerName = template.teacherInfo?.name || 'Guru';
+        signerPosition = template.teacherInfo?.jabatan || 'Guru';
+        signerNIP = template.teacherInfo?.nip;
+      }
+      
+      // Left side: Place and date
+      doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, template.layout.margins.left, signatureStartY);
+      
+      // Right side: Signature section
+      const rightColumnX = pageWidth - 80;
+      doc.text('Mengetahui,', rightColumnX, signatureStartY);
+      doc.text(signerPosition, rightColumnX, signatureStartY + 5);
+      doc.text('', rightColumnX, signatureStartY + 20); // Space for signature
+      doc.text(`(${signerName})`, rightColumnX, signatureStartY + 25);
+      if (signerNIP) {
+        doc.text(`NIP: ${signerNIP}`, rightColumnX, signatureStartY + 30);
+      }
+    }
 
     // Save the PDF
     doc.save(filename);

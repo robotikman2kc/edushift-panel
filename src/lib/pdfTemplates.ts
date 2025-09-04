@@ -43,6 +43,8 @@ export interface PDFTemplate {
     nip: string;
     subject: string;
     jabatan: string;
+    kepala_sekolah_nama?: string;
+    kepala_sekolah_nip?: string;
   };
 }
 
