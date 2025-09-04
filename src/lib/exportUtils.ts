@@ -134,14 +134,14 @@ export const exportToPDF = (
         currentY += 6;
       }
 
-      // Date
-      if (template.header.showDate) {
-        doc.setFontSize(template.styling.fontSize.header);
-        doc.setTextColor(0, 0, 0);
-        const dateText = `Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
-        doc.text(dateText, template.layout.margins.left, currentY);
-        currentY += 6;
-      }
+      // Remove date section - commented out
+      // if (template.header.showDate) {
+      //   doc.setFontSize(template.styling.fontSize.header);
+      //   doc.setTextColor(0, 0, 0);
+      //   const dateText = `Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
+      //   doc.text(dateText, template.layout.margins.left, currentY);
+      //   currentY += 6;
+      // }
 
       // Add teacher info if available (for grade and journal reports)
       if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
@@ -174,14 +174,15 @@ export const exportToPDF = (
       doc.setTextColor(0, 0, 0); // Reset text color
     }
 
-    // Prepare table data
-    const tableHeaders = columns.map(col => col.label);
-    const tableData = data.map(item => 
-      columns.map(col => {
+    // Prepare table data with numbering
+    const tableHeaders = ['No.', ...columns.map(col => col.label)];
+    const tableData = data.map((item, index) => [
+      String(index + 1), // Add row number
+      ...columns.map(col => {
         const value = item[col.key];
         return value !== null && value !== undefined ? String(value) : '-';
       })
-    );
+    ]);
 
     // Generate table
     let tableEndY = currentY;
@@ -248,8 +249,8 @@ export const exportToPDF = (
         signerNIP = template.teacherInfo?.nip;
       }
       
-      // Left side: Place and date above signature
-      doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, template.layout.margins.left, signatureStartY);
+      // Remove left side date - commented out
+      // doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, template.layout.margins.left, signatureStartY);
       
       // Right side: Signature section
       const rightColumnX = pageWidth - 80;
