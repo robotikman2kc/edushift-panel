@@ -42,7 +42,7 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
         logo: settings.schoolInfo?.logo,
       },
       footer: {
-        text: settings.schoolInfo?.email ? `${settings.schoolInfo.name} - ${settings.schoolInfo.email}` : settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
+        text: '', // Remove footer text to eliminate school name/email in footer
         showPageNumbers: true,
         signatureSection: format?.showSignature ?? true,
       },
@@ -109,28 +109,28 @@ export const exportToPDF = (
         }
       }
       
-      // Main title - adjust position if logo exists
-      const titleStartX = template.header.logo ? template.layout.margins.left + 25 : (pageWidth - doc.getTextWidth(template.header.title)) / 2;
+      // Main title - always centered
       doc.setFontSize(template.styling.fontSize.title);
-      doc.setTextColor(0, 0, 0); // Always black for header
-      doc.text(template.header.title, titleStartX, currentY);
+      doc.setTextColor(0, 0, 0);
+      const titleWidth = doc.getTextWidth(template.header.title);
+      doc.text(template.header.title, (pageWidth - titleWidth) / 2, currentY);
       currentY += 8;
 
-      // Subtitle
+      // Subtitle - always centered
       if (template.header.subtitle) {
         doc.setFontSize(template.styling.fontSize.subtitle);
         doc.setTextColor(0, 0, 0);
-        const subtitleStartX = template.header.logo ? template.layout.margins.left + 25 : (pageWidth - doc.getTextWidth(template.header.subtitle)) / 2;
-        doc.text(template.header.subtitle, subtitleStartX, currentY);
+        const subtitleWidth = doc.getTextWidth(template.header.subtitle);
+        doc.text(template.header.subtitle, (pageWidth - subtitleWidth) / 2, currentY);
         currentY += 6;
       }
 
-      // Address
+      // Address - always centered
       if (template.header.address) {
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(100, 100, 100);
-        const addressStartX = template.header.logo ? template.layout.margins.left + 25 : (pageWidth - doc.getTextWidth(template.header.address)) / 2;
-        doc.text(template.header.address, addressStartX, currentY);
+        const addressWidth = doc.getTextWidth(template.header.address);
+        doc.text(template.header.address, (pageWidth - addressWidth) / 2, currentY);
         currentY += 6;
       }
 
@@ -212,14 +212,7 @@ export const exportToPDF = (
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
           
-          // Footer text
-          if (template.footer.text) {
-            doc.setFontSize(template.styling.fontSize.header);
-            doc.setTextColor(100, 100, 100);
-            doc.text(template.footer.text, template.layout.margins.left, pageHeight - 25);
-          }
-
-          // Page numbers
+          // Page numbers only - remove footer text
           if (template.footer.showPageNumbers) {
             doc.setFontSize(template.styling.fontSize.header);
             doc.setTextColor(0, 0, 0);
@@ -255,17 +248,18 @@ export const exportToPDF = (
         signerNIP = template.teacherInfo?.nip;
       }
       
-      // Left side: Place and date
+      // Left side: Place and date above signature
       doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, template.layout.margins.left, signatureStartY);
       
       // Right side: Signature section
       const rightColumnX = pageWidth - 80;
-      doc.text('Mengetahui,', rightColumnX, signatureStartY);
-      doc.text(signerPosition, rightColumnX, signatureStartY + 5);
-      doc.text('', rightColumnX, signatureStartY + 20); // Space for signature
-      doc.text(`(${signerName})`, rightColumnX, signatureStartY + 25);
+      doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
+      doc.text('Mengetahui,', rightColumnX, signatureStartY + 5);
+      doc.text(signerPosition, rightColumnX, signatureStartY + 10);
+      doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
+      doc.text(`(${signerName})`, rightColumnX, signatureStartY + 30);
       if (signerNIP) {
-        doc.text(`NIP: ${signerNIP}`, rightColumnX, signatureStartY + 30);
+        doc.text(`NIP: ${signerNIP}`, rightColumnX, signatureStartY + 35);
       }
     }
 
