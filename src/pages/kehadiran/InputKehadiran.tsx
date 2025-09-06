@@ -43,9 +43,19 @@ interface Kehadiran {
 }
 
 const InputKehadiran = () => {
-  const [selectedTingkat, setSelectedTingkat] = useState("");
-  const [selectedKelas, setSelectedKelas] = useState("");
-  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("");
+  // Load saved state from localStorage
+  const getSavedState = (key: string, defaultValue: string) => {
+    try {
+      const saved = localStorage.getItem(`input_kehadiran_${key}`);
+      return saved || defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  };
+
+  const [selectedTingkat, setSelectedTingkat] = useState(() => getSavedState('tingkat', ""));
+  const [selectedKelas, setSelectedKelas] = useState(() => getSavedState('kelas', ""));
+  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState(() => getSavedState('mata_pelajaran', ""));
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [allKelas, setAllKelas] = useState<Kelas[]>([]);
   const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
@@ -56,6 +66,15 @@ const InputKehadiran = () => {
   const [loading, setLoading] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
+
+  // Save state to localStorage
+  const saveState = (key: string, value: string) => {
+    try {
+      localStorage.setItem(`input_kehadiran_${key}`, value);
+    } catch (error) {
+      console.warn('Failed to save state:', error);
+    }
+  };
 
   // Fetch all kelas and mata pelajaran
   useEffect(() => {
@@ -71,7 +90,10 @@ const InputKehadiran = () => {
     } else {
       setFilteredKelas([]);
     }
-    setSelectedKelas("");
+    // Don't reset selected kelas when tingkat changes if we have a saved state
+    if (!getSavedState('kelas', '')) {
+      setSelectedKelas("");
+    }
     setStudents([]);
     setAttendance({});
   }, [selectedTingkat, allKelas]);
@@ -327,7 +349,10 @@ const InputKehadiran = () => {
 
             <div className="space-y-2">
               <Label htmlFor="tingkat">Tingkat Kelas</Label>
-              <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+              <Select value={selectedTingkat} onValueChange={(value) => {
+                setSelectedTingkat(value);
+                saveState('tingkat', value);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tingkat kelas" />
                 </SelectTrigger>
@@ -343,7 +368,10 @@ const InputKehadiran = () => {
 
             <div className="space-y-2">
               <Label htmlFor="kelas">Nama Kelas</Label>
-              <Select value={selectedKelas} onValueChange={setSelectedKelas} disabled={!selectedTingkat}>
+              <Select value={selectedKelas} onValueChange={(value) => {
+                setSelectedKelas(value);
+                saveState('kelas', value);
+              }} disabled={!selectedTingkat}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih nama kelas" />
                 </SelectTrigger>
@@ -359,7 +387,10 @@ const InputKehadiran = () => {
 
             <div className="space-y-2">
               <Label htmlFor="mata-pelajaran">Mata Pelajaran</Label>
-              <Select value={selectedMataPelajaran} onValueChange={setSelectedMataPelajaran} disabled={!selectedKelas}>
+              <Select value={selectedMataPelajaran} onValueChange={(value) => {
+                setSelectedMataPelajaran(value);
+                saveState('mata_pelajaran', value);
+              }} disabled={!selectedKelas}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih mata pelajaran" />
                 </SelectTrigger>
