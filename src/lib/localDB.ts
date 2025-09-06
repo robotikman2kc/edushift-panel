@@ -123,6 +123,36 @@ class LocalDB {
         this.insert('jenis_kegiatan', kegiatan);
       });
     }
+
+    // Initialize IndexedDB migration in background
+    this.initIndexedDBMigration();
+  }
+
+  // Background IndexedDB migration
+  private async initIndexedDBMigration() {
+    try {
+      // Import IndexedDB utilities dynamically to avoid blocking
+      const { indexedDB } = await import('./indexedDB');
+      const { DataMigration } = await import('./migrationUtils');
+      
+      await indexedDB.initDB();
+      const migration = new DataMigration();
+      const needsMigration = await migration.isMigrationNeeded();
+      
+      if (needsMigration) {
+        console.log('Starting background migration to IndexedDB...');
+        const result = await migration.migrateData();
+        
+        if (result.success) {
+          console.log('Background migration to IndexedDB completed successfully');
+          // Data is now available in both localStorage and IndexedDB
+        } else {
+          console.warn('IndexedDB migration failed, continuing with localStorage:', result.error);
+        }
+      }
+    } catch (error) {
+      console.warn('IndexedDB not available, using localStorage only:', error);
+    }
   }
 
   // Select all records from table
