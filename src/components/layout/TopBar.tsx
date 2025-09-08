@@ -9,10 +9,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings, Circle, Clock, Calendar } from "lucide-react";
+import { LogOut, User, Settings, Circle, Clock, Calendar, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { localDB } from "@/lib/localDB";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -40,6 +41,22 @@ export function TopBar() {
       toast({
         title: "Error",
         description: "Terjadi kesalahan saat keluar",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRefreshDatabase = () => {
+    try {
+      localDB.initializeDefaultData();
+      toast({
+        title: "Database di-refresh",
+        description: "Database berhasil di-refresh dengan data default.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat refresh database",
         variant: "destructive",
       });
     }
@@ -74,6 +91,16 @@ export function TopBar() {
           <span className="text-sm text-muted-foreground hidden sm:block">
             Selamat datang, Administrator
           </span>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefreshDatabase}
+            className="h-8 w-8 p-0"
+            title="Refresh Database"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
