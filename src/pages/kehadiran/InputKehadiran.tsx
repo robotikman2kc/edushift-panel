@@ -83,27 +83,44 @@ const InputKehadiran = () => {
     fetchMataPelajaran();
   }, []);
 
-  // Filter kelas by tingkat
+  // Initialize filtered kelas when allKelas is loaded and we have saved tingkat
   useEffect(() => {
-    if (selectedTingkat) {
+    if (allKelas.length > 0 && selectedTingkat) {
       const filtered = allKelas.filter(kelas => kelas.tingkat === selectedTingkat);
       setFilteredKelas(filtered);
-    } else {
+    } else if (allKelas.length > 0) {
       setFilteredKelas([]);
     }
-    // Don't reset selected kelas when tingkat changes if we have a saved state
-    if (!getSavedState('kelas', '')) {
-      setSelectedKelas("");
+  }, [allKelas, selectedTingkat]);
+
+  // Filter kelas by tingkat (but don't clear students if we have saved state)
+  useEffect(() => {
+    if (selectedTingkat && allKelas.length > 0) {
+      const filtered = allKelas.filter(kelas => kelas.tingkat === selectedTingkat);
+      setFilteredKelas(filtered);
+      
+      // Only clear selections if no saved state exists
+      const savedKelas = getSavedState('kelas', '');
+      if (!savedKelas) {
+        setSelectedKelas("");
+        setStudents([]);
+        setAttendance({});
+      }
+    } else {
+      setFilteredKelas([]);
+      if (!getSavedState('kelas', '')) {
+        setSelectedKelas("");
+        setStudents([]);
+        setAttendance({});
+      }
     }
-    setStudents([]);
-    setAttendance({});
   }, [selectedTingkat, allKelas]);
 
   // Fetch students when kelas and mata pelajaran are selected
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran) {
+    if (selectedKelas && selectedMataPelajaran && allKelas.length > 0) {
       fetchStudentsAndAttendance();
-    } else {
+    } else if (!selectedKelas || !selectedMataPelajaran) {
       setStudents([]);
       setAttendance({});
       setExistingAttendance({});

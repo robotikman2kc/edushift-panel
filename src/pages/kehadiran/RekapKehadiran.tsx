@@ -115,28 +115,33 @@ const RekapKehadiran = () => {
     fetchMataPelajaran();
   }, []);
 
-  // Filter kelas by tingkat
+  // Filter kelas by tingkat (but don't clear selections if we have saved state)
   useEffect(() => {
-    if (selectedTingkat) {
+    if (selectedTingkat && allKelas.length > 0) {
       const filtered = allKelas.filter(kelas => kelas.tingkat === selectedTingkat);
       setFilteredKelas(filtered);
-    } else {
+      
+      // Only clear selections if no saved state exists
+      const savedKelas = getSavedState('kelas', '');
+      if (!savedKelas) {
+        setSelectedKelas("");
+      }
+    } else if (allKelas.length > 0) {
       setFilteredKelas([]);
-    }
-    // Don't reset selected kelas when tingkat changes if we have a saved state
-    if (!getSavedState('kelas', '')) {
-      setSelectedKelas("");
+      if (!getSavedState('kelas', '')) {
+        setSelectedKelas("");
+      }
     }
   }, [selectedTingkat, allKelas]);
 
   // Generate report when filters change
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran) {
+    if (selectedKelas && selectedMataPelajaran && allKelas.length > 0) {
       generateReport();
-    } else {
+    } else if (!selectedKelas || !selectedMataPelajaran) {
       setReportData([]);
     }
-  }, [selectedKelas, selectedMataPelajaran, selectedMonth, selectedYear]);
+  }, [selectedKelas, selectedMataPelajaran, selectedMonth, selectedYear, allKelas]);
 
   const fetchKelas = async () => {
     try {
