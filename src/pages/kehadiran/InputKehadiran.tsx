@@ -30,6 +30,7 @@ interface Siswa {
   nis: string;
   nama_siswa: string;
   kelas_id: string;
+  status: string;
 }
 
 interface Kehadiran {
