@@ -81,7 +81,24 @@ export interface Kehadiran extends BaseRecord {
   keterangan?: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran';
+export interface JenisPenilaian extends BaseRecord {
+  nama_kategori: string;
+  bobot?: number;
+  deskripsi?: string;
+  status: string;
+}
+
+export interface NilaiSiswa extends BaseRecord {
+  siswa_id: string;
+  mata_pelajaran_id: string;
+  jenis_penilaian_id: string;
+  nilai: number;
+  tanggal: string;
+  semester?: string;
+  tahun_ajaran?: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa';
 
 // Generate UUID function
 function generateId(): string {
@@ -113,7 +130,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {
@@ -150,6 +167,22 @@ class IndexedDBManager {
 
       for (const kegiatan of defaultKegiatan) {
         await this.insert('jenis_kegiatan', kegiatan);
+      }
+    }
+
+    // Add default jenis penilaian if empty
+    const jenisPenilaian = await this.select('jenis_penilaian');
+    if (jenisPenilaian.length === 0) {
+      const defaultPenilaian = [
+        { nama_kategori: 'PH1', bobot: 20, deskripsi: 'Penilaian Harian 1', status: 'Aktif' },
+        { nama_kategori: 'PH2', bobot: 20, deskripsi: 'Penilaian Harian 2', status: 'Aktif' },
+        { nama_kategori: 'KUIS', bobot: 15, deskripsi: 'Kuis', status: 'Aktif' },
+        { nama_kategori: 'UTS', bobot: 20, deskripsi: 'Ujian Tengah Semester', status: 'Aktif' },
+        { nama_kategori: 'UAS', bobot: 25, deskripsi: 'Ujian Akhir Semester', status: 'Aktif' }
+      ];
+
+      for (const penilaian of defaultPenilaian) {
+        await this.insert('jenis_penilaian', penilaian);
       }
     }
   }
@@ -314,7 +347,7 @@ class IndexedDBManager {
 
   // Export all data
   async exportAll(): Promise<Record<TableName, any[]>> {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa'];
     const exportData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
     
     for (const table of tables) {
