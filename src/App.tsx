@@ -5,10 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { AuthProvider } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 
 // Pengaturan Pages
@@ -49,68 +47,65 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/auth" element={<Auth />} />
             <Route path="/*" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    
-                    {/* Pengaturan Routes */}
-                    <Route path="/pengaturan/user" element={<User />} />
-                    <Route path="/pengaturan/guru" element={<Guru />} />
-                    <Route path="/pengaturan/kelas" element={<Kelas />} />
-                    <Route path="/pengaturan/siswa" element={<Siswa />} />
-                    <Route path="/pengaturan/mata-pelajaran" element={<MataPelajaran />} />
-                    <Route 
-                      path="/pengaturan/kategori-penilaian" 
-                      element={<PlaceholderPage title="Kategori Penilaian" description="Kelola kategori penilaian" />} 
-                    />
-                    <Route 
-                      path="/pengaturan/bobot-penilaian" 
-                      element={<PlaceholderPage title="Bobot Penilaian" description="Kelola bobot penilaian" />} 
-                    />
-                    <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
+              <DashboardLayout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  
+                  {/* Pengaturan Routes */}
+                  <Route path="/pengaturan/user" element={<User />} />
+                  <Route path="/pengaturan/guru" element={<Guru />} />
+                  <Route path="/pengaturan/kelas" element={<Kelas />} />
+                  <Route path="/pengaturan/siswa" element={<Siswa />} />
+                  <Route path="/pengaturan/mata-pelajaran" element={<MataPelajaran />} />
+                  <Route 
+                    path="/pengaturan/kategori-penilaian" 
+                    element={<PlaceholderPage title="Kategori Penilaian" description="Kelola kategori penilaian" />} 
+                  />
+                  <Route 
+                    path="/pengaturan/bobot-penilaian" 
+                    element={<PlaceholderPage title="Bobot Penilaian" description="Kelola bobot penilaian" />} 
+                  />
+                  <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
 
-                    {/* Penilaian Routes */}
-                    <Route path="/penilaian/input-nilai" element={<InputNilai />} />
-                    <Route 
-                      path="/penilaian/rekap-nilai" 
-                      element={<PlaceholderPage title="Rekap Nilai" description="Lihat rekap nilai siswa" />} 
-                    />
+                  {/* Penilaian Routes */}
+                  <Route path="/penilaian/input-nilai" element={<InputNilai />} />
+                  <Route 
+                    path="/penilaian/rekap-nilai" 
+                    element={<PlaceholderPage title="Rekap Nilai" description="Lihat rekap nilai siswa" />} 
+                  />
 
-                    {/* Kehadiran Routes */}
-                    <Route path="/kehadiran/input-kehadiran" element={<InputKehadiran />} />
-                    <Route path="/kehadiran/rekap-kehadiran" element={<RekapKehadiran />} />
-                    <Route 
-                      path="/kehadiran/statistik-kehadiran" 
-                      element={<PlaceholderPage title="Statistik Kehadiran" description="Lihat statistik kehadiran" />} 
-                    />
+                  {/* Kehadiran Routes */}
+                  <Route path="/kehadiran/input-kehadiran" element={<InputKehadiran />} />
+                  <Route path="/kehadiran/rekap-kehadiran" element={<RekapKehadiran />} />
+                  <Route 
+                    path="/kehadiran/statistik-kehadiran" 
+                    element={<PlaceholderPage title="Statistik Kehadiran" description="Lihat statistik kehadiran" />} 
+                  />
 
-                    {/* Jurnal Routes */}
-                    <Route path="/jurnal/jurnal-guru" element={<JurnalGuru />} />
-                    <Route 
-                      path="/jurnal/input-jurnal" 
-                      element={<PlaceholderPage title="Input Jurnal" description="Input jurnal mengajar" />} 
-                    />
+                  {/* Jurnal Routes */}
+                  <Route path="/jurnal/jurnal-guru" element={<JurnalGuru />} />
+                  <Route 
+                    path="/jurnal/input-jurnal" 
+                    element={<PlaceholderPage title="Input Jurnal" description="Input jurnal mengajar" />} 
+                  />
 
-                    {/* Data Routes */}
-                    <Route path="/data/manajemen-data" element={<ManajemenData />} />
-                    <Route path="/data/backup-restore" element={<BackupRestore />} />
+                  {/* Data Routes */}
+                  <Route path="/data/manajemen-data" element={<ManajemenData />} />
+                  <Route path="/data/backup-restore" element={<BackupRestore />} />
 
-                    {/* Akun Routes */}
-                    <Route path="/akun/profil" element={<Profil />} />
-                    <Route 
-                      path="/akun/bantuan" 
-                      element={<PlaceholderPage title="Bantuan" description="Panduan penggunaan sistem" />} 
-                    />
+                  {/* Akun Routes */}
+                  <Route path="/akun/profil" element={<Profil />} />
+                  <Route 
+                    path="/akun/bantuan" 
+                    element={<PlaceholderPage title="Bantuan" description="Panduan penggunaan sistem" />} 
+                  />
 
-                    {/* Catch all route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </DashboardLayout>
-              </ProtectedRoute>
+                  {/* Catch all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </DashboardLayout>
             } />
           </Routes>
         </BrowserRouter>

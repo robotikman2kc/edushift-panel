@@ -9,16 +9,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings, Circle, Clock, Calendar, RotateCcw } from "lucide-react";
+import { User, Settings, Circle, Clock, Calendar, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { localDB } from "@/lib/localDB";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
 export function TopBar() {
-  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -29,22 +27,6 @@ export function TopBar() {
 
     return () => clearInterval(timer);
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Berhasil keluar",
-        description: "Anda telah berhasil keluar dari sistem.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Terjadi kesalahan saat keluar",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleRefreshDatabase = () => {
     try {
@@ -122,10 +104,8 @@ export function TopBar() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">
-                    {user?.email?.split('@')[0] || 'User'}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{user?.email}</span>
+                  <span className="text-sm font-medium">Administrator</span>
+                  <span className="text-xs text-muted-foreground">admin@sekolah.com</span>
                 </div>
               </div>
               <DropdownMenuSeparator />
@@ -136,11 +116,6 @@ export function TopBar() {
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Pengaturan</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
