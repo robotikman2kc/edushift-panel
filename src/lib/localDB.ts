@@ -81,7 +81,7 @@ export interface Kehadiran extends BaseRecord {
   keterangan?: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran';
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jadwal_pelajaran' | 'jam_pelajaran' | 'pengaturan';
 
 // Generate UUID function
 function generateId(): string {
@@ -100,7 +100,7 @@ class LocalDB {
 
   // Initialize default data
   initializeDefaultData() {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan'];
     
     tables.forEach(table => {
       if (!localStorage.getItem(this.getStorageKey(table))) {
@@ -253,7 +253,7 @@ class LocalDB {
 
   // Export all data
   exportAll(): Record<TableName, any[]> {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan'];
     const exportData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
     
     tables.forEach(table => {

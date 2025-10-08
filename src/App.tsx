@@ -15,6 +15,7 @@ import Guru from "./pages/pengaturan/Guru";
 import Kelas from "./pages/pengaturan/Kelas";
 import Siswa from "./pages/pengaturan/Siswa";
 import MataPelajaran from "./pages/pengaturan/MataPelajaran";
+import JadwalPelajaran from "./pages/pengaturan/JadwalPelajaran";
 
 // Penilaian Pages
 import InputNilai from "./pages/penilaian/InputNilai";
@@ -59,6 +60,7 @@ const App = () => (
                   <Route path="/pengaturan/kelas" element={<Kelas />} />
                   <Route path="/pengaturan/siswa" element={<Siswa />} />
                   <Route path="/pengaturan/mata-pelajaran" element={<MataPelajaran />} />
+                  <Route path="/pengaturan/jadwal-pelajaran" element={<JadwalPelajaran />} />
                   <Route 
                     path="/pengaturan/kategori-penilaian" 
                     element={<PlaceholderPage title="Kategori Penilaian" description="Kelola kategori penilaian" />} 
