@@ -136,6 +136,9 @@ const BackupRestore = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      // Save last backup timestamp
+      localStorage.setItem('lastBackupDate', new Date().toISOString());
+
       toast({
         title: "Backup Berhasil",
         description: "Data berhasil dibackup dan diunduh"
