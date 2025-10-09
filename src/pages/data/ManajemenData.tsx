@@ -102,6 +102,22 @@ const ManajemenData = () => {
       color: 'purple'
     },
     {
+      key: 'guru' as const,
+      title: 'Data Guru',
+      description: 'Hapus semua data guru yang terdaftar',
+      icon: Users,
+      count: stats.guru,
+      color: 'blue'
+    },
+    {
+      key: 'mata_pelajaran' as const,
+      title: 'Data Mata Pelajaran',
+      description: 'Hapus semua data mata pelajaran',
+      icon: BookOpen,
+      count: stats.mata_pelajaran,
+      color: 'cyan'
+    },
+    {
       key: 'kelas' as const,
       title: 'Data Kelas',
       description: 'Hapus semua data kelas yang terdaftar',
@@ -118,12 +134,12 @@ const ManajemenData = () => {
       color: 'orange'
     },
     {
-      key: 'kehadiran' as const,
-      title: 'Data Kehadiran',
-      description: 'Hapus semua record kehadiran siswa',
-      icon: Calendar,
-      count: stats.kehadiran,
-      color: 'red'
+      key: 'jenis_kegiatan' as const,
+      title: 'Data Jenis Kegiatan',
+      description: 'Hapus semua jenis kegiatan',
+      icon: Database,
+      count: stats.jenis_kegiatan,
+      color: 'teal'
     },
     {
       key: 'jurnal' as const,
@@ -132,16 +148,27 @@ const ManajemenData = () => {
       icon: FileText,
       count: stats.jurnal,
       color: 'indigo'
+    },
+    {
+      key: 'kehadiran' as const,
+      title: 'Data Kehadiran',
+      description: 'Hapus semua record kehadiran siswa',
+      icon: Calendar,
+      count: stats.kehadiran,
+      color: 'red'
     }
   ];
 
   const getColorClasses = (color: string) => {
     const colors = {
       purple: 'bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800',
+      blue: 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800',
+      cyan: 'bg-cyan-50 dark:bg-cyan-950 border-cyan-200 dark:border-cyan-800',
       green: 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800',
       orange: 'bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800',
-      red: 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800',
-      indigo: 'bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800'
+      teal: 'bg-teal-50 dark:bg-teal-950 border-teal-200 dark:border-teal-800',
+      indigo: 'bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800',
+      red: 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
     };
     return colors[color as keyof typeof colors];
   };
@@ -149,10 +176,13 @@ const ManajemenData = () => {
   const getIconColor = (color: string) => {
     const colors = {
       purple: 'text-purple-600',
+      blue: 'text-blue-600',
+      cyan: 'text-cyan-600',
       green: 'text-green-600',
-      orange: 'text-orange-600', 
-      red: 'text-red-600',
-      indigo: 'text-indigo-600'
+      orange: 'text-orange-600',
+      teal: 'text-teal-600',
+      indigo: 'text-indigo-600',
+      red: 'text-red-600'
     };
     return colors[color as keyof typeof colors];
   };
@@ -261,36 +291,6 @@ const ManajemenData = () => {
         })}
       </div>
 
-      <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-            <Database className="h-5 w-5" />
-            Data Lainnya
-          </CardTitle>
-          <CardDescription className="text-blue-700 dark:text-blue-300">
-            Data berikut dikelola melalui menu pengaturan dan tidak dapat dihapus massal
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg text-center">
-              <Users className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Data Guru</p>
-              <p className="text-lg font-bold text-blue-600">{stats.guru}</p>
-            </div>
-            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg text-center">
-              <BookOpen className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Mata Pelajaran</p>
-              <p className="text-lg font-bold text-blue-600">{stats.mata_pelajaran}</p>
-            </div>
-            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg text-center">
-              <Database className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Jenis Kegiatan</p>
-              <p className="text-lg font-bold text-blue-600">{stats.jenis_kegiatan}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
