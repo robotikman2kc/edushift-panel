@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -425,59 +426,70 @@ const JurnalGuru = () => {
         </div>
       </PageHeader>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Daftar Jenis Kegiatan</CardTitle>
-          <CardDescription>
-            Kelola jenis kegiatan yang tersedia
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={jenisKegiatan.map((item, index) => ({
-              ...item,
-              no: index + 1,
-            }))}
-            columns={[
-              { key: "no", label: "No.", sortable: false },
-              { key: "nama_kegiatan", label: "Nama Kegiatan", sortable: true },
-              { key: "deskripsi", label: "Deskripsi", sortable: false },
-            ]}
-            loading={loading}
-            onDelete={handleDeleteKegiatan}
-            searchPlaceholder="Cari jenis kegiatan..."
-            title="Jenis Kegiatan"
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="jurnal" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="jurnal">Daftar Jurnal</TabsTrigger>
+          <TabsTrigger value="jenis-kegiatan">Daftar Jenis Kegiatan</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Daftar Jurnal</CardTitle>
-          <CardDescription>
-            Lihat dan kelola jurnal kegiatan mengajar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={filteredJurnal.map((item, index) => ({
-              ...item,
-              no: index + 1,
-              tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
-              jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
-            }))}
-            columns={[
-              { key: "no", label: "No.", sortable: false },
-              ...columns
-            ]}
-            loading={loading}
-            onEdit={(id) => handleEdit(id)}
-            onDelete={handleDelete}
-            searchPlaceholder="Cari jurnal..."
-            title="Jurnal Guru"
-          />
-        </CardContent>
-      </Card>
+        <TabsContent value="jurnal">
+          <Card>
+            <CardHeader>
+              <CardTitle>Daftar Jurnal</CardTitle>
+              <CardDescription>
+                Lihat dan kelola jurnal kegiatan mengajar
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                data={filteredJurnal.map((item, index) => ({
+                  ...item,
+                  no: index + 1,
+                  tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
+                  jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
+                }))}
+                columns={[
+                  { key: "no", label: "No.", sortable: false },
+                  ...columns
+                ]}
+                loading={loading}
+                onEdit={(id) => handleEdit(id)}
+                onDelete={handleDelete}
+                searchPlaceholder="Cari jurnal..."
+                title="Jurnal Guru"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="jenis-kegiatan">
+          <Card>
+            <CardHeader>
+              <CardTitle>Daftar Jenis Kegiatan</CardTitle>
+              <CardDescription>
+                Kelola jenis kegiatan yang tersedia
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                data={jenisKegiatan.map((item, index) => ({
+                  ...item,
+                  no: index + 1,
+                }))}
+                columns={[
+                  { key: "no", label: "No.", sortable: false },
+                  { key: "nama_kegiatan", label: "Nama Kegiatan", sortable: true },
+                  { key: "deskripsi", label: "Deskripsi", sortable: false },
+                ]}
+                loading={loading}
+                onDelete={handleDeleteKegiatan}
+                searchPlaceholder="Cari jenis kegiatan..."
+                title="Jenis Kegiatan"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={showJurnalDialog} onOpenChange={setShowJurnalDialog}>
         <DialogContent className="max-w-2xl">
