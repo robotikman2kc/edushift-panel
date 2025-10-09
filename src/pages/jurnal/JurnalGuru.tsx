@@ -262,6 +262,40 @@ const JurnalGuru = () => {
     }
   };
 
+  const handleDeleteKegiatan = async (id: string) => {
+    try {
+      // Check if jenis kegiatan is being used in any jurnal
+      const jurnalUsingKegiatan = localDB.select("jurnal").filter(
+        (j: any) => j.jenis_kegiatan_id === id
+      );
+
+      if (jurnalUsingKegiatan.length > 0) {
+        toast({
+          title: "Tidak Bisa Dihapus",
+          description: `Jenis kegiatan ini digunakan di ${jurnalUsingKegiatan.length} jurnal`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const result = localDB.delete("jenis_kegiatan", id);
+      if (result.error) throw new Error(result.error);
+
+      toast({
+        title: "Berhasil",
+        description: "Jenis kegiatan berhasil dihapus",
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting jenis kegiatan:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus jenis kegiatan",
+        variant: "destructive",
+      });
+    }
+  };
+
   const columns = [
     { key: "tanggal", label: "Tanggal", sortable: true },
     { key: "uraian_kegiatan", label: "Uraian Kegiatan", sortable: true },
@@ -390,6 +424,32 @@ const JurnalGuru = () => {
           </Button>
         </div>
       </PageHeader>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Daftar Jenis Kegiatan</CardTitle>
+          <CardDescription>
+            Kelola jenis kegiatan yang tersedia
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            data={jenisKegiatan.map((item, index) => ({
+              ...item,
+              no: index + 1,
+            }))}
+            columns={[
+              { key: "no", label: "No.", sortable: false },
+              { key: "nama_kegiatan", label: "Nama Kegiatan", sortable: true },
+              { key: "deskripsi", label: "Deskripsi", sortable: false },
+            ]}
+            loading={loading}
+            onDelete={handleDeleteKegiatan}
+            searchPlaceholder="Cari jenis kegiatan..."
+            title="Jenis Kegiatan"
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
