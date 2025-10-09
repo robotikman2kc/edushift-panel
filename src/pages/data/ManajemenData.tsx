@@ -16,6 +16,7 @@ interface DataStats {
   kehadiran: number;
   jenis_kegiatan: number;
   jurnal: number;
+  users: number;
 }
 
 const ManajemenData = () => {
@@ -26,7 +27,8 @@ const ManajemenData = () => {
     siswa: 0,
     kehadiran: 0,
     jenis_kegiatan: 0,
-    jurnal: 0
+    jurnal: 0,
+    users: 0
   });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -35,6 +37,7 @@ const ManajemenData = () => {
   // Fetch data statistics
   const fetchStats = async () => {
     try {
+      const usersData = JSON.parse(localStorage.getItem('users') || '[]');
       setStats({
         guru: localDB.select('guru').length,
         kelas: localDB.select('kelas').length,
@@ -42,7 +45,8 @@ const ManajemenData = () => {
         siswa: localDB.select('siswa').length,
         kehadiran: localDB.select('kehadiran').length,
         jenis_kegiatan: localDB.select('jenis_kegiatan').length,
-        jurnal: localDB.select('jurnal').length
+        jurnal: localDB.select('jurnal').length,
+        users: usersData.length
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -56,12 +60,17 @@ const ManajemenData = () => {
   }, []);
 
   // Delete all data from a table
-  const deleteAllData = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
+  const deleteAllData = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal' | 'users', displayName: string) => {
     setDeleting(tableName);
     try {
-      const result = localDB.clear(tableName);
-      if (result.error) {
-        throw new Error(result.error);
+      if (tableName === 'users') {
+        // Clear users from localStorage
+        localStorage.setItem('users', JSON.stringify([]));
+      } else {
+        const result = localDB.clear(tableName);
+        if (result.error) {
+          throw new Error(result.error);
+        }
       }
 
       toast({
@@ -84,6 +93,14 @@ const ManajemenData = () => {
   };
 
   const dataTypes = [
+    {
+      key: 'users' as const,
+      title: 'Data User',
+      description: 'Hapus semua data pengguna sistem',
+      icon: Users,
+      count: stats.users,
+      color: 'purple'
+    },
     {
       key: 'kelas' as const,
       title: 'Data Kelas',
@@ -120,6 +137,7 @@ const ManajemenData = () => {
 
   const getColorClasses = (color: string) => {
     const colors = {
+      purple: 'bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800',
       green: 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800',
       orange: 'bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800',
       red: 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800',
@@ -130,6 +148,7 @@ const ManajemenData = () => {
 
   const getIconColor = (color: string) => {
     const colors = {
+      purple: 'text-purple-600',
       green: 'text-green-600',
       orange: 'text-orange-600', 
       red: 'text-red-600',
