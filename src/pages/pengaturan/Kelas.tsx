@@ -8,7 +8,6 @@ interface Kelas {
   id: string;
   nama_kelas: string;
   tingkat: string;
-  jurusan: string;
   wali_kelas_id?: string;
   wali_kelas?: {
     nama_guru: string;
@@ -32,7 +31,6 @@ const Kelas = () => {
   const columns = [
     { key: "nama_kelas", label: "Nama Kelas", sortable: true },
     { key: "tingkat", label: "Tingkat", sortable: true },
-    { key: "jurusan", label: "Jurusan", sortable: true },
     { key: "wali_kelas_nama", label: "Wali Kelas", sortable: false },
     { key: "tahun_ajaran", label: "Tahun Ajaran", sortable: true },
     { key: "kapasitas", label: "Kapasitas", sortable: false },
@@ -45,11 +43,6 @@ const Kelas = () => {
       { value: "X", label: "X" },
       { value: "XI", label: "XI" },
       { value: "XII", label: "XII" }
-    ]},
-    { key: "jurusan", label: "Jurusan", type: "select" as const, placeholder: "Pilih jurusan", required: false, options: [
-      { value: "IPA", label: "IPA" },
-      { value: "IPS", label: "IPS" },
-      { value: "Bahasa", label: "Bahasa" }
     ]},
     { key: "wali_kelas_id", label: "Wali Kelas", type: "select" as const, placeholder: "Pilih wali kelas", required: false, options: guru.map(g => ({ value: g.id, label: g.nama_guru })) },
     { key: "tahun_ajaran", label: "Tahun Ajaran", type: "text" as const, placeholder: "Contoh: 2024/2025", required: true },
@@ -108,7 +101,6 @@ const Kelas = () => {
       const result = localDB.insert('kelas', {
         nama_kelas: formData.nama_kelas,
         tingkat: formData.tingkat,
-        jurusan: formData.jurusan || undefined,
         wali_kelas_id: formData.wali_kelas_id || undefined,
         tahun_ajaran: formData.tahun_ajaran,
         kapasitas: parseInt(formData.kapasitas),
@@ -137,7 +129,6 @@ const Kelas = () => {
       const result = localDB.update('kelas', id, {
         nama_kelas: formData.nama_kelas,
         tingkat: formData.tingkat,
-        jurusan: formData.jurusan || undefined,
         wali_kelas_id: formData.wali_kelas_id || undefined,
         tahun_ajaran: formData.tahun_ajaran,
         kapasitas: parseInt(formData.kapasitas),
@@ -191,7 +182,7 @@ const Kelas = () => {
       <DataTable
         data={kelas}
         columns={columns}
-        searchPlaceholder="Cari nama kelas, tingkat, atau jurusan..."
+        searchPlaceholder="Cari nama kelas atau tingkat..."
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}

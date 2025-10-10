@@ -484,7 +484,7 @@ export function DataTable({
                     <TableRow key={item.id || index}>
                       {columns.map((column) => (
                         <TableCell key={column.key}>
-                          {item[column.key] || "-"}
+                          {column.key === 'no' ? index + 1 : (item[column.key] || "-")}
                         </TableCell>
                       ))}
                       <TableCell>
