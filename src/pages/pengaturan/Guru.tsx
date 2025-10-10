@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { useToast } from "@/hooks/use-toast";
 
 interface Guru {
@@ -36,7 +36,7 @@ const Guru = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const guru = localDB.select('guru');
+      const guru = await indexedDB.select('guru');
       
       // Add row numbers to data
       const dataWithNumbers = guru.map((item, index) => ({
@@ -58,7 +58,7 @@ const Guru = () => {
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
-      const result = localDB.insert('guru', {
+      const result = await indexedDB.insert('guru', {
         nama_guru: formData.nama_guru,
         nip: formData.nip,
         mata_pelajaran: formData.mata_pelajaran,
@@ -92,7 +92,7 @@ const Guru = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const result = localDB.update('guru', id, {
+      const result = await indexedDB.update('guru', id, {
         nama_guru: formData.nama_guru,
         nip: formData.nip,
         mata_pelajaran: formData.mata_pelajaran,
@@ -126,7 +126,7 @@ const Guru = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const result = localDB.delete('guru', id);
+      const result = await indexedDB.delete('guru', id);
 
       if (result.error) {
         toast({
@@ -168,14 +168,15 @@ const Guru = () => {
           }
 
           // Cek apakah NIP sudah ada
-          const existingGuru = localDB.select('guru').find(g => g.nip === row.nip);
+          const allGuru = await indexedDB.select('guru');
+          const existingGuru = allGuru.find(g => g.nip === row.nip);
           if (existingGuru) {
             errors.push(`NIP "${row.nip}" sudah ada dalam database`);
             errorCount++;
             continue;
           }
 
-          const result = localDB.insert('guru', {
+          const result = await indexedDB.insert('guru', {
             nama_guru: row.nama_guru,
             nip: row.nip,
             mata_pelajaran: row.mata_pelajaran || '',

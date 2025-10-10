@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { User, Mail, Save, Eye, EyeOff, Camera, Upload } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +44,7 @@ const Profil = () => {
     if (!user) return;
     
     try {
-      const userData = localDB.selectById('users', user.id);
+      const userData = await indexedDB.selectById('users' as any, user.id);
       if (!userData) {
         throw new Error('Profile not found');
       }
@@ -77,7 +77,7 @@ const Profil = () => {
       }
 
       // Update profile data
-      const result = localDB.update('users', user?.id!, {
+      const result = await indexedDB.update('users' as any, user?.id!, {
         nama: formData.nama,
         email: formData.email
       });
@@ -123,7 +123,7 @@ const Profil = () => {
         const base64 = e.target?.result as string;
         
         // Update user profile with avatar URL (base64)
-        const result = localDB.update('users', user.id, { avatar_url: base64 });
+        const result = await indexedDB.update('users' as any, user.id, { avatar_url: base64 });
         
         if (result.error) {
           throw new Error(result.error);

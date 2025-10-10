@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,16 +129,15 @@ const InputKehadiran = () => {
 
   const fetchKelas = async () => {
     try {
-      const data = localDB.select("kelas")
-        .filter(kelas => kelas.status === "Aktif")
-        .sort((a, b) => {
-          if (a.tingkat !== b.tingkat) {
-            return a.tingkat.localeCompare(b.tingkat);
-          }
-          return a.nama_kelas.localeCompare(b.nama_kelas);
-        });
+      const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif");
+      const sortedData = data.sort((a, b) => {
+        if (a.tingkat !== b.tingkat) {
+          return a.tingkat.localeCompare(b.tingkat);
+        }
+        return a.nama_kelas.localeCompare(b.nama_kelas);
+      });
 
-      setAllKelas(data);
+      setAllKelas(sortedData);
     } catch (error) {
       console.error("Error fetching kelas:", error);
       toast({
@@ -151,11 +150,10 @@ const InputKehadiran = () => {
 
   const fetchMataPelajaran = async () => {
     try {
-      const data = localDB.select("mata_pelajaran")
-        .filter(mp => mp.status === "Aktif")
-        .sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
+      const data = await indexedDB.select("mata_pelajaran", mp => mp.status === "Aktif");
+      const sortedData = data.sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
 
-      setMataPelajaran(data);
+      setMataPelajaran(sortedData);
     } catch (error) {
       console.error("Error fetching mata pelajaran:", error);
       toast({
@@ -171,12 +169,11 @@ const InputKehadiran = () => {
       setLoading(true);
       
       // First fetch existing attendance
-      const attendanceData = localDB.select("kehadiran")
-        .filter(record => 
-          record.kelas_id === selectedKelas &&
-          record.mata_pelajaran_id === selectedMataPelajaran &&
-          record.tanggal === selectedDate
-        );
+      const attendanceData = await indexedDB.select("kehadiran", record => 
+        record.kelas_id === selectedKelas &&
+        record.mata_pelajaran_id === selectedMataPelajaran &&
+        record.tanggal === selectedDate
+      );
       
       const attendanceMap: {[key: string]: Kehadiran} = {};
       attendanceData.forEach(record => {
@@ -185,14 +182,13 @@ const InputKehadiran = () => {
       setExistingAttendance(attendanceMap);
 
       // Then fetch students
-      const studentsData = localDB.select("siswa")
-        .filter(student => 
-          student.kelas_id === selectedKelas &&
-          student.status === "Aktif"
-        )
-        .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
+      const studentsData = await indexedDB.select("siswa", student => 
+        student.kelas_id === selectedKelas &&
+        student.status === "Aktif"
+      );
+      const sortedStudents = studentsData.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
-      setStudents(studentsData);
+      setStudents(sortedStudents);
       
       // Initialize attendance with existing data
       const initialAttendance: {[key: string]: string} = {};
@@ -270,7 +266,7 @@ const InputKehadiran = () => {
 
       // Insert new records
       for (const record of toInsert) {
-        const result = localDB.insert("kehadiran", {
+        const result = await indexedDB.insert("kehadiran", {
           siswa_id: record.siswa_id,
           kelas_id: record.kelas_id,
           mata_pelajaran_id: selectedMataPelajaran,
@@ -283,7 +279,7 @@ const InputKehadiran = () => {
 
       // Update existing records
       for (const record of toUpdate) {
-        const result = localDB.update("kehadiran", record.id!, {
+        const result = await indexedDB.update("kehadiran", record.id!, {
           status_kehadiran: record.status_kehadiran,
           keterangan: record.keterangan,
         });

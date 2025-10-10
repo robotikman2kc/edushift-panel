@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { Download, Upload, Database, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, BarChart3 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -38,14 +38,22 @@ const BackupRestore = () => {
   // Fetch data statistics
   const fetchStats = async () => {
     try {
+      const kelasCount = await indexedDB.count('kelas');
+      const mataPelajaranCount = await indexedDB.count('mata_pelajaran');
+      const siswaCount = await indexedDB.count('siswa');
+      const guruCount = await indexedDB.count('guru');
+      const kehadiranCount = await indexedDB.count('kehadiran');
+      const jenisKegiatanCount = await indexedDB.count('jenis_kegiatan');
+      const jurnalCount = await indexedDB.count('jurnal');
+      
       setStats({
-        kelas: localDB.select('kelas').length,
-        mata_pelajaran: localDB.select('mata_pelajaran').length,
-        siswa: localDB.select('siswa').length,
-        guru: localDB.select('guru').length,
-        kehadiran: localDB.select('kehadiran').length,
-        jenis_kegiatan: localDB.select('jenis_kegiatan').length,
-        jurnal: localDB.select('jurnal').length
+        kelas: kelasCount,
+        mata_pelajaran: mataPelajaranCount,
+        siswa: siswaCount,
+        guru: guruCount,
+        kehadiran: kehadiranCount,
+        jenis_kegiatan: jenisKegiatanCount,
+        jurnal: jurnalCount
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -63,7 +71,7 @@ const BackupRestore = () => {
   // Export individual table
   const exportTable = async (tableName: 'kelas' | 'mata_pelajaran' | 'siswa' | 'guru' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal', displayName: string) => {
     try {
-      const data = localDB.select(tableName);
+      const data = await indexedDB.select(tableName);
 
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: 'application/json'
@@ -102,7 +110,7 @@ const BackupRestore = () => {
         ['kelas', 'mata_pelajaran', 'siswa', 'guru', 'kehadiran', 'jenis_kegiatan', 'jurnal'];
       
       for (const table of tables) {
-        const data = localDB.select(table);
+        const data = await indexedDB.select(table);
         backupData[table] = data;
       }
 
@@ -181,7 +189,7 @@ const BackupRestore = () => {
       for (const table of tables) {
         if (backupData[table]) {
           // Clear existing data
-          const clearResult = localDB.clear(table);
+          const clearResult = await indexedDB.clear(table);
           if (clearResult.error) {
             console.warn(`Warning clearing ${table}:`, clearResult.error);
           }
@@ -189,7 +197,7 @@ const BackupRestore = () => {
           // Restore data
           if (backupData[table].length > 0) {
             for (const item of backupData[table]) {
-              const insertResult = localDB.insert(table, item);
+              const insertResult = await indexedDB.insert(table, item);
               if (insertResult.error) {
                 throw new Error(`Error restoring ${table}: ${insertResult.error}`);
               }

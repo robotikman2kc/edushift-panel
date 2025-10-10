@@ -13,7 +13,7 @@ import {
 import { User, Settings, Circle, Clock, Calendar, RotateCcw, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { format, differenceInDays } from "date-fns";
 import { id } from "date-fns/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -67,9 +67,9 @@ export function TopBar() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleRefreshDatabase = () => {
+  const handleRefreshDatabase = async () => {
     try {
-      localDB.initializeDefaultData();
+      await indexedDB.initializeDefaultData();
       toast({
         title: "Database di-refresh",
         description: "Database berhasil di-refresh dengan data default.",

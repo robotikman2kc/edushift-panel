@@ -41,7 +41,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { cn } from "@/lib/utils";
 
 const jurnalSchema = z.object({
@@ -128,23 +128,28 @@ const JurnalGuru = () => {
   const fetchData = async () => {
     try {
       // Fetch jurnal entries
-      const jurnalData = localDB.select("jurnal").map(jurnal => {
-        const jenisKegiatan = localDB.selectById("jenis_kegiatan", jurnal.jenis_kegiatan_id);
-        return {
-          ...jurnal,
-          jenis_kegiatan: {
-            nama_kegiatan: jenisKegiatan?.nama_kegiatan || ""
-          }
-        };
-      }).sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
+      const jurnalDataRaw = await indexedDB.select("jurnal");
+      const jurnalData = await Promise.all(
+        jurnalDataRaw.map(async jurnal => {
+          const jenisKegiatan = await indexedDB.selectById("jenis_kegiatan", jurnal.jenis_kegiatan_id);
+          return {
+            ...jurnal,
+            jenis_kegiatan: {
+              nama_kegiatan: jenisKegiatan?.nama_kegiatan || ""
+            }
+          };
+        })
+      );
+      const sortedJurnal = jurnalData.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
 
       // Fetch jenis kegiatan
-      const kegiatanData = localDB.select("jenis_kegiatan").sort((a, b) => 
+      const kegiatanData = await indexedDB.select("jenis_kegiatan");
+      const sortedKegiatan = kegiatanData.sort((a, b) => 
         a.nama_kegiatan.localeCompare(b.nama_kegiatan)
       );
 
-      setJurnal(jurnalData);
-      setJenisKegiatan(kegiatanData);
+      setJurnal(sortedJurnal);
+      setJenisKegiatan(sortedKegiatan);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -168,7 +173,7 @@ const JurnalGuru = () => {
       };
 
       if (selectedJurnal) {
-        const result = localDB.update("jurnal", selectedJurnal.id, jurnalData);
+        const result = await indexedDB.update("jurnal", selectedJurnal.id, jurnalData);
         if (result.error) throw new Error(result.error);
         
         toast({
@@ -176,7 +181,7 @@ const JurnalGuru = () => {
           description: "Jurnal berhasil diperbarui",
         });
       } else {
-        const result = localDB.insert("jurnal", jurnalData);
+        const result = await indexedDB.insert("jurnal", jurnalData);
         if (result.error) throw new Error(result.error);
         
         toast({
@@ -206,7 +211,7 @@ const JurnalGuru = () => {
         deskripsi: data.deskripsi || "",
       };
       
-      const result = localDB.insert("jenis_kegiatan", kegiatanData);
+      const result = await indexedDB.insert("jenis_kegiatan", kegiatanData);
       if (result.error) throw new Error(result.error);
 
       toast({
@@ -245,7 +250,7 @@ const JurnalGuru = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const result = localDB.delete("jurnal", id);
+      const result = await indexedDB.delete("jurnal", id);
       if (result.error) throw new Error(result.error);
 
       toast({
@@ -266,7 +271,8 @@ const JurnalGuru = () => {
   const handleDeleteKegiatan = async (id: string) => {
     try {
       // Check if jenis kegiatan is being used in any jurnal
-      const jurnalUsingKegiatan = localDB.select("jurnal").filter(
+      const allJurnal = await indexedDB.select("jurnal");
+      const jurnalUsingKegiatan = allJurnal.filter(
         (j: any) => j.jenis_kegiatan_id === id
       );
 
@@ -279,7 +285,7 @@ const JurnalGuru = () => {
         return;
       }
 
-      const result = localDB.delete("jenis_kegiatan", id);
+      const result = await indexedDB.delete("jenis_kegiatan", id);
       if (result.error) throw new Error(result.error);
 
       toast({

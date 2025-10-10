@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { toast } from "@/hooks/use-toast";
 
 interface Kelas {
@@ -51,7 +51,7 @@ const Kelas = () => {
 
   const fetchGuru = async () => {
     try {
-      const data = localDB.select('guru');
+      const data = await indexedDB.select('guru');
       const guruData = data.map(g => ({ id: g.id, nama_guru: g.nama_guru }));
       setGuru(guruData);
     } catch (error: any) {
@@ -66,8 +66,8 @@ const Kelas = () => {
   const fetchKelas = async () => {
     try {
       setLoading(true);
-      const data = localDB.select('kelas');
-      const allGuru = localDB.select('guru');
+      const data = await indexedDB.select('kelas');
+      const allGuru = await indexedDB.select('guru');
 
       // Format the data to match the expected structure
       const formattedData = data.map(item => {
@@ -98,7 +98,7 @@ const Kelas = () => {
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
-      const result = localDB.insert('kelas', {
+      const result = await indexedDB.insert('kelas', {
         nama_kelas: formData.nama_kelas,
         tingkat: formData.tingkat,
         wali_kelas_id: formData.wali_kelas_id || undefined,
@@ -126,7 +126,7 @@ const Kelas = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const result = localDB.update('kelas', id, {
+      const result = await indexedDB.update('kelas', id, {
         nama_kelas: formData.nama_kelas,
         tingkat: formData.tingkat,
         wali_kelas_id: formData.wali_kelas_id || undefined,
@@ -153,7 +153,7 @@ const Kelas = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const result = localDB.delete('kelas', id);
+      const result = await indexedDB.delete('kelas', id);
 
       if (result.error) throw new Error(result.error);
 

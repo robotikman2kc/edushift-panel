@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { toast } from "@/hooks/use-toast";
 
 interface Siswa {
@@ -68,7 +68,7 @@ const Siswa = () => {
 
   const fetchKelas = async () => {
     try {
-      const data = localDB.select('kelas');
+      const data = await indexedDB.select('kelas');
       setKelas(data);
     } catch (error: any) {
       toast({
@@ -82,8 +82,8 @@ const Siswa = () => {
   const fetchSiswa = async () => {
     try {
       setLoading(true);
-      const data = localDB.select('siswa');
-      const allKelas = localDB.select('kelas');
+      const data = await indexedDB.select('siswa');
+      const allKelas = await indexedDB.select('kelas');
 
       // Format the data to match the expected structure
       const formattedData = data.map(item => {
@@ -164,7 +164,7 @@ const Siswa = () => {
         return;
       }
 
-      const result = localDB.insert('siswa', {
+      const result = await indexedDB.insert('siswa', {
         nis: formData.nis,
         nama_siswa: formData.nama_siswa,
         kelas_id: kelasId,
@@ -197,7 +197,7 @@ const Siswa = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
-      const result = localDB.update('siswa', id, {
+      const result = await indexedDB.update('siswa', id, {
         nis: formData.nis,
         nama_siswa: formData.nama_siswa,
         jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
@@ -228,7 +228,7 @@ const Siswa = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const result = localDB.delete('siswa', id);
+      const result = await indexedDB.delete('siswa', id);
 
       if (result.error) throw new Error(result.error);
 
@@ -272,7 +272,8 @@ const Siswa = () => {
           }
 
           // Cek apakah NIS sudah ada
-          const existingSiswa = localDB.select('siswa').find(s => s.nis === row.nis);
+          const allSiswa = await indexedDB.select('siswa');
+          const existingSiswa = allSiswa.find(s => s.nis === row.nis);
           if (existingSiswa) {
             errors.push(`NIS "${row.nis}" sudah ada dalam database`);
             errorCount++;
@@ -295,7 +296,7 @@ const Siswa = () => {
             continue;
           }
 
-          const result = localDB.insert('siswa', {
+          const result = await indexedDB.insert('siswa', {
             nis: row.nis,
             nama_siswa: row.nama_siswa,
             kelas_id: kelasId,

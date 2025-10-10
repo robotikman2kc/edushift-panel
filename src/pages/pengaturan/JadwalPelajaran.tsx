@@ -29,7 +29,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 
 interface TimeSlot {
   id: string;
@@ -88,19 +88,19 @@ export default function JadwalPelajaran() {
       setLoading(true);
       
       // Fetch schedules
-      const schedulesData = localDB.select("jadwal_pelajaran");
+      const schedulesData = await indexedDB.select("jadwal_pelajaran" as any);
       
       // Fetch time slots or create default ones
-      let timeSlotsData = localDB.select("jam_pelajaran");
+      let timeSlotsData = await indexedDB.select("jam_pelajaran" as any);
       if (timeSlotsData.length === 0) {
-        timeSlotsData = createDefaultTimeSlots();
+        timeSlotsData = await createDefaultTimeSlots();
       }
       
       // Fetch kelas
-      const kelasData = localDB.select("kelas");
+      const kelasData = await indexedDB.select("kelas");
       
       // Fetch mata pelajaran
-      const mataPelajaranData = localDB.select("mata_pelajaran");
+      const mataPelajaranData = await indexedDB.select("mata_pelajaran");
       
       // Enrich schedules with names
       const enrichedSchedules = schedulesData.map((schedule: any) => {
@@ -119,7 +119,7 @@ export default function JadwalPelajaran() {
       setMataPelajaranList(mataPelajaranData);
       
       // Get minutes per JP from settings or use default
-      const settings = localDB.select("pengaturan");
+      const settings = await indexedDB.select("pengaturan" as any);
       const jpSetting = settings.find((s: any) => s.key === "minutes_per_jp");
       if (jpSetting) {
         setMinutesPerJP(Number(jpSetting.value));
@@ -136,7 +136,7 @@ export default function JadwalPelajaran() {
     }
   };
 
-  const createDefaultTimeSlots = () => {
+  const createDefaultTimeSlots = async () => {
     const defaultSlots: TimeSlot[] = [
       { id: "1", jam_ke: 1, waktu_mulai: "06:30", waktu_selesai: "07:15" },
       { id: "2", jam_ke: 2, waktu_mulai: "07:15", waktu_selesai: "08:00" },
@@ -149,13 +149,13 @@ export default function JadwalPelajaran() {
     ];
     
     for (const slot of defaultSlots) {
-      localDB.insert("jam_pelajaran", slot);
+      await indexedDB.insert("jam_pelajaran", slot);
     }
     
     return defaultSlots;
   };
 
-  const handleAddSchedule = () => {
+  const handleAddSchedule = async () => {
     if (!selectedDay || !selectedJamKe || !selectedKelas || !selectedMataPelajaran) {
       toast({
         title: "Error",
@@ -174,7 +174,7 @@ export default function JadwalPelajaran() {
         jumlah_jp: jumlahJP,
       };
 
-      localDB.insert("jadwal_pelajaran", newSchedule);
+      await indexedDB.insert("jadwal_pelajaran" as any, newSchedule);
       
       toast({
         title: "Berhasil",
@@ -194,9 +194,9 @@ export default function JadwalPelajaran() {
     }
   };
 
-  const handleDeleteSchedule = (id: string) => {
+  const handleDeleteSchedule = async (id: string) => {
     try {
-      localDB.delete("jadwal_pelajaran", id);
+      await indexedDB.delete("jadwal_pelajaran" as any, id);
       toast({
         title: "Berhasil",
         description: "Jadwal berhasil dihapus",
@@ -212,9 +212,9 @@ export default function JadwalPelajaran() {
     }
   };
 
-  const handleSaveTimeSettings = () => {
+  const handleSaveTimeSettings = async () => {
     try {
-      localDB.insert("pengaturan", {
+      await indexedDB.insert("pengaturan" as any, {
         key: "minutes_per_jp",
         value: minutesPerJP.toString(),
       });

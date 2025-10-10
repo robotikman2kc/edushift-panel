@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { useToast } from "@/hooks/use-toast";
@@ -30,10 +30,10 @@ const MataPelajaran = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const mataPelajaran = localDB.select("mata_pelajaran")
-        .sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
+      const mataPelajaran = await indexedDB.select("mata_pelajaran");
+      const sortedData = mataPelajaran.sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
 
-      setData(mataPelajaran);
+      setData(sortedData);
     } catch (error) {
       console.error("Error fetching mata pelajaran:", error);
       toast({
@@ -52,7 +52,7 @@ const MataPelajaran = () => {
 
   const handleAdd = async (formData: any) => {
     try {
-      const result = localDB.insert("mata_pelajaran", {
+      const result = await indexedDB.insert("mata_pelajaran", {
         nama_mata_pelajaran: formData.nama_mata_pelajaran,
         kode_mata_pelajaran: formData.kode_mata_pelajaran,
         deskripsi: formData.deskripsi,
@@ -79,7 +79,7 @@ const MataPelajaran = () => {
 
   const handleEdit = async (id: string, formData: any) => {
     try {
-      const result = localDB.update("mata_pelajaran", id, {
+      const result = await indexedDB.update("mata_pelajaran", id, {
         nama_mata_pelajaran: formData.nama_mata_pelajaran,
         kode_mata_pelajaran: formData.kode_mata_pelajaran,
         deskripsi: formData.deskripsi,
@@ -106,7 +106,7 @@ const MataPelajaran = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const result = localDB.delete("mata_pelajaran", id);
+      const result = await indexedDB.delete("mata_pelajaran", id);
 
       if (result.error) throw new Error(result.error);
 

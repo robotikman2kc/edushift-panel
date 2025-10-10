@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { Trash2, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, Database } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -38,14 +38,22 @@ const ManajemenData = () => {
   const fetchStats = async () => {
     try {
       const usersData = JSON.parse(localStorage.getItem('users') || '[]');
+      const guruCount = await indexedDB.count('guru');
+      const kelasCount = await indexedDB.count('kelas');
+      const mataPelajaranCount = await indexedDB.count('mata_pelajaran');
+      const siswaCount = await indexedDB.count('siswa');
+      const kehadiranCount = await indexedDB.count('kehadiran');
+      const jenisKegiatanCount = await indexedDB.count('jenis_kegiatan');
+      const jurnalCount = await indexedDB.count('jurnal');
+      
       setStats({
-        guru: localDB.select('guru').length,
-        kelas: localDB.select('kelas').length,
-        mata_pelajaran: localDB.select('mata_pelajaran').length,
-        siswa: localDB.select('siswa').length,
-        kehadiran: localDB.select('kehadiran').length,
-        jenis_kegiatan: localDB.select('jenis_kegiatan').length,
-        jurnal: localDB.select('jurnal').length,
+        guru: guruCount,
+        kelas: kelasCount,
+        mata_pelajaran: mataPelajaranCount,
+        siswa: siswaCount,
+        kehadiran: kehadiranCount,
+        jenis_kegiatan: jenisKegiatanCount,
+        jurnal: jurnalCount,
         users: usersData.length
       });
     } catch (error) {
@@ -67,7 +75,7 @@ const ManajemenData = () => {
         // Clear users from localStorage
         localStorage.setItem('users', JSON.stringify([]));
       } else {
-        const result = localDB.clear(tableName);
+        const result = await indexedDB.clear(tableName);
         if (result.error) {
           throw new Error(result.error);
         }

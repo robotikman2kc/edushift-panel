@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { localDB } from "@/lib/localDB";
+import { indexedDB } from "@/lib/indexedDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,16 +145,15 @@ const RekapKehadiran = () => {
 
   const fetchKelas = async () => {
     try {
-      const data = localDB.select("kelas")
-        .filter(kelas => kelas.status === "Aktif")
-        .sort((a, b) => {
-          if (a.tingkat !== b.tingkat) {
-            return a.tingkat.localeCompare(b.tingkat);
-          }
-          return a.nama_kelas.localeCompare(b.nama_kelas);
-        });
+      const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif");
+      const sortedData = data.sort((a, b) => {
+        if (a.tingkat !== b.tingkat) {
+          return a.tingkat.localeCompare(b.tingkat);
+        }
+        return a.nama_kelas.localeCompare(b.nama_kelas);
+      });
 
-      setAllKelas(data);
+      setAllKelas(sortedData);
     } catch (error) {
       console.error("Error fetching kelas:", error);
       toast({
@@ -167,11 +166,10 @@ const RekapKehadiran = () => {
 
   const fetchMataPelajaran = async () => {
     try {
-      const data = localDB.select("mata_pelajaran")
-        .filter(mp => mp.status === "Aktif")
-        .sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
+      const data = await indexedDB.select("mata_pelajaran", mp => mp.status === "Aktif");
+      const sortedData = data.sort((a, b) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran));
 
-      setMataPelajaran(data);
+      setMataPelajaran(sortedData);
     } catch (error) {
       console.error("Error fetching mata pelajaran:", error);
       toast({
@@ -194,22 +192,20 @@ const RekapKehadiran = () => {
       const endDateStr = endDate.toISOString().split('T')[0];
 
       // Fetch students in the selected class
-      const students = localDB.select("siswa")
-        .filter(student => 
-          student.kelas_id === selectedKelas &&
-          student.status === "Aktif"
-        )
-        .sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
+      const studentsData = await indexedDB.select("siswa", student => 
+        student.kelas_id === selectedKelas &&
+        student.status === "Aktif"
+      );
+      const students = studentsData.sort((a, b) => a.nama_siswa.localeCompare(b.nama_siswa));
 
       // Fetch attendance data for the date range
-      const attendance = localDB.select("kehadiran")
-        .filter(record => 
-          record.kelas_id === selectedKelas &&
-          record.mata_pelajaran_id === selectedMataPelajaran &&
-          record.tanggal >= startDateStr &&
-          record.tanggal <= endDateStr
-        )
-        .sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+      const attendanceData = await indexedDB.select("kehadiran", record => 
+        record.kelas_id === selectedKelas &&
+        record.mata_pelajaran_id === selectedMataPelajaran &&
+        record.tanggal >= startDateStr &&
+        record.tanggal <= endDateStr
+      );
+      const attendance = attendanceData.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
 
       // Get unique dates from attendance data
       const dates = [...new Set(attendance.map(a => a.tanggal))].sort();
