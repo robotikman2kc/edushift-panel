@@ -32,6 +32,7 @@ const BackupRestore = () => {
     jurnal: 0
   });
   const [loading, setLoading] = useState(true);
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Fetch data statistics
@@ -55,6 +56,8 @@ const BackupRestore = () => {
 
   useEffect(() => {
     fetchStats();
+    const lastBackup = localStorage.getItem('lastBackupDate');
+    setLastBackupDate(lastBackup);
   }, []);
 
   // Export individual table
@@ -137,7 +140,9 @@ const BackupRestore = () => {
       URL.revokeObjectURL(url);
 
       // Save last backup timestamp
-      localStorage.setItem('lastBackupDate', new Date().toISOString());
+      const backupTime = new Date().toISOString();
+      localStorage.setItem('lastBackupDate', backupTime);
+      setLastBackupDate(backupTime);
 
       toast({
         title: "Backup Berhasil",
@@ -282,6 +287,14 @@ const BackupRestore = () => {
                     </>
                   )}
                 </Button>
+                {lastBackupDate && (
+                  <div className="text-xs text-muted-foreground text-center mt-2">
+                    Backup terakhir: {new Date(lastBackupDate).toLocaleString('id-ID', {
+                      dateStyle: 'long',
+                      timeStyle: 'short'
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

@@ -77,7 +77,6 @@ const menuItems = [
     icon: FileText,
     items: [
       { title: "Jurnal Guru", url: "/jurnal/jurnal-guru", icon: FileText },
-      { title: "Input Jurnal", url: "/jurnal/input-jurnal", icon: Plus },
     ],
   },
   {
