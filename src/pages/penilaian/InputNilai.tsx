@@ -32,7 +32,77 @@ const InputNilai = () => {
   // Load data
   useEffect(() => {
     loadData();
+    loadLastSelectedFilters();
   }, []);
+
+  const loadLastSelectedFilters = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const lastKelas = settings.find((s: any) => s.key === "last_selected_kelas_nilai");
+      const lastMapel = settings.find((s: any) => s.key === "last_selected_mapel_nilai");
+      const lastCategory = settings.find((s: any) => s.key === "last_selected_category_nilai");
+      
+      if (lastKelas) setSelectedClass(lastKelas.value);
+      if (lastMapel) setSelectedSubject(lastMapel.value);
+      if (lastCategory) setSelectedCategory(lastCategory.value);
+    } catch (error) {
+      console.error("Error loading last selected filters:", error);
+    }
+  };
+
+  const saveLastSelectedClass = async (kelasId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_kelas_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: kelasId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_kelas_nilai",
+          value: kelasId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving kelas:", error);
+    }
+  };
+
+  const saveLastSelectedSubject = async (mapelId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_mapel_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: mapelId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_mapel_nilai",
+          value: mapelId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving mapel:", error);
+    }
+  };
+
+  const saveLastSelectedCategory = async (categoryId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_category_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: categoryId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_category_nilai",
+          value: categoryId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving category:", error);
+    }
+  };
 
   // Load students when class changes
   useEffect(() => {
@@ -258,7 +328,10 @@ const InputNilai = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="kelas">Kelas</Label>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <Select value={selectedClass} onValueChange={(value) => {
+                setSelectedClass(value);
+                saveLastSelectedClass(value);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kelas" />
                 </SelectTrigger>
@@ -274,7 +347,10 @@ const InputNilai = () => {
 
             <div className="space-y-2">
               <Label htmlFor="mata-pelajaran">Mata Pelajaran</Label>
-              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+              <Select value={selectedSubject} onValueChange={(value) => {
+                setSelectedSubject(value);
+                saveLastSelectedSubject(value);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih mata pelajaran" />
                 </SelectTrigger>
@@ -340,7 +416,10 @@ const InputNilai = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select value={selectedCategory} onValueChange={(value) => {
+                setSelectedCategory(value);
+                saveLastSelectedCategory(value);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kategori" />
                 </SelectTrigger>

@@ -113,7 +113,61 @@ const Siswa = () => {
   useEffect(() => {
     fetchKelas();
     fetchSiswa();
+    loadLastSelectedClass();
   }, []);
+
+  const loadLastSelectedClass = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const lastTingkat = settings.find((s: any) => s.key === "last_selected_tingkat_siswa");
+      const lastKelas = settings.find((s: any) => s.key === "last_selected_kelas_siswa");
+      
+      if (lastTingkat) {
+        setSelectedTingkat(lastTingkat.value);
+      }
+      if (lastKelas) {
+        setSelectedKelas(lastKelas.value);
+      }
+    } catch (error) {
+      console.error("Error loading last selected class:", error);
+    }
+  };
+
+  const saveLastSelectedTingkat = async (tingkat: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_tingkat_siswa");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: tingkat });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_tingkat_siswa",
+          value: tingkat,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving tingkat:", error);
+    }
+  };
+
+  const saveLastSelectedKelas = async (kelasId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_kelas_siswa");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: kelasId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_kelas_siswa",
+          value: kelasId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving kelas:", error);
+    }
+  };
 
   // Filter kelas berdasarkan tingkat yang dipilih
   useEffect(() => {
@@ -360,7 +414,10 @@ const Siswa = () => {
       <div className="flex gap-4 p-4 bg-card rounded-lg border">
         <div className="flex-1">
           <label className="text-sm font-medium mb-2 block">Tingkat Kelas</label>
-          <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+          <Select value={selectedTingkat} onValueChange={(value) => {
+            setSelectedTingkat(value);
+            saveLastSelectedTingkat(value);
+          }}>
             <SelectTrigger>
               <SelectValue placeholder="Pilih tingkat kelas" />
             </SelectTrigger>
@@ -378,7 +435,10 @@ const Siswa = () => {
           <label className="text-sm font-medium mb-2 block">Nama Kelas</label>
           <Select 
             value={selectedKelas} 
-            onValueChange={setSelectedKelas}
+            onValueChange={(value) => {
+              setSelectedKelas(value);
+              saveLastSelectedKelas(value);
+            }}
             disabled={!selectedTingkat}
           >
             <SelectTrigger>
