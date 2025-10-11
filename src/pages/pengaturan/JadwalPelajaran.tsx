@@ -88,10 +88,10 @@ export default function JadwalPelajaran() {
       setLoading(true);
       
       // Fetch schedules
-      const schedulesData = await indexedDB.select("jadwal_pelajaran" as any);
+      const schedulesData = await indexedDB.select("jadwal_pelajaran");
       
       // Fetch time slots or create default ones
-      let timeSlotsData = await indexedDB.select("jam_pelajaran" as any);
+      let timeSlotsData = await indexedDB.select("jam_pelajaran");
       if (timeSlotsData.length === 0) {
         timeSlotsData = await createDefaultTimeSlots();
       }
@@ -119,7 +119,7 @@ export default function JadwalPelajaran() {
       setMataPelajaranList(mataPelajaranData);
       
       // Get minutes per JP from settings or use default
-      const settings = await indexedDB.select("pengaturan" as any);
+      const settings = await indexedDB.select("pengaturan");
       const jpSetting = settings.find((s: any) => s.key === "minutes_per_jp");
       if (jpSetting) {
         setMinutesPerJP(Number(jpSetting.value));
@@ -174,7 +174,7 @@ export default function JadwalPelajaran() {
         jumlah_jp: jumlahJP,
       };
 
-      await indexedDB.insert("jadwal_pelajaran" as any, newSchedule);
+      await indexedDB.insert("jadwal_pelajaran", newSchedule);
       
       toast({
         title: "Berhasil",
@@ -196,7 +196,7 @@ export default function JadwalPelajaran() {
 
   const handleDeleteSchedule = async (id: string) => {
     try {
-      await indexedDB.delete("jadwal_pelajaran" as any, id);
+      await indexedDB.delete("jadwal_pelajaran", id);
       toast({
         title: "Berhasil",
         description: "Jadwal berhasil dihapus",
@@ -214,7 +214,7 @@ export default function JadwalPelajaran() {
 
   const handleSaveTimeSettings = async () => {
     try {
-      await indexedDB.insert("pengaturan" as any, {
+      await indexedDB.insert("pengaturan", {
         key: "minutes_per_jp",
         value: minutesPerJP.toString(),
       });
