@@ -131,7 +131,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 1;
+  private dbVersion = 2;
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
