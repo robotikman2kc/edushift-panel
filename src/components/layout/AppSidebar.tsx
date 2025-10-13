@@ -69,7 +69,6 @@ const menuItems = [
     items: [
       { title: "Input Kehadiran", url: "/kehadiran/input-kehadiran", icon: CalendarCheck },
       { title: "Rekap Kehadiran", url: "/kehadiran/rekap-kehadiran", icon: Calendar },
-      { title: "Statistik Kehadiran", url: "/kehadiran/statistik-kehadiran", icon: PieChart },
     ],
   },
   {
