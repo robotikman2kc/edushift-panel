@@ -49,9 +49,12 @@ export default function BobotPenilaian() {
 
   useEffect(() => {
     if (selectedTingkat) {
+      console.log("Filtering tingkat:", selectedTingkat);
+      console.log("All classes:", classes);
       const filtered = classes.filter(
         (kelas) => kelas.tingkat === selectedTingkat && kelas.status === "Aktif"
       );
+      console.log("Filtered classes:", filtered);
       setFilteredClasses(filtered);
     } else {
       setFilteredClasses([]);
@@ -76,11 +79,16 @@ export default function BobotPenilaian() {
         indexedDB.select("jenis_penilaian"),
       ]);
 
+      console.log("Loaded kelas data:", kelasData);
+      console.log("Total kelas:", kelasData.length);
+      
       setClasses(kelasData as Kelas[]);
       const activeCategories = (kategoriData as JenisPenilaian[]).filter(
         (k) => k.status === "Aktif"
       );
       setCategories(activeCategories);
+      
+      console.log("Active categories:", activeCategories.length);
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
