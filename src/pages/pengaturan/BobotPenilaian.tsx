@@ -11,6 +11,7 @@ import { indexedDB } from "@/lib/indexedDB";
 import type { Kelas, JenisPenilaian } from "@/lib/indexedDB";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { saveBobotForKelas } from "@/lib/bobotUtils";
 
 interface BobotKategori {
   kategori_id: string;
@@ -157,26 +158,12 @@ export default function BobotPenilaian() {
 
     setIsLoading(true);
     try {
-      const bobotKey = `bobot_penilaian_${selectedClass}`;
-      
-      // Check if already exists
-      const existing = await indexedDB.select("pengaturan");
-      const existingBobot = existing.find((s: any) => s.key === bobotKey);
-
-      if (existingBobot) {
-        await indexedDB.update("pengaturan", existingBobot.id, {
-          value: JSON.stringify(bobotValues),
-        });
-      } else {
-        await indexedDB.insert("pengaturan", {
-          key: bobotKey,
-          value: JSON.stringify(bobotValues),
-        });
-      }
+      // Save custom bobot for this kelas
+      await saveBobotForKelas(selectedClass, bobotValues);
 
       toast({
         title: "Berhasil",
-        description: "Bobot penilaian berhasil disimpan",
+        description: "Bobot penilaian berhasil disimpan dan akan digunakan untuk kelas ini",
       });
     } catch (error) {
       console.error("Error saving bobot:", error);

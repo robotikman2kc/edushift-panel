@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { Save, Plus } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa } from "@/lib/indexedDB";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { getBobotForKelas } from "@/lib/bobotUtils";
 
 const InputNilai = () => {
   const [selectedClass, setSelectedClass] = useState("");
@@ -22,6 +23,7 @@ const InputNilai = () => {
   const [categories, setCategories] = useState<JenisPenilaian[]>([]);
   const [existingGrades, setExistingGrades] = useState<NilaiSiswa[]>([]);
   const [grades, setGrades] = useState<{[key: string]: string}>({});
+  const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
   
   // Dialog states for adding new category
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -108,8 +110,9 @@ const InputNilai = () => {
   useEffect(() => {
     if (selectedClass) {
       loadStudents();
+      loadBobotForClass();
     }
-  }, [selectedClass]);
+  }, [selectedClass, categories]);
 
   // Load existing grades when filters change
   useEffect(() => {
@@ -173,6 +176,17 @@ const InputNilai = () => {
         description: "Gagal memuat nilai yang sudah ada",
         variant: "destructive",
       });
+    }
+  };
+
+  const loadBobotForClass = async () => {
+    if (!selectedClass || categories.length === 0) return;
+    
+    try {
+      const bobot = await getBobotForKelas(selectedClass, categories);
+      setBobotMap(bobot);
+    } catch (error) {
+      console.error("Error loading bobot:", error);
     }
   };
 
@@ -424,11 +438,14 @@ const InputNilai = () => {
                   <SelectValue placeholder="Pilih kategori" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.nama_kategori} {category.bobot ? `(${category.bobot}%)` : ''}
-                    </SelectItem>
-                  ))}
+                  {categories.map((category) => {
+                    const bobot = bobotMap[category.id] || category.bobot || 0;
+                    return (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.nama_kategori} ({bobot}%)
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
