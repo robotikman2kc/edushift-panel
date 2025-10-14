@@ -38,9 +38,9 @@ export default function BobotPenilaian() {
   const [totalBobot, setTotalBobot] = useState(0);
 
   const tingkatOptions = [
-    { value: "10", label: "Kelas 10" },
-    { value: "11", label: "Kelas 11" },
-    { value: "12", label: "Kelas 12" },
+    { value: "X", label: "Kelas X" },
+    { value: "XI", label: "Kelas XI" },
+    { value: "XII", label: "Kelas XII" },
   ];
 
   useEffect(() => {
