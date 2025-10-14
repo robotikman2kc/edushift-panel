@@ -33,6 +33,7 @@ interface Siswa {
   nama_siswa: string;
   kelas_id: string;
   status: string;
+  jenis_kelamin?: string;
 }
 
 interface KehadiranData {
@@ -46,6 +47,7 @@ interface KehadiranReport {
   siswa_id: string;
   nama_siswa: string;
   nis: string;
+  jenis_kelamin: string;
   kehadiran_per_tanggal: { [tanggal: string]: string };
   total_hadir: number;
   total_sakit: number;
@@ -235,6 +237,7 @@ const RekapKehadiran = () => {
           siswa_id: student.id,
           nama_siswa: student.nama_siswa,
           nis: student.nis,
+          jenis_kelamin: student.jenis_kelamin || '-',
           kehadiran_per_tanggal: kehadiranPerTanggal,
           total_hadir: totalHadir,
           total_sakit: totalSakit,
@@ -298,6 +301,7 @@ const RekapKehadiran = () => {
         const baseData = {
           NIS: student.nis,
           'Nama Siswa': student.nama_siswa,
+          'Jenis Kelamin': student.jenis_kelamin,
           'Total Hadir': student.total_hadir,
           'Total Sakit': student.total_sakit,
           'Total Izin': student.total_izin,
@@ -316,6 +320,7 @@ const RekapKehadiran = () => {
       const exportColumns = [
         { key: 'NIS', label: 'NIS' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
+        { key: 'Jenis Kelamin', label: 'Jenis Kelamin' },
         ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
         { key: 'Total Hadir', label: 'Hadir' },
         { key: 'Total Sakit', label: 'Sakit' },
@@ -356,6 +361,7 @@ const RekapKehadiran = () => {
         const baseData = {
           NIS: student.nis,
           'Nama Siswa': student.nama_siswa,
+          'Jenis Kelamin': student.jenis_kelamin,
           'Total Hadir': student.total_hadir,
           'Total Sakit': student.total_sakit,
           'Total Izin': student.total_izin,
@@ -374,6 +380,7 @@ const RekapKehadiran = () => {
       const exportColumns = [
         { key: 'NIS', label: 'NIS' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
+        { key: 'Jenis Kelamin', label: 'Jenis Kelamin' },
         ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
         { key: 'Total Hadir', label: 'Hadir' },
         { key: 'Total Sakit', label: 'Sakit' },
@@ -603,12 +610,15 @@ const RekapKehadiran = () => {
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
                 Laporan Kehadiran
-                {selectedKelasData && selectedMataPelajaranData && (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    - {selectedKelasData.nama_kelas} {selectedKelasData.jurusan && `${selectedKelasData.jurusan}`} | {selectedMataPelajaranData.nama_mata_pelajaran} | {selectedMonthLabel} {selectedYear}
-                  </span>
-                )}
               </CardTitle>
+              {selectedKelasData && (
+                <div className="mt-2 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm font-medium">
+                    <span className="text-muted-foreground">Kelas:</span>{' '}
+                    <span className="font-semibold">{selectedKelasData.nama_kelas}</span>
+                  </p>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {!selectedKelas || !selectedMataPelajaran ? (
@@ -634,6 +644,7 @@ const RekapKehadiran = () => {
                         <TableHead>No</TableHead>
                         <TableHead>NIS</TableHead>
                         <TableHead>Nama Siswa</TableHead>
+                        <TableHead>Jenis Kelamin</TableHead>
                         {uniqueDates.map((date) => (
                           <TableHead key={date} className="text-center min-w-[60px]">
                             {formatDate(date)}
@@ -649,6 +660,7 @@ const RekapKehadiran = () => {
                           <TableCell className="font-medium">{index + 1}</TableCell>
                           <TableCell className="font-medium">{student.nis}</TableCell>
                           <TableCell>{student.nama_siswa}</TableCell>
+                          <TableCell>{student.jenis_kelamin}</TableCell>
                           {uniqueDates.map((date) => (
                             <TableCell key={date} className="text-center">
                               {getStatusSymbol(student.kehadiran_per_tanggal[date])}
