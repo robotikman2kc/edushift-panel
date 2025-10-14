@@ -3,15 +3,12 @@ import {
   UserCheck,
   GraduationCap,
   BookOpen,
-  Target,
   TrendingUp,
   FileInput,
   BarChart3,
   Calendar,
   CalendarCheck,
-  PieChart,
   FileText,
-  Plus,
   Database,
   Download,
   User,
@@ -19,8 +16,6 @@ import {
   Settings,
   ClipboardList,
   UserCog,
-  ChevronDown,
-  ChevronRight,
   CalendarDays
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -50,7 +45,6 @@ const menuItems = [
       { title: "Daftar Siswa", url: "/pengaturan/siswa", icon: Users },
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
       { title: "Jadwal Pelajaran", url: "/pengaturan/jadwal-pelajaran", icon: CalendarDays },
-      { title: "Kategori Penilaian", url: "/pengaturan/kategori-penilaian", icon: Target },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
     ],
