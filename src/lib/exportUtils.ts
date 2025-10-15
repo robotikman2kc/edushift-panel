@@ -144,7 +144,24 @@ export const exportToPDF = (
       //   currentY += 6;
       // }
 
-      // Add additional info (kelas and bulan for attendance reports)
+      // Add teacher info if available (for grade and journal reports)
+      if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(0, 0, 0);
+        const teacherY = currentY;
+        doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
+        doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 4);
+        doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
+        currentY += 16;
+      }
+
+      // Add separator line
+      doc.setDrawColor(...template.styling.primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
+      currentY += 8;
+
+      // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
       console.log('Additional info received:', additionalInfo); // Debug log
       if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan)) {
         console.log('Adding class and month info to PDF'); // Debug log
@@ -165,23 +182,6 @@ export const exportToPDF = (
       } else {
         console.log('No additional info to add'); // Debug log
       }
-
-      // Add teacher info if available (for grade and journal reports)
-      if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
-        doc.setFontSize(template.styling.fontSize.header);
-        doc.setTextColor(0, 0, 0);
-        const teacherY = currentY;
-        doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
-        doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 4);
-        doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
-        currentY += 16;
-      }
-
-      // Add separator line
-      doc.setDrawColor(...template.styling.primaryColor);
-      doc.setLineWidth(0.5);
-      doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
-      currentY += 8;
     }
 
     // Add watermark if specified
