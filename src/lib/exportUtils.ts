@@ -145,19 +145,25 @@ export const exportToPDF = (
       // }
 
       // Add additional info (kelas and bulan for attendance reports)
+      console.log('Additional info received:', additionalInfo); // Debug log
       if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan)) {
+        console.log('Adding class and month info to PDF'); // Debug log
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(0, 0, 0);
         const infoY = currentY;
         if (additionalInfo.kelas) {
+          console.log('Adding Kelas:', additionalInfo.kelas); // Debug log
           doc.text(`Kelas: ${additionalInfo.kelas}`, template.layout.margins.left, infoY);
           currentY += 5;
         }
         if (additionalInfo.bulan) {
+          console.log('Adding Bulan:', additionalInfo.bulan); // Debug log
           doc.text(`Bulan: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
           currentY += 5;
         }
         currentY += 6;
+      } else {
+        console.log('No additional info to add'); // Debug log
       }
 
       // Add teacher info if available (for grade and journal reports)
