@@ -335,7 +335,17 @@ const RekapKehadiran = () => {
       const customTemplate = getCustomPDFTemplate('attendance');
       console.log('Using custom template for attendance:', customTemplate); // Debug log
       
-      const success = exportToPDF(exportData, exportColumns, title, `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`, customTemplate);
+      const success = exportToPDF(
+        exportData, 
+        exportColumns, 
+        title, 
+        `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`, 
+        customTemplate,
+        {
+          kelas: selectedKelasData?.nama_kelas,
+          bulan: `${selectedMonthLabel} ${selectedYear}`
+        }
+      );
       
       if (success) {
         toast({

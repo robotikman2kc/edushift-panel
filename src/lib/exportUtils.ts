@@ -77,7 +77,8 @@ export const exportToPDF = (
   columns: ExportColumn[],
   title: string = 'Data Export',
   filename: string = 'export.pdf',
-  template: PDFTemplate = defaultTemplate
+  template: PDFTemplate = defaultTemplate,
+  additionalInfo?: { kelas?: string; bulan?: string }
 ) => {
   try {
     console.log('Exporting PDF with template:', template); // Debug log
@@ -142,6 +143,22 @@ export const exportToPDF = (
       //   doc.text(dateText, template.layout.margins.left, currentY);
       //   currentY += 6;
       // }
+
+      // Add additional info (kelas and bulan for attendance reports)
+      if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan)) {
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(0, 0, 0);
+        const infoY = currentY;
+        if (additionalInfo.kelas) {
+          doc.text(`Kelas: ${additionalInfo.kelas}`, template.layout.margins.left, infoY);
+          currentY += 5;
+        }
+        if (additionalInfo.bulan) {
+          doc.text(`Bulan: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
+          currentY += 5;
+        }
+        currentY += 6;
+      }
 
       // Add teacher info if available (for grade and journal reports)
       if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
