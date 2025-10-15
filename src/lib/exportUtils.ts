@@ -72,14 +72,13 @@ const hexToRgb = (hex: string): [number, number, number] => {
     : [59, 130, 246]; // default blue
 };
 
-export const exportToPDF = (
+export const generatePDFBlob = (
   data: any[],
   columns: ExportColumn[],
   title: string = 'Data Export',
-  filename: string = 'export.pdf',
   template: PDFTemplate = defaultTemplate,
   additionalInfo?: { kelas?: string; bulan?: string }
-) => {
+): Blob | null => {
   try {
     console.log('Exporting PDF with template:', template); // Debug log
     
@@ -287,8 +286,39 @@ export const exportToPDF = (
       }
     }
 
-    // Save the PDF
-    doc.save(filename);
+    // Return PDF as Blob instead of saving
+    const pdfBlob = doc.output('blob');
+    return pdfBlob;
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    return null;
+  }
+};
+
+export const exportToPDF = (
+  data: any[],
+  columns: ExportColumn[],
+  title: string = 'Data Export',
+  filename: string = 'export.pdf',
+  template: PDFTemplate = defaultTemplate,
+  additionalInfo?: { kelas?: string; bulan?: string }
+) => {
+  try {
+    const pdfBlob = generatePDFBlob(data, columns, title, template, additionalInfo);
+    
+    if (!pdfBlob) {
+      return false;
+    }
+
+    // Create download link
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     
     return true;
   } catch (error) {

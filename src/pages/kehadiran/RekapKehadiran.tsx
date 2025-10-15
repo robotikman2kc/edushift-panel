@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, Users, BookOpen, BarChart3 } from "lucide-react";
-import { exportToPDF, exportToExcel, getCustomPDFTemplate } from "@/lib/exportUtils";
+import { exportToExcel, getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
 import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
 import { attendanceTemplate, PDFTemplate } from "@/lib/pdfTemplates";
+import { PDFPreviewDialog } from "@/components/common/PDFPreviewDialog";
 
 interface Kelas {
   id: string;
@@ -79,6 +80,9 @@ const RekapKehadiran = () => {
   const [reportData, setReportData] = useState<KehadiranReport[]>([]);
   const [uniqueDates, setUniqueDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [pdfFilename, setPdfFilename] = useState("");
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -335,11 +339,12 @@ const RekapKehadiran = () => {
       const customTemplate = getCustomPDFTemplate('attendance');
       console.log('Using custom template for attendance:', customTemplate); // Debug log
       
-      const success = exportToPDF(
+      const filename = `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`;
+      
+      const blob = generatePDFBlob(
         exportData, 
         exportColumns, 
         title, 
-        `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`, 
         customTemplate,
         {
           kelas: selectedKelasData?.nama_kelas,
@@ -347,13 +352,12 @@ const RekapKehadiran = () => {
         }
       );
       
-      if (success) {
-        toast({
-          title: "Export Berhasil",
-          description: "Rekap kehadiran berhasil diekspor ke PDF",
-        });
+      if (blob) {
+        setPdfBlob(blob);
+        setPdfFilename(filename);
+        setPdfPreviewOpen(true);
       } else {
-        throw new Error('Export failed');
+        throw new Error('Failed to generate PDF');
       }
     } catch (error) {
       toast({
@@ -720,6 +724,13 @@ const RekapKehadiran = () => {
           </Card>
         </div>
       </div>
+
+      <PDFPreviewDialog
+        open={pdfPreviewOpen}
+        onOpenChange={setPdfPreviewOpen}
+        pdfBlob={pdfBlob}
+        filename={pdfFilename}
+      />
     </div>
   );
 };
