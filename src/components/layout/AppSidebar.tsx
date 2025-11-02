@@ -72,6 +72,7 @@ const menuItems = [
     icon: FileText,
     items: [
       { title: "Jurnal Guru", url: "/jurnal/jurnal-guru", icon: FileText },
+      { title: "Agenda Mengajar", url: "/jurnal/agenda-mengajar", icon: ClipboardList },
     ],
   },
   {

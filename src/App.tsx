@@ -31,6 +31,7 @@ import BackupRestore from "./pages/data/BackupRestore";
 
 // Jurnal Pages
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
+import AgendaMengajar from "./pages/jurnal/AgendaMengajar";
 
 // Akun Pages
 import Profil from "./pages/akun/Profil";
@@ -82,6 +83,7 @@ const App = () => (
 
                   {/* Jurnal Routes */}
                   <Route path="/jurnal/jurnal-guru" element={<JurnalGuru />} />
+                  <Route path="/jurnal/agenda-mengajar" element={<AgendaMengajar />} />
                   <Route 
                     path="/jurnal/input-jurnal" 
                     element={<PlaceholderPage title="Input Jurnal" description="Input jurnal mengajar" />} 
