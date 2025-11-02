@@ -210,6 +210,31 @@ export default function JadwalPelajaran() {
       return;
     }
 
+    // Check for conflicts with existing schedules
+    const startJam = Number(selectedJamKe);
+    const endJam = startJam + jumlahJP;
+    
+    const hasConflict = schedules.some(schedule => {
+      if (schedule.hari !== selectedDay || schedule.kelas_id !== selectedKelas) {
+        return false;
+      }
+      
+      const existingStart = schedule.jam_ke;
+      const existingEnd = schedule.jam_ke + schedule.jumlah_jp;
+      
+      // Check if ranges overlap
+      return (startJam < existingEnd && endJam > existingStart);
+    });
+    
+    if (hasConflict) {
+      toast({
+        title: "Error",
+        description: "Jadwal bentrok dengan jadwal yang sudah ada untuk kelas ini",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const newSchedule = {
         hari: selectedDay,
@@ -313,7 +338,28 @@ export default function JadwalPelajaran() {
   };
 
   const getScheduleForDayAndTime = (day: string, jamKe: number) => {
-    return schedules.filter(s => s.hari === day && s.jam_ke === jamKe);
+    // Check if this slot is occupied by a schedule that started earlier but spans multiple JPs
+    const occupyingSchedule = schedules.find(s => {
+      if (s.hari !== day) return false;
+      // Check if this time slot falls within the range of this schedule
+      return s.jam_ke <= jamKe && jamKe < (s.jam_ke + s.jumlah_jp);
+    });
+    
+    if (occupyingSchedule) {
+      // Return the schedule if this is the starting slot, otherwise return continuation marker
+      if (occupyingSchedule.jam_ke === jamKe) {
+        return [occupyingSchedule];
+      } else {
+        // This is a continuation slot
+        return [{
+          ...occupyingSchedule,
+          isContinuation: true,
+          continuationNumber: jamKe - occupyingSchedule.jam_ke + 1
+        }];
+      }
+    }
+    
+    return [];
   };
 
   if (loading) {
@@ -394,24 +440,36 @@ export default function JadwalPelajaran() {
                       return (
                         <TableCell key={day}>
                           <div className="space-y-2">
-                            {daySchedules.map(schedule => (
+                            {daySchedules.map((schedule: any) => (
                               <div 
                                 key={schedule.id}
-                                className="p-2 bg-primary/10 rounded border border-primary/20 text-sm"
+                                className={`p-2 rounded border text-sm ${
+                                  schedule.isContinuation 
+                                    ? 'bg-primary/5 border-primary/10' 
+                                    : 'bg-primary/10 border-primary/20'
+                                }`}
                               >
                                 <div className="font-medium">{schedule.kelas_nama}</div>
                                 <div className="text-xs">{schedule.mata_pelajaran_nama}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {schedule.jumlah_jp} JP
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="mt-1 h-6 w-full"
-                                  onClick={() => handleDeleteSchedule(schedule.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                                {schedule.isContinuation ? (
+                                  <div className="text-xs text-muted-foreground italic">
+                                    (Lanjutan - JP {schedule.continuationNumber}/{schedule.jumlah_jp})
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-muted-foreground">
+                                    {schedule.jumlah_jp} JP
+                                  </div>
+                                )}
+                                {!schedule.isContinuation && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="mt-1 h-6 w-full"
+                                    onClick={() => handleDeleteSchedule(schedule.id)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -458,7 +516,7 @@ export default function JadwalPelajaran() {
                   <SelectValue placeholder="Pilih jam" />
                 </SelectTrigger>
                 <SelectContent>
-                  {timeSlots.map(slot => (
+                  {timeSlots.filter(slot => !slot.is_break).map(slot => (
                     <SelectItem key={slot.id} value={slot.jam_ke.toString()}>
                       Jam ke-{slot.jam_ke} ({slot.waktu_mulai} - {slot.waktu_selesai})
                     </SelectItem>
