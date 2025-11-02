@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   Users, 
   UserCheck, 
@@ -8,10 +9,33 @@ import {
   TrendingUp,
   Calendar,
   FileText,
-  BarChart3 
+  BarChart3,
+  Download,
+  RefreshCw
 } from "lucide-react";
+import { usePWA } from "@/hooks/usePWA";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
+  const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
+  const { toast } = useToast();
+
+  const handleInstall = async () => {
+    await installApp();
+    toast({
+      title: "Aplikasi Terinstal",
+      description: "EduShift Panel telah ditambahkan ke layar utama Anda.",
+    });
+  };
+
+  const handleUpdate = () => {
+    updateApp();
+    toast({
+      title: "Memperbarui Aplikasi",
+      description: "Aplikasi akan dimuat ulang untuk menerapkan pembaruan...",
+    });
+  };
+
   const stats = [
     {
       title: "Total Siswa",
@@ -63,10 +87,28 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Dashboard" 
-        description="Selamat datang di Sistem Administrasi Sekolah"
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <PageHeader 
+          title="Dashboard" 
+          description="Selamat datang di Sistem Administrasi Sekolah"
+        />
+        
+        <div className="flex gap-2">
+          {isInstallable && !isInstalled && (
+            <Button onClick={handleInstall} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Install Aplikasi
+            </Button>
+          )}
+          
+          {updateAvailable && (
+            <Button onClick={handleUpdate} variant="default" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Update Tersedia
+            </Button>
+          )}
+        </div>
+      </div>
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
