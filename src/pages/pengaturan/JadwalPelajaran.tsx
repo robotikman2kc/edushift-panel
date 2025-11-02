@@ -76,11 +76,20 @@ export default function JadwalPelajaran() {
   const [showBreakSettingsDialog, setShowBreakSettingsDialog] = useState(false);
   const [minutesPerJP, setMinutesPerJP] = useState(45);
   
-  // Break settings
-  const [break1Start, setBreak1Start] = useState("09:30");
-  const [break1End, setBreak1End] = useState("09:45");
-  const [break2Start, setBreak2Start] = useState("12:00");
-  const [break2End, setBreak2End] = useState("12:30");
+  // Break settings per day
+  const [breakSettings, setBreakSettings] = useState<Record<string, {
+    break1Start: string;
+    break1End: string;
+    break2Start: string;
+    break2End: string;
+  }>>({
+    "Senin": { break1Start: "09:30", break1End: "09:45", break2Start: "12:00", break2End: "12:30" },
+    "Selasa": { break1Start: "09:30", break1End: "09:45", break2Start: "12:00", break2End: "12:30" },
+    "Rabu": { break1Start: "09:30", break1End: "09:45", break2Start: "12:00", break2End: "12:30" },
+    "Kamis": { break1Start: "09:30", break1End: "09:45", break2Start: "12:00", break2End: "12:30" },
+    "Jumat": { break1Start: "09:30", break1End: "09:45", break2Start: "11:30", break2End: "13:00" },
+  });
+  const [selectedBreakDay, setSelectedBreakDay] = useState("Senin");
   
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedJamKe, setSelectedJamKe] = useState("");
@@ -118,40 +127,27 @@ export default function JadwalPelajaran() {
         setMinutesPerJP(Number(jpSetting.value));
       }
       
-      // Get break times from settings
-      const break1StartSetting = settings.find((s: any) => s.key === "break1_start");
-      const break1EndSetting = settings.find((s: any) => s.key === "break1_end");
-      const break2StartSetting = settings.find((s: any) => s.key === "break2_start");
-      const break2EndSetting = settings.find((s: any) => s.key === "break2_end");
+      // Get break times from settings for each day
+      const loadedBreakSettings: any = {};
+      DAYS.forEach(day => {
+        const dayKey = day.toLowerCase();
+        const break1StartSetting = settings.find((s: any) => s.key === `break1_start_${dayKey}`);
+        const break1EndSetting = settings.find((s: any) => s.key === `break1_end_${dayKey}`);
+        const break2StartSetting = settings.find((s: any) => s.key === `break2_start_${dayKey}`);
+        const break2EndSetting = settings.find((s: any) => s.key === `break2_end_${dayKey}`);
+        
+        if (break1StartSetting) {
+          loadedBreakSettings[day] = {
+            break1Start: break1StartSetting.value,
+            break1End: break1EndSetting.value,
+            break2Start: break2StartSetting.value,
+            break2End: break2EndSetting.value,
+          };
+        }
+      });
       
-      if (break1StartSetting) setBreak1Start(break1StartSetting.value);
-      if (break1EndSetting) setBreak1End(break1EndSetting.value);
-      if (break2StartSetting) setBreak2Start(break2StartSetting.value);
-      if (break2EndSetting) setBreak2End(break2EndSetting.value);
-      
-      // Add break slots to time slots
-      const allSlots = [...timeSlotsData];
-      
-      if (break1StartSetting && break1EndSetting) {
-        allSlots.push({
-          id: 'break1',
-          jam_ke: 4.5, // Between jam 4 and 5
-          waktu_mulai: break1StartSetting.value,
-          waktu_selesai: break1EndSetting.value,
-          is_break: true,
-          break_label: 'Istirahat 1'
-        });
-      }
-      
-      if (break2StartSetting && break2EndSetting) {
-        allSlots.push({
-          id: 'break2',
-          jam_ke: 7.5, // Between jam 7 and 8
-          waktu_mulai: break2StartSetting.value,
-          waktu_selesai: break2EndSetting.value,
-          is_break: true,
-          break_label: 'Istirahat 2'
-        });
+      if (Object.keys(loadedBreakSettings).length > 0) {
+        setBreakSettings(loadedBreakSettings);
       }
       
       // Enrich schedules with names
@@ -166,7 +162,7 @@ export default function JadwalPelajaran() {
       });
       
       setSchedules(enrichedSchedules);
-      setTimeSlots(allSlots);
+      setTimeSlots(timeSlotsData);
       setKelasList(kelasData);
       setMataPelajaranList(mataPelajaranData);
     } catch (error) {
@@ -307,10 +303,28 @@ export default function JadwalPelajaran() {
 
   const handleSaveBreakSettings = async () => {
     try {
-      await indexedDB.insert("pengaturan", { key: "break1_start", value: break1Start });
-      await indexedDB.insert("pengaturan", { key: "break1_end", value: break1End });
-      await indexedDB.insert("pengaturan", { key: "break2_start", value: break2Start });
-      await indexedDB.insert("pengaturan", { key: "break2_end", value: break2End });
+      // Save break settings for all days
+      for (const day of DAYS) {
+        const dayKey = day.toLowerCase();
+        const settings = breakSettings[day];
+        
+        await indexedDB.insert("pengaturan", { 
+          key: `break1_start_${dayKey}`, 
+          value: settings.break1Start 
+        });
+        await indexedDB.insert("pengaturan", { 
+          key: `break1_end_${dayKey}`, 
+          value: settings.break1End 
+        });
+        await indexedDB.insert("pengaturan", { 
+          key: `break2_start_${dayKey}`, 
+          value: settings.break2Start 
+        });
+        await indexedDB.insert("pengaturan", { 
+          key: `break2_end_${dayKey}`, 
+          value: settings.break2End 
+        });
+      }
       
       toast({
         title: "Berhasil",
@@ -409,28 +423,26 @@ export default function JadwalPelajaran() {
                   .map(slot => (
                   <TableRow key={slot.id}>
                     <TableCell className="font-medium">
-                      {slot.is_break ? (
-                        <>
-                          <div className="font-semibold text-orange-600">{slot.break_label}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {slot.waktu_mulai} - {slot.waktu_selesai}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div>Jam ke-{slot.jam_ke}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {slot.waktu_mulai} - {slot.waktu_selesai}
-                          </div>
-                        </>
-                      )}
+                      <div>Jam ke-{slot.jam_ke}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {slot.waktu_mulai} - {slot.waktu_selesai}
+                      </div>
                     </TableCell>
                     {DAYS.map(day => {
-                      if (slot.is_break) {
+                      // Check if this time slot is a break time for this day
+                      const dayBreak = breakSettings[day];
+                      const isBreak1 = dayBreak && 
+                        slot.waktu_mulai === dayBreak.break1Start && 
+                        slot.waktu_selesai === dayBreak.break1End;
+                      const isBreak2 = dayBreak && 
+                        slot.waktu_mulai === dayBreak.break2Start && 
+                        slot.waktu_selesai === dayBreak.break2End;
+                      
+                      if (isBreak1 || isBreak2) {
                         return (
                           <TableCell key={day} className="bg-orange-50 dark:bg-orange-950/20">
                             <div className="text-center text-sm text-muted-foreground">
-                              Istirahat
+                              {isBreak1 ? "Istirahat 1" : "Istirahat 2"}
                             </div>
                           </TableCell>
                         );
@@ -614,61 +626,99 @@ export default function JadwalPelajaran() {
 
       {/* Break Settings Dialog */}
       <Dialog open={showBreakSettingsDialog} onOpenChange={setShowBreakSettingsDialog}>
-        <DialogContent>
+<DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Pengaturan Jam Istirahat</DialogTitle>
             <DialogDescription>
-              Atur waktu istirahat (2 sesi)
+              Atur waktu istirahat per hari (2 sesi untuk setiap hari)
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
+            <div>
+              <Label>Pilih Hari</Label>
+              <Select value={selectedBreakDay} onValueChange={setSelectedBreakDay}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DAYS.map(day => (
+                    <SelectItem key={day} value={day}>{day}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-3 p-3 border rounded-lg">
-              <h4 className="font-medium text-sm">Istirahat Sesi 1</h4>
+              <h4 className="font-medium text-sm">Istirahat Sesi 1 - {selectedBreakDay}</h4>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Mulai</Label>
                   <Input
                     type="time"
-                    value={break1Start}
-                    onChange={(e) => setBreak1Start(e.target.value)}
+                    value={breakSettings[selectedBreakDay]?.break1Start || "09:30"}
+                    onChange={(e) => setBreakSettings(prev => ({
+                      ...prev,
+                      [selectedBreakDay]: {
+                        ...prev[selectedBreakDay],
+                        break1Start: e.target.value
+                      }
+                    }))}
                   />
                 </div>
                 <div>
                   <Label>Selesai</Label>
                   <Input
                     type="time"
-                    value={break1End}
-                    onChange={(e) => setBreak1End(e.target.value)}
+                    value={breakSettings[selectedBreakDay]?.break1End || "09:45"}
+                    onChange={(e) => setBreakSettings(prev => ({
+                      ...prev,
+                      [selectedBreakDay]: {
+                        ...prev[selectedBreakDay],
+                        break1End: e.target.value
+                      }
+                    }))}
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-3 p-3 border rounded-lg">
-              <h4 className="font-medium text-sm">Istirahat Sesi 2</h4>
+              <h4 className="font-medium text-sm">Istirahat Sesi 2 - {selectedBreakDay}</h4>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Mulai</Label>
                   <Input
                     type="time"
-                    value={break2Start}
-                    onChange={(e) => setBreak2Start(e.target.value)}
+                    value={breakSettings[selectedBreakDay]?.break2Start || "12:00"}
+                    onChange={(e) => setBreakSettings(prev => ({
+                      ...prev,
+                      [selectedBreakDay]: {
+                        ...prev[selectedBreakDay],
+                        break2Start: e.target.value
+                      }
+                    }))}
                   />
                 </div>
                 <div>
                   <Label>Selesai</Label>
                   <Input
                     type="time"
-                    value={break2End}
-                    onChange={(e) => setBreak2End(e.target.value)}
+                    value={breakSettings[selectedBreakDay]?.break2End || "12:30"}
+                    onChange={(e) => setBreakSettings(prev => ({
+                      ...prev,
+                      [selectedBreakDay]: {
+                        ...prev[selectedBreakDay],
+                        break2End: e.target.value
+                      }
+                    }))}
                   />
                 </div>
               </div>
             </div>
             
             <p className="text-xs text-muted-foreground">
-              Jam istirahat akan ditampilkan di tabel jadwal mengajar
+              Jam istirahat akan ditampilkan otomatis di jadwal untuk hari yang dipilih
             </p>
           </div>
 
@@ -676,7 +726,7 @@ export default function JadwalPelajaran() {
             <Button variant="outline" onClick={() => setShowBreakSettingsDialog(false)}>
               Batal
             </Button>
-            <Button onClick={handleSaveBreakSettings}>Simpan</Button>
+            <Button onClick={handleSaveBreakSettings}>Simpan Semua Hari</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
