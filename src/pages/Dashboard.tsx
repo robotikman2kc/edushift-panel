@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,47 @@ import {
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
+import { indexedDB } from "@/lib/indexedDB";
 
 const Dashboard = () => {
   const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
   const { toast } = useToast();
+  
+  // State untuk data statistik
+  const [totalSiswa, setTotalSiswa] = useState(0);
+  const [totalGuru, setTotalGuru] = useState(0);
+  const [totalKelas, setTotalKelas] = useState(0);
+  const [totalMataPelajaran, setTotalMataPelajaran] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStatistics();
+  }, []);
+
+  const fetchStatistics = async () => {
+    try {
+      setLoading(true);
+      
+      const siswaData = await indexedDB.select("siswa");
+      const guruData = await indexedDB.select("guru");
+      const kelasData = await indexedDB.select("kelas");
+      const mataPelajaranData = await indexedDB.select("mata_pelajaran");
+      
+      setTotalSiswa(siswaData.length);
+      setTotalGuru(guruData.length);
+      setTotalKelas(kelasData.length);
+      setTotalMataPelajaran(mataPelajaranData.length);
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat statistik",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInstall = async () => {
     await installApp();
@@ -39,28 +77,28 @@ const Dashboard = () => {
   const stats = [
     {
       title: "Total Siswa",
-      value: "1,234",
+      value: loading ? "..." : totalSiswa.toString(),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
       title: "Total Guru",
-      value: "56",
+      value: loading ? "..." : totalGuru.toString(),
       icon: UserCheck,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
       title: "Jumlah Kelas",
-      value: "24",
+      value: loading ? "..." : totalKelas.toString(),
       icon: GraduationCap,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
     },
     {
       title: "Mata Pelajaran",
-      value: "15",
+      value: loading ? "..." : totalMataPelajaran.toString(),
       icon: BookOpen,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
