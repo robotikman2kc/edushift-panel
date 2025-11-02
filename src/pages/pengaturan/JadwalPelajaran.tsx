@@ -103,6 +103,21 @@ export default function JadwalPelajaran() {
       let timeSlotsData = await indexedDB.select("jam_pelajaran");
       if (timeSlotsData.length === 0) {
         timeSlotsData = await createDefaultTimeSlots();
+      } else {
+        // Check if we need to add jam 9-12 (for existing databases)
+        const hasJam9 = timeSlotsData.some((slot: TimeSlot) => slot.jam_ke === 9);
+        if (!hasJam9) {
+          const additionalSlots: TimeSlot[] = [
+            { id: "9", jam_ke: 9, waktu_mulai: "13:15", waktu_selesai: "14:00" },
+            { id: "10", jam_ke: 10, waktu_mulai: "14:00", waktu_selesai: "14:45" },
+            { id: "11", jam_ke: 11, waktu_mulai: "14:45", waktu_selesai: "15:30" },
+            { id: "12", jam_ke: 12, waktu_mulai: "15:30", waktu_selesai: "16:15" },
+          ];
+          for (const slot of additionalSlots) {
+            await indexedDB.insert("jam_pelajaran", slot);
+          }
+          timeSlotsData = await indexedDB.select("jam_pelajaran");
+        }
       }
       
       // Fetch kelas
