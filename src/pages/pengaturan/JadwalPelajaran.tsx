@@ -191,6 +191,10 @@ export default function JadwalPelajaran() {
       { id: "6", jam_ke: 6, waktu_mulai: "10:30", waktu_selesai: "11:15" },
       { id: "7", jam_ke: 7, waktu_mulai: "11:15", waktu_selesai: "12:00" },
       { id: "8", jam_ke: 8, waktu_mulai: "12:30", waktu_selesai: "13:15" },
+      { id: "9", jam_ke: 9, waktu_mulai: "13:15", waktu_selesai: "14:00" },
+      { id: "10", jam_ke: 10, waktu_mulai: "14:00", waktu_selesai: "14:45" },
+      { id: "11", jam_ke: 11, waktu_mulai: "14:45", waktu_selesai: "15:30" },
+      { id: "12", jam_ke: 12, waktu_mulai: "15:30", waktu_selesai: "16:15" },
     ];
     
     for (const slot of defaultSlots) {
