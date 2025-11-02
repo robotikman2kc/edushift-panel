@@ -27,7 +27,6 @@ const Dashboard = () => {
   const [totalGuru, setTotalGuru] = useState(0);
   const [totalKelas, setTotalKelas] = useState(0);
   const [totalMataPelajaran, setTotalMataPelajaran] = useState(0);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,14 +46,6 @@ const Dashboard = () => {
       setTotalGuru(guruData.length);
       setTotalKelas(kelasData.length);
       setTotalMataPelajaran(mataPelajaranData.length);
-      
-      // Fetch recent activities
-      const activitiesData = await indexedDB.select("activity_log");
-      const sortedActivities = activitiesData
-        .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 5); // Ambil 5 aktivitas terbaru
-      
-      setRecentActivities(sortedActivities);
     } catch (error) {
       console.error("Error fetching statistics:", error);
       toast({
@@ -65,20 +56,6 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
-  
-  const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const activityTime = new Date(timestamp);
-    const diffMs = now.getTime() - activityTime.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return "Baru saja";
-    if (diffMins < 60) return `${diffMins} menit yang lalu`;
-    if (diffHours < 24) return `${diffHours} jam yang lalu`;
-    return `${diffDays} hari yang lalu`;
   };
 
   const handleInstall = async () => {
@@ -125,24 +102,6 @@ const Dashboard = () => {
       icon: BookOpen,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
-    },
-  ];
-
-  const recentActivitiesDisplay = [
-    {
-      title: "Input nilai siswa kelas X-A",
-      time: "2 jam yang lalu",
-      user: "Guru Matematika",
-    },
-    {
-      title: "Update data kehadiran",
-      time: "3 jam yang lalu", 
-      user: "Wali Kelas XII-B",
-    },
-    {
-      title: "Tambah data siswa baru",
-      time: "1 hari yang lalu",
-      user: "Admin",
     },
   ];
 
@@ -215,9 +174,8 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <Card>
+      {/* Quick Actions */}
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
@@ -268,37 +226,6 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Recent Activities */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Aktivitas Terbaru</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center text-sm text-muted-foreground">Memuat aktivitas...</div>
-            ) : recentActivities.length === 0 ? (
-              <div className="text-center text-sm text-muted-foreground py-8">
-                Belum ada aktivitas yang tercatat
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentActivities.map((activity: any, index: number) => (
-                  <div key={activity.id || index} className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {activity.user || "Sistem"} • {formatTimeAgo(activity.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
