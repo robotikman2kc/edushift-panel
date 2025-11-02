@@ -87,28 +87,10 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageHeader 
-          title="Dashboard" 
-          description="Selamat datang di Sistem Administrasi Sekolah"
-        />
-        
-        <div className="flex gap-2">
-          {isInstallable && !isInstalled && (
-            <Button onClick={handleInstall} variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Install Aplikasi
-            </Button>
-          )}
-          
-          {updateAvailable && (
-            <Button onClick={handleUpdate} variant="default" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Update Tersedia
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader 
+        title="Dashboard" 
+        description="Selamat datang di Sistem Administrasi Sekolah"
+      />
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -135,6 +117,42 @@ const Dashboard = () => {
           );
         })}
       </div>
+
+      {/* PWA Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Download className="h-5 w-5" />
+            Kontrol Aplikasi PWA
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={handleInstall} 
+              variant={isInstallable && !isInstalled ? "default" : "outline"}
+              disabled={!isInstallable || isInstalled}
+              size="sm"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isInstalled ? "Aplikasi Sudah Terinstall" : "Install Aplikasi"}
+            </Button>
+            
+            <Button 
+              onClick={handleUpdate} 
+              variant={updateAvailable ? "default" : "outline"}
+              disabled={!updateAvailable}
+              size="sm"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {updateAvailable ? "Update Tersedia - Klik untuk Update" : "Tidak Ada Update"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline. Update akan otomatis tersedia saat ada versi baru.
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
