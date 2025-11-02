@@ -56,33 +56,28 @@ export const PDFPreviewDialog: React.FC<PDFPreviewDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col" aria-describedby="pdf-preview-description">
         <DialogHeader>
           <DialogTitle>Preview PDF - {filename}</DialogTitle>
+          <p id="pdf-preview-description" className="sr-only">
+            Dialog untuk preview PDF sebelum diunduh atau dicetak
+          </p>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden rounded-lg border bg-muted">
-          {pdfUrl && (
-            <object
-              data={pdfUrl}
-              type="application/pdf"
+          {pdfUrl ? (
+            <iframe
+              src={`${pdfUrl}#toolbar=0`}
               className="w-full h-full"
-            >
-              <embed
-                src={pdfUrl}
-                type="application/pdf"
-                className="w-full h-full"
-              />
-              <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
-                <p className="text-muted-foreground">
-                  Browser Anda tidak dapat menampilkan preview PDF.
-                </p>
-                <Button onClick={handleDownload}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Unduh PDF untuk Melihat
-                </Button>
-              </div>
-            </object>
+              title="PDF Preview"
+              style={{ border: 'none' }}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+              <p className="text-muted-foreground">
+                Memuat preview PDF...
+              </p>
+            </div>
           )}
         </div>
 
