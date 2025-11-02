@@ -151,49 +151,50 @@ export default function JadwalPelajaran() {
         setBreakSettings(loadedBreakSettings);
       }
       
-      // Create combined time slots with breaks inserted per day
-      const allSlotsWithBreaks: TimeSlot[] = [];
+      // Collect all unique break times across all days
+      const uniqueBreakSlots = new Map<string, TimeSlot>();
       
-      // Add all regular time slots
-      timeSlotsData.forEach((slot: TimeSlot) => {
-        allSlotsWithBreaks.push(slot);
-        
-        // Check if any day has a break after this slot
-        DAYS.forEach(day => {
-          const dayBreak = loadedBreakSettings[day];
-          if (dayBreak) {
-            // Check if break1 should be inserted after this slot
-            if (slot.waktu_selesai === dayBreak.break1Start) {
-              const break1Slot: TimeSlot = {
-                id: `break1_${day}`,
-                jam_ke: slot.jam_ke + 0.1,
-                waktu_mulai: dayBreak.break1Start,
-                waktu_selesai: dayBreak.break1End,
-                is_break: true,
-                break_label: 'Istirahat 1',
-                break_day: day
-              };
-              if (!allSlotsWithBreaks.find(s => s.id === break1Slot.id)) {
-                allSlotsWithBreaks.push(break1Slot);
-              }
-            }
-            // Check if break2 should be inserted after this slot
-            if (slot.waktu_selesai === dayBreak.break2Start) {
-              const break2Slot: TimeSlot = {
-                id: `break2_${day}`,
-                jam_ke: slot.jam_ke + 0.2,
-                waktu_mulai: dayBreak.break2Start,
-                waktu_selesai: dayBreak.break2End,
-                is_break: true,
-                break_label: 'Istirahat 2',
-                break_day: day
-              };
-              if (!allSlotsWithBreaks.find(s => s.id === break2Slot.id)) {
-                allSlotsWithBreaks.push(break2Slot);
-              }
-            }
+      // First, add all regular time slots
+      const allSlotsWithBreaks: TimeSlot[] = [...timeSlotsData];
+      
+      // Collect unique break times
+      DAYS.forEach(day => {
+        const dayBreak = loadedBreakSettings[day];
+        if (dayBreak) {
+          // Break 1
+          const break1Key = `${dayBreak.break1Start}-${dayBreak.break1End}`;
+          if (!uniqueBreakSlots.has(break1Key)) {
+            // Find the slot before this break to determine jam_ke position
+            const previousSlot = timeSlotsData.find((s: TimeSlot) => s.waktu_selesai === dayBreak.break1Start);
+            uniqueBreakSlots.set(break1Key, {
+              id: `break_${break1Key}`,
+              jam_ke: previousSlot ? previousSlot.jam_ke + 0.1 : 4.5,
+              waktu_mulai: dayBreak.break1Start,
+              waktu_selesai: dayBreak.break1End,
+              is_break: true,
+              break_label: 'Istirahat 1'
+            });
           }
-        });
+          
+          // Break 2
+          const break2Key = `${dayBreak.break2Start}-${dayBreak.break2End}`;
+          if (!uniqueBreakSlots.has(break2Key)) {
+            const previousSlot = timeSlotsData.find((s: TimeSlot) => s.waktu_selesai === dayBreak.break2Start);
+            uniqueBreakSlots.set(break2Key, {
+              id: `break_${break2Key}`,
+              jam_ke: previousSlot ? previousSlot.jam_ke + 0.2 : 7.5,
+              waktu_mulai: dayBreak.break2Start,
+              waktu_selesai: dayBreak.break2End,
+              is_break: true,
+              break_label: 'Istirahat 2'
+            });
+          }
+        }
+      });
+      
+      // Add unique break slots to the time slots array
+      uniqueBreakSlots.forEach(breakSlot => {
+        allSlotsWithBreaks.push(breakSlot);
       });
       
       // Enrich schedules with names
@@ -490,20 +491,64 @@ export default function JadwalPelajaran() {
                       )}
                     </TableCell>
                     {DAYS.map(day => {
-                      // If this is a break slot, only show it for the specific day
+                      // If this is a break slot, check if this day has this break time
                       if (slot.is_break) {
-                        if (slot.break_day && slot.break_day !== day) {
-                          // This break is for a different day, show empty cell
-                          return <TableCell key={day}></TableCell>;
-                        }
-                        // This break is for all days or this specific day
-                        return (
-                          <TableCell key={day} className="bg-orange-50 dark:bg-orange-950/20">
-                            <div className="text-center text-sm text-muted-foreground">
-                              {slot.break_label}
-                            </div>
-                          </TableCell>
+                        const dayBreak = breakSettings[day];
+                        const hasThisBreak = dayBreak && (
+                          (slot.waktu_mulai === dayBreak.break1Start && slot.waktu_selesai === dayBreak.break1End) ||
+                          (slot.waktu_mulai === dayBreak.break2Start && slot.waktu_selesai === dayBreak.break2End)
                         );
+                        
+                        if (hasThisBreak) {
+                          return (
+                            <TableCell key={day} className="bg-orange-50 dark:bg-orange-950/20">
+                              <div className="text-center text-sm text-muted-foreground">
+                                {slot.break_label}
+                              </div>
+                            </TableCell>
+                          );
+                        } else {
+                          // This day doesn't have this break time, show empty or schedule
+                          const daySchedules = getScheduleForDayAndTime(day, Math.floor(slot.jam_ke));
+                          return (
+                            <TableCell key={day}>
+                              <div className="space-y-2">
+                                {daySchedules.map((schedule: any) => (
+                                  <div 
+                                    key={schedule.id}
+                                    className={`p-2 rounded border text-sm ${
+                                      schedule.isContinuation 
+                                        ? 'bg-primary/5 border-primary/10' 
+                                        : 'bg-primary/10 border-primary/20'
+                                    }`}
+                                  >
+                                    <div className="font-medium">{schedule.kelas_nama}</div>
+                                    <div className="text-xs">{schedule.mata_pelajaran_nama}</div>
+                                    {schedule.isContinuation ? (
+                                      <div className="text-xs text-muted-foreground italic">
+                                        (Lanjutan - JP {schedule.continuationNumber}/{schedule.jumlah_jp})
+                                      </div>
+                                    ) : (
+                                      <div className="text-xs text-muted-foreground">
+                                        {schedule.jumlah_jp} JP
+                                      </div>
+                                    )}
+                                    {!schedule.isContinuation && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="mt-1 h-6 w-full"
+                                        onClick={() => handleDeleteSchedule(schedule.id)}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </TableCell>
+                          );
+                        }
                       }
                       
                       const daySchedules = getScheduleForDayAndTime(day, slot.jam_ke);
