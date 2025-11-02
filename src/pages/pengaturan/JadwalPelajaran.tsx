@@ -36,6 +36,8 @@ interface TimeSlot {
   jam_ke: number;
   waktu_mulai: string;
   waktu_selesai: string;
+  is_break?: boolean;
+  break_label?: string;
 }
 
 interface Schedule {
@@ -71,7 +73,14 @@ export default function JadwalPelajaran() {
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
+  const [showBreakSettingsDialog, setShowBreakSettingsDialog] = useState(false);
   const [minutesPerJP, setMinutesPerJP] = useState(45);
+  
+  // Break settings
+  const [break1Start, setBreak1Start] = useState("09:30");
+  const [break1End, setBreak1End] = useState("09:45");
+  const [break2Start, setBreak2Start] = useState("12:00");
+  const [break2End, setBreak2End] = useState("12:30");
   
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedJamKe, setSelectedJamKe] = useState("");
@@ -102,6 +111,49 @@ export default function JadwalPelajaran() {
       // Fetch mata pelajaran
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
       
+      // Get settings
+      const settings = await indexedDB.select("pengaturan");
+      const jpSetting = settings.find((s: any) => s.key === "minutes_per_jp");
+      if (jpSetting) {
+        setMinutesPerJP(Number(jpSetting.value));
+      }
+      
+      // Get break times from settings
+      const break1StartSetting = settings.find((s: any) => s.key === "break1_start");
+      const break1EndSetting = settings.find((s: any) => s.key === "break1_end");
+      const break2StartSetting = settings.find((s: any) => s.key === "break2_start");
+      const break2EndSetting = settings.find((s: any) => s.key === "break2_end");
+      
+      if (break1StartSetting) setBreak1Start(break1StartSetting.value);
+      if (break1EndSetting) setBreak1End(break1EndSetting.value);
+      if (break2StartSetting) setBreak2Start(break2StartSetting.value);
+      if (break2EndSetting) setBreak2End(break2EndSetting.value);
+      
+      // Add break slots to time slots
+      const allSlots = [...timeSlotsData];
+      
+      if (break1StartSetting && break1EndSetting) {
+        allSlots.push({
+          id: 'break1',
+          jam_ke: 4.5, // Between jam 4 and 5
+          waktu_mulai: break1StartSetting.value,
+          waktu_selesai: break1EndSetting.value,
+          is_break: true,
+          break_label: 'Istirahat 1'
+        });
+      }
+      
+      if (break2StartSetting && break2EndSetting) {
+        allSlots.push({
+          id: 'break2',
+          jam_ke: 7.5, // Between jam 7 and 8
+          waktu_mulai: break2StartSetting.value,
+          waktu_selesai: break2EndSetting.value,
+          is_break: true,
+          break_label: 'Istirahat 2'
+        });
+      }
+      
       // Enrich schedules with names
       const enrichedSchedules = schedulesData.map((schedule: any) => {
         const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
@@ -114,16 +166,9 @@ export default function JadwalPelajaran() {
       });
       
       setSchedules(enrichedSchedules);
-      setTimeSlots(timeSlotsData);
+      setTimeSlots(allSlots);
       setKelasList(kelasData);
       setMataPelajaranList(mataPelajaranData);
-      
-      // Get minutes per JP from settings or use default
-      const settings = await indexedDB.select("pengaturan");
-      const jpSetting = settings.find((s: any) => s.key === "minutes_per_jp");
-      if (jpSetting) {
-        setMinutesPerJP(Number(jpSetting.value));
-      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -235,6 +280,30 @@ export default function JadwalPelajaran() {
     }
   };
 
+  const handleSaveBreakSettings = async () => {
+    try {
+      await indexedDB.insert("pengaturan", { key: "break1_start", value: break1Start });
+      await indexedDB.insert("pengaturan", { key: "break1_end", value: break1End });
+      await indexedDB.insert("pengaturan", { key: "break2_start", value: break2Start });
+      await indexedDB.insert("pengaturan", { key: "break2_end", value: break2End });
+      
+      toast({
+        title: "Berhasil",
+        description: "Pengaturan jam istirahat berhasil disimpan",
+      });
+      
+      setShowBreakSettingsDialog(false);
+      fetchData();
+    } catch (error) {
+      console.error("Error saving break settings:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan pengaturan jam istirahat",
+        variant: "destructive",
+      });
+    }
+  };
+
   const resetForm = () => {
     setSelectedDay("");
     setSelectedJamKe("");
@@ -267,6 +336,10 @@ export default function JadwalPelajaran() {
           <SettingsIcon className="mr-2 h-4 w-4" />
           Pengaturan Waktu ({minutesPerJP} menit/JP)
         </Button>
+        <Button variant="outline" onClick={() => setShowBreakSettingsDialog(true)}>
+          <SettingsIcon className="mr-2 h-4 w-4" />
+          Jam Istirahat
+        </Button>
       </div>
 
       <Card>
@@ -285,15 +358,38 @@ export default function JadwalPelajaran() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {timeSlots.map(slot => (
+                {timeSlots
+                  .sort((a, b) => a.jam_ke - b.jam_ke)
+                  .map(slot => (
                   <TableRow key={slot.id}>
                     <TableCell className="font-medium">
-                      <div>Jam ke-{slot.jam_ke}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {slot.waktu_mulai} - {slot.waktu_selesai}
-                      </div>
+                      {slot.is_break ? (
+                        <>
+                          <div className="font-semibold text-orange-600">{slot.break_label}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {slot.waktu_mulai} - {slot.waktu_selesai}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>Jam ke-{slot.jam_ke}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {slot.waktu_mulai} - {slot.waktu_selesai}
+                          </div>
+                        </>
+                      )}
                     </TableCell>
                     {DAYS.map(day => {
+                      if (slot.is_break) {
+                        return (
+                          <TableCell key={day} className="bg-orange-50 dark:bg-orange-950/20">
+                            <div className="text-center text-sm text-muted-foreground">
+                              Istirahat
+                            </div>
+                          </TableCell>
+                        );
+                      }
+                      
                       const daySchedules = getScheduleForDayAndTime(day, slot.jam_ke);
                       return (
                         <TableCell key={day}>
@@ -454,6 +550,75 @@ export default function JadwalPelajaran() {
               Batal
             </Button>
             <Button onClick={handleSaveTimeSettings}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Break Settings Dialog */}
+      <Dialog open={showBreakSettingsDialog} onOpenChange={setShowBreakSettingsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pengaturan Jam Istirahat</DialogTitle>
+            <DialogDescription>
+              Atur waktu istirahat (2 sesi)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-3 p-3 border rounded-lg">
+              <h4 className="font-medium text-sm">Istirahat Sesi 1</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Mulai</Label>
+                  <Input
+                    type="time"
+                    value={break1Start}
+                    onChange={(e) => setBreak1Start(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Selesai</Label>
+                  <Input
+                    type="time"
+                    value={break1End}
+                    onChange={(e) => setBreak1End(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 p-3 border rounded-lg">
+              <h4 className="font-medium text-sm">Istirahat Sesi 2</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Mulai</Label>
+                  <Input
+                    type="time"
+                    value={break2Start}
+                    onChange={(e) => setBreak2Start(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Selesai</Label>
+                  <Input
+                    type="time"
+                    value={break2End}
+                    onChange={(e) => setBreak2End(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Jam istirahat akan ditampilkan di tabel jadwal mengajar
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBreakSettingsDialog(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleSaveBreakSettings}>Simpan</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
