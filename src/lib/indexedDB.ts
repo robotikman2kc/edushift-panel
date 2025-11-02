@@ -117,14 +117,7 @@ export interface Pengaturan extends BaseRecord {
   value: string;
 }
 
-export interface ActivityLog extends BaseRecord {
-  description: string;
-  user: string;
-  timestamp: string;
-  action_type: string;
-}
-
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log';
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan';
 
 // Generate UUID function
 function generateId(): string {
@@ -138,7 +131,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 3;
+  private dbVersion = 2;
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -156,7 +149,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {
@@ -373,7 +366,7 @@ class IndexedDBManager {
 
   // Export all data
   async exportAll(): Promise<Record<TableName, any[]>> {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan'];
     const exportData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
     
     for (const table of tables) {
