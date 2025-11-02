@@ -38,6 +38,7 @@ interface TimeSlot {
   waktu_selesai: string;
   is_break?: boolean;
   break_label?: string;
+  break_day?: string;
 }
 
 interface Schedule {
@@ -150,6 +151,51 @@ export default function JadwalPelajaran() {
         setBreakSettings(loadedBreakSettings);
       }
       
+      // Create combined time slots with breaks inserted per day
+      const allSlotsWithBreaks: TimeSlot[] = [];
+      
+      // Add all regular time slots
+      timeSlotsData.forEach((slot: TimeSlot) => {
+        allSlotsWithBreaks.push(slot);
+        
+        // Check if any day has a break after this slot
+        DAYS.forEach(day => {
+          const dayBreak = loadedBreakSettings[day];
+          if (dayBreak) {
+            // Check if break1 should be inserted after this slot
+            if (slot.waktu_selesai === dayBreak.break1Start) {
+              const break1Slot: TimeSlot = {
+                id: `break1_${day}`,
+                jam_ke: slot.jam_ke + 0.1,
+                waktu_mulai: dayBreak.break1Start,
+                waktu_selesai: dayBreak.break1End,
+                is_break: true,
+                break_label: 'Istirahat 1',
+                break_day: day
+              };
+              if (!allSlotsWithBreaks.find(s => s.id === break1Slot.id)) {
+                allSlotsWithBreaks.push(break1Slot);
+              }
+            }
+            // Check if break2 should be inserted after this slot
+            if (slot.waktu_selesai === dayBreak.break2Start) {
+              const break2Slot: TimeSlot = {
+                id: `break2_${day}`,
+                jam_ke: slot.jam_ke + 0.2,
+                waktu_mulai: dayBreak.break2Start,
+                waktu_selesai: dayBreak.break2End,
+                is_break: true,
+                break_label: 'Istirahat 2',
+                break_day: day
+              };
+              if (!allSlotsWithBreaks.find(s => s.id === break2Slot.id)) {
+                allSlotsWithBreaks.push(break2Slot);
+              }
+            }
+          }
+        });
+      });
+      
       // Enrich schedules with names
       const enrichedSchedules = schedulesData.map((schedule: any) => {
         const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
@@ -162,7 +208,7 @@ export default function JadwalPelajaran() {
       });
       
       setSchedules(enrichedSchedules);
-      setTimeSlots(timeSlotsData);
+      setTimeSlots(allSlotsWithBreaks);
       setKelasList(kelasData);
       setMataPelajaranList(mataPelajaranData);
     } catch (error) {
@@ -187,6 +233,10 @@ export default function JadwalPelajaran() {
       { id: "6", jam_ke: 6, waktu_mulai: "10:30", waktu_selesai: "11:15" },
       { id: "7", jam_ke: 7, waktu_mulai: "11:15", waktu_selesai: "12:00" },
       { id: "8", jam_ke: 8, waktu_mulai: "12:30", waktu_selesai: "13:15" },
+      { id: "9", jam_ke: 9, waktu_mulai: "13:15", waktu_selesai: "14:00" },
+      { id: "10", jam_ke: 10, waktu_mulai: "14:00", waktu_selesai: "14:45" },
+      { id: "11", jam_ke: 11, waktu_mulai: "14:45", waktu_selesai: "15:30" },
+      { id: "12", jam_ke: 12, waktu_mulai: "15:30", waktu_selesai: "16:15" },
     ];
     
     for (const slot of defaultSlots) {
@@ -423,26 +473,34 @@ export default function JadwalPelajaran() {
                   .map(slot => (
                   <TableRow key={slot.id}>
                     <TableCell className="font-medium">
-                      <div>Jam ke-{slot.jam_ke}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {slot.waktu_mulai} - {slot.waktu_selesai}
-                      </div>
+                      {slot.is_break ? (
+                        <>
+                          <div className="font-semibold text-orange-600">{slot.break_label}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {slot.waktu_mulai} - {slot.waktu_selesai}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>Jam ke-{slot.jam_ke}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {slot.waktu_mulai} - {slot.waktu_selesai}
+                          </div>
+                        </>
+                      )}
                     </TableCell>
                     {DAYS.map(day => {
-                      // Check if this time slot is a break time for this day
-                      const dayBreak = breakSettings[day];
-                      const isBreak1 = dayBreak && 
-                        slot.waktu_mulai === dayBreak.break1Start && 
-                        slot.waktu_selesai === dayBreak.break1End;
-                      const isBreak2 = dayBreak && 
-                        slot.waktu_mulai === dayBreak.break2Start && 
-                        slot.waktu_selesai === dayBreak.break2End;
-                      
-                      if (isBreak1 || isBreak2) {
+                      // If this is a break slot, only show it for the specific day
+                      if (slot.is_break) {
+                        if (slot.break_day && slot.break_day !== day) {
+                          // This break is for a different day, show empty cell
+                          return <TableCell key={day}></TableCell>;
+                        }
+                        // This break is for all days or this specific day
                         return (
                           <TableCell key={day} className="bg-orange-50 dark:bg-orange-950/20">
                             <div className="text-center text-sm text-muted-foreground">
-                              {isBreak1 ? "Istirahat 1" : "Istirahat 2"}
+                              {slot.break_label}
                             </div>
                           </TableCell>
                         );
