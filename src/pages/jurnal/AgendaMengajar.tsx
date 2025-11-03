@@ -50,6 +50,7 @@ const AgendaMengajar = () => {
   const [agendaList, setAgendaList] = useState<AgendaMengajar[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [selectedKelasFilter, setSelectedKelasFilter] = useState<string>('all');
   const [kelasList, setKelasList] = useState<any[]>([]);
   const [mataPelajaranList, setMataPelajaranList] = useState<any[]>([]);
   
@@ -70,7 +71,7 @@ const AgendaMengajar = () => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedMonth]);
+  }, [selectedMonth, selectedKelasFilter]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -82,10 +83,12 @@ const AgendaMengajar = () => {
         indexedDB.select('mata_pelajaran'),
       ]);
 
-      // Filter agenda by selected month
+      // Filter agenda by selected month and class
       const filteredAgenda = (agenda as AgendaMengajar[]).filter((item) => {
         const itemMonth = format(new Date(item.tanggal), 'yyyy-MM');
-        return itemMonth === selectedMonth;
+        const matchesMonth = itemMonth === selectedMonth;
+        const matchesKelas = selectedKelasFilter === 'all' || item.kelas_id === selectedKelasFilter;
+        return matchesMonth && matchesKelas;
       });
 
       setAgendaList(filteredAgenda);
@@ -105,7 +108,7 @@ const AgendaMengajar = () => {
 
   const resetForm = () => {
     setFormData({
-      tanggal: '',
+      tanggal: format(new Date(), 'yyyy-MM-dd'),
       kelas_id: '',
       mata_pelajaran_id: '',
       materi: '',
@@ -267,6 +270,22 @@ const AgendaMengajar = () => {
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="w-full sm:w-auto"
               />
+              <Select
+                value={selectedKelasFilter}
+                onValueChange={setSelectedKelasFilter}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Semua Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kelas</SelectItem>
+                  {kelasList.map((kelas) => (
+                    <SelectItem key={kelas.id} value={kelas.id}>
+                      {kelas.nama_kelas}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 onClick={() => {
                   resetForm();
