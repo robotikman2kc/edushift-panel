@@ -130,6 +130,7 @@ const InputKehadiran = () => {
   const fetchKelas = async () => {
     try {
       const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif");
+      console.log("Fetched kelas data:", data); // Debug log
       const sortedData = data.sort((a, b) => {
         if (a.tingkat !== b.tingkat) {
           return a.tingkat.localeCompare(b.tingkat);
