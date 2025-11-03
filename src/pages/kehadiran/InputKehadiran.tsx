@@ -79,8 +79,25 @@ const InputKehadiran = () => {
 
   // Fetch all kelas and mata pelajaran
   useEffect(() => {
-    fetchKelas();
-    fetchMataPelajaran();
+    // Clean up IPA class on mount if it exists
+    const cleanupIPAClass = async () => {
+      try {
+        const ipaClass = await indexedDB.select("kelas", kelas => 
+          kelas.id === "7399ed54-79fc-4ebc-8a48-3fc19cc1ad81"
+        );
+        if (ipaClass.length > 0) {
+          await indexedDB.delete("kelas", "7399ed54-79fc-4ebc-8a48-3fc19cc1ad81");
+          console.log("IPA class deleted successfully");
+        }
+      } catch (error) {
+        console.error("Error deleting IPA class:", error);
+      }
+    };
+    
+    cleanupIPAClass().then(() => {
+      fetchKelas();
+      fetchMataPelajaran();
+    });
   }, []);
 
   // Initialize filtered kelas when allKelas is loaded and we have saved tingkat
