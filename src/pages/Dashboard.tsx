@@ -12,11 +12,14 @@ import {
   FileText,
   BarChart3,
   Download,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
+import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
 
 const Dashboard = () => {
   const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
@@ -28,9 +31,12 @@ const Dashboard = () => {
   const [totalKelas, setTotalKelas] = useState(0);
   const [totalMataPelajaran, setTotalMataPelajaran] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
+  const [loadingSchedule, setLoadingSchedule] = useState(true);
 
   useEffect(() => {
     fetchStatistics();
+    fetchTodaySchedule();
   }, []);
 
   const fetchStatistics = async () => {
@@ -72,6 +78,41 @@ const Dashboard = () => {
       title: "Memperbarui Aplikasi",
       description: "Aplikasi akan dimuat ulang untuk menerapkan pembaruan...",
     });
+  };
+
+  const fetchTodaySchedule = async () => {
+    try {
+      setLoadingSchedule(true);
+      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const today = days[new Date().getDay()];
+      
+      const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
+      const timeSlots = await indexedDB.select("jam_pelajaran");
+      const kelasData = await indexedDB.select("kelas");
+      const mataPelajaranData = await indexedDB.select("mata_pelajaran");
+      
+      // Enrich schedule with names and sort by jam
+      const enrichedSchedules = schedules
+        .map((schedule: any) => {
+          const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
+          const mataPelajaran = mataPelajaranData.find((m: any) => m.id === schedule.mata_pelajaran_id);
+          const timeSlot = timeSlots.find((t: any) => t.jam === schedule.jam);
+          
+          return {
+            ...schedule,
+            kelas_nama: kelas?.nama_kelas || "N/A",
+            mata_pelajaran_nama: mataPelajaran?.nama || "N/A",
+            waktu: timeSlot?.waktu_mulai || "N/A"
+          };
+        })
+        .sort((a: any, b: any) => a.jam - b.jam);
+      
+      setTodaySchedule(enrichedSchedules);
+    } catch (error) {
+      console.error("Error fetching today's schedule:", error);
+    } finally {
+      setLoadingSchedule(false);
+    }
   };
 
   const stats = [
@@ -137,6 +178,49 @@ const Dashboard = () => {
           );
         })}
       </div>
+
+      {/* Today's Schedule */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMMM yyyy", { locale: idLocale })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingSchedule ? (
+            <p className="text-sm text-muted-foreground">Memuat jadwal...</p>
+          ) : todaySchedule.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Tidak ada jadwal untuk hari ini</p>
+          ) : (
+            <div className="space-y-2">
+              {todaySchedule.map((schedule, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10">
+                      <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
+                      <span className="text-lg font-bold text-primary">{schedule.jam}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{schedule.mata_pelajaran_nama}</p>
+                      <p className="text-xs text-muted-foreground">Kelas: {schedule.kelas_nama}</p>
+                      <p className="text-xs text-muted-foreground">Waktu: {schedule.waktu}</p>
+                    </div>
+                  </div>
+                  {schedule.jumlah_jp > 1 && (
+                    <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium">
+                      {schedule.jumlah_jp} JP
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* PWA Controls */}
       <Card>
