@@ -118,7 +118,7 @@ const InputKehadiran = () => {
 
   // Fetch students when kelas and mata pelajaran are selected
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran && allKelas.length > 0) {
+    if (selectedKelas && selectedMataPelajaran) {
       fetchStudentsAndAttendance();
     } else if (!selectedKelas || !selectedMataPelajaran) {
       setStudents([]);
