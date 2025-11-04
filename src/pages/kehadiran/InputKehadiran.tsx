@@ -216,9 +216,17 @@ const InputKehadiran = () => {
       const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
       const today = days[new Date(selectedDate).getDay()];
       
-      const jadwalData = await indexedDB.select("jadwal_pelajaran", (jadwal) => 
-        jadwal.hari === today && jadwal.status === "Aktif"
+      // Fetch all active schedules first to debug
+      const allJadwal = await indexedDB.select("jadwal_pelajaran", (jadwal) => 
+        jadwal.status === "Aktif"
       );
+      
+      console.log("All active schedules:", allJadwal);
+      console.log("Today is:", today);
+      console.log("Selected date:", selectedDate);
+      console.log("Day index:", new Date(selectedDate).getDay());
+      
+      const jadwalData = allJadwal.filter(jadwal => jadwal.hari === today);
 
       console.log("Today's schedule data:", jadwalData);
 
