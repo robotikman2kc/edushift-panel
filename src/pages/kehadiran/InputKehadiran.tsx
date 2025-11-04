@@ -439,38 +439,6 @@ const InputKehadiran = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {todaySchedules.length > 0 && (
-              <div className="space-y-2 pb-4 border-b">
-                <Label className="text-sm font-medium">Jadwal Hari Ini</Label>
-                <div className="space-y-2">
-                  {todaySchedules.map((schedule) => (
-                    <Button
-                      key={schedule.jadwal_id}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-left h-auto py-2"
-                      onClick={() => handleQuickSelect(schedule)}
-                    >
-                      <div className="flex items-start gap-2 w-full">
-                        <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium truncate">
-                            {schedule.kelas_tingkat} {schedule.kelas_nama}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {schedule.mata_pelajaran_nama}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Jam ke {schedule.jam_ke}{schedule.jumlah_jp > 1 && `-${schedule.jam_ke + schedule.jumlah_jp - 1}`}
-                          </div>
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="tanggal">Tanggal</Label>
               <input
@@ -608,6 +576,40 @@ const InputKehadiran = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {todaySchedules.length > 0 && (
+                <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="h-4 w-4" />
+                    <Label className="text-sm font-medium">Jadwal Hari Ini - Klik untuk mengisi presensi</Label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {todaySchedules.map((schedule) => (
+                      <Button
+                        key={schedule.jadwal_id}
+                        variant="outline"
+                        size="sm"
+                        className="justify-start text-left h-auto py-2"
+                        onClick={() => handleQuickSelect(schedule)}
+                      >
+                        <div className="flex items-start gap-2 w-full">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium truncate">
+                              {schedule.kelas_tingkat} {schedule.kelas_nama}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {schedule.mata_pelajaran_nama}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Jam ke {schedule.jam_ke}{schedule.jumlah_jp > 1 && `-${schedule.jam_ke + schedule.jumlah_jp - 1}`}
+                            </div>
+                          </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {!selectedKelas || !selectedMataPelajaran ? (
                 <div className="text-center py-8">
                   <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
