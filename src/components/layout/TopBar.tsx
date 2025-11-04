@@ -157,7 +157,7 @@ export function TopBar() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-background border-border z-50">
                 <div className="flex items-center gap-2 p-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/placeholder.svg" />
