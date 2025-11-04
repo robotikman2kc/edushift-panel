@@ -53,6 +53,9 @@ const AgendaMengajar = () => {
   const [selectedKelasFilter, setSelectedKelasFilter] = useState<string>('all');
   const [kelasList, setKelasList] = useState<any[]>([]);
   const [mataPelajaranList, setMataPelajaranList] = useState<any[]>([]);
+  const [filteredKelasList, setFilteredKelasList] = useState<any[]>([]);
+  const [filteredMataPelajaranList, setFilteredMataPelajaranList] = useState<any[]>([]);
+  const [jadwalPelajaranList, setJadwalPelajaranList] = useState<any[]>([]);
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -77,10 +80,11 @@ const AgendaMengajar = () => {
     setLoading(true);
     try {
       // Fetch all required data
-      const [agenda, kelas, mataPelajaran] = await Promise.all([
+      const [agenda, kelas, mataPelajaran, jadwalPelajaran] = await Promise.all([
         indexedDB.select('agenda_mengajar'),
         indexedDB.select('kelas'),
         indexedDB.select('mata_pelajaran'),
+        indexedDB.select('jadwal_pelajaran'),
       ]);
 
       // Filter agenda by selected month and class
@@ -94,6 +98,7 @@ const AgendaMengajar = () => {
       setAgendaList(filteredAgenda);
       setKelasList(kelas);
       setMataPelajaranList(mataPelajaran);
+      setJadwalPelajaranList(jadwalPelajaran);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -114,6 +119,38 @@ const AgendaMengajar = () => {
       materi: '',
       keterangan: '',
     });
+    filterByDate(format(new Date(), 'yyyy-MM-dd'));
+  };
+
+  // Filter kelas and mata pelajaran based on selected date
+  const filterByDate = (selectedDate: string) => {
+    if (!selectedDate) {
+      setFilteredKelasList([]);
+      setFilteredMataPelajaranList([]);
+      return;
+    }
+
+    // Get day of week from selected date (0 = Minggu, 1 = Senin, etc.)
+    const date = new Date(selectedDate);
+    const dayOfWeek = date.getDay();
+    
+    // Convert to Indonesian day name
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const selectedDay = dayNames[dayOfWeek];
+
+    // Filter jadwal based on selected day
+    const scheduleForDay = jadwalPelajaranList.filter((jadwal: any) => jadwal.hari === selectedDay);
+
+    // Get unique kelas_id and mata_pelajaran_id from the schedule
+    const kelasIds = [...new Set(scheduleForDay.map((jadwal: any) => jadwal.kelas_id))];
+    const mataPelajaranIds = [...new Set(scheduleForDay.map((jadwal: any) => jadwal.mata_pelajaran_id))];
+
+    // Filter kelas and mata pelajaran lists
+    const filteredKelas = kelasList.filter((kelas) => kelasIds.includes(kelas.id));
+    const filteredMataPelajaran = mataPelajaranList.filter((mapel) => mataPelajaranIds.includes(mapel.id));
+
+    setFilteredKelasList(filteredKelas);
+    setFilteredMataPelajaranList(filteredMataPelajaran);
   };
 
   const handleAdd = async () => {
@@ -206,6 +243,7 @@ const AgendaMengajar = () => {
       materi: agenda.materi,
       keterangan: agenda.keterangan,
     });
+    filterByDate(agenda.tanggal);
     setIsEditDialogOpen(true);
   };
 
@@ -385,7 +423,11 @@ const AgendaMengajar = () => {
                 id="tanggal"
                 type="date"
                 value={formData.tanggal}
-                onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
+                  filterByDate(newDate);
+                }}
               />
             </div>
             <div className="grid gap-2">
@@ -393,12 +435,13 @@ const AgendaMengajar = () => {
               <Select
                 value={formData.kelas_id}
                 onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
+                disabled={!formData.tanggal || filteredKelasList.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih kelas" />
+                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih kelas"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {kelasList.map((kelas) => (
+                  {filteredKelasList.map((kelas) => (
                     <SelectItem key={kelas.id} value={kelas.id}>
                       {kelas.nama_kelas}
                     </SelectItem>
@@ -411,12 +454,13 @@ const AgendaMengajar = () => {
               <Select
                 value={formData.mata_pelajaran_id}
                 onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
+                disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih mata pelajaran" />
+                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih mata pelajaran"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {mataPelajaranList.map((mapel) => (
+                  {filteredMataPelajaranList.map((mapel) => (
                     <SelectItem key={mapel.id} value={mapel.id}>
                       {mapel.nama_mata_pelajaran}
                     </SelectItem>
@@ -470,7 +514,11 @@ const AgendaMengajar = () => {
                 id="edit-tanggal"
                 type="date"
                 value={formData.tanggal}
-                onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
+                  filterByDate(newDate);
+                }}
               />
             </div>
             <div className="grid gap-2">
@@ -478,12 +526,13 @@ const AgendaMengajar = () => {
               <Select
                 value={formData.kelas_id}
                 onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
+                disabled={!formData.tanggal || filteredKelasList.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih kelas" />
+                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih kelas"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {kelasList.map((kelas) => (
+                  {filteredKelasList.map((kelas) => (
                     <SelectItem key={kelas.id} value={kelas.id}>
                       {kelas.nama_kelas}
                     </SelectItem>
@@ -496,12 +545,13 @@ const AgendaMengajar = () => {
               <Select
                 value={formData.mata_pelajaran_id}
                 onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
+                disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih mata pelajaran" />
+                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih mata pelajaran"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {mataPelajaranList.map((mapel) => (
+                  {filteredMataPelajaranList.map((mapel) => (
                     <SelectItem key={mapel.id} value={mapel.id}>
                       {mapel.nama_mata_pelajaran}
                     </SelectItem>
