@@ -48,6 +48,27 @@ export const useNotification = () => {
       return false;
     }
 
+    // Check if permission was already denied
+    if (Notification.permission === 'denied') {
+      toast({
+        title: "Izin Telah Ditolak Sebelumnya",
+        description: "Silakan aktifkan notifikasi melalui pengaturan browser Anda. Klik ikon kunci/info di sebelah URL untuk mengubah izin.",
+        variant: "destructive",
+        duration: 10000,
+      });
+      return false;
+    }
+
+    // Check if permission was already granted
+    if (Notification.permission === 'granted') {
+      toast({
+        title: "Izin Sudah Diberikan",
+        description: "Notifikasi sudah aktif",
+      });
+      return true;
+    }
+
+    // Request permission
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
@@ -61,8 +82,9 @@ export const useNotification = () => {
       } else {
         toast({
           title: "Izin Ditolak",
-          description: "Anda menolak izin notifikasi",
+          description: "Anda menolak izin notifikasi. Untuk mengaktifkan kembali, klik ikon kunci di sebelah URL dan ubah pengaturan notifikasi.",
           variant: "destructive",
+          duration: 10000,
         });
         return false;
       }
