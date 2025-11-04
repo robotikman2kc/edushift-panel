@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Save, Calendar, CheckCheck, X, Clock, UserX, BookOpen } from "lucide-react";
+import { Save, Calendar, CheckCheck, X, Clock, UserX, BookOpen, Star } from "lucide-react";
 
 interface Kelas {
   id: string;
@@ -41,6 +41,7 @@ interface Kehadiran {
   mata_pelajaran_id?: string;
   tanggal: string;
   status_kehadiran: string;
+  keaktifan?: string;
   keterangan?: string;
 }
 
@@ -87,6 +88,7 @@ const InputKehadiran = () => {
   const [mataPelajaran, setMataPelajaran] = useState<MataPelajaran[]>([]);
   const [students, setStudents] = useState<Siswa[]>([]);
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
+  const [keaktifan, setKeaktifan] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: Kehadiran}>({});
   const [loading, setLoading] = useState(false);
   const [todaySchedules, setTodaySchedules] = useState<ScheduleQuickButton[]>([]);
@@ -337,12 +339,15 @@ const InputKehadiran = () => {
 
       setStudents(sortedStudents);
       
-      // Initialize attendance with existing data
+      // Initialize attendance and keaktifan with existing data
       const initialAttendance: {[key: string]: string} = {};
+      const initialKeaktifan: {[key: string]: string} = {};
       studentsData.forEach(student => {
         initialAttendance[student.id] = attendanceMap[student.id]?.status_kehadiran || "";
+        initialKeaktifan[student.id] = attendanceMap[student.id]?.keaktifan || "";
       });
       setAttendance(initialAttendance);
+      setKeaktifan(initialKeaktifan);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -358,6 +363,13 @@ const InputKehadiran = () => {
 
   const handleAttendanceChange = (studentId: string, status: string) => {
     setAttendance(prev => ({
+      ...prev,
+      [studentId]: status
+    }));
+  };
+
+  const handleKeaktifanChange = (studentId: string, status: string) => {
+    setKeaktifan(prev => ({
       ...prev,
       [studentId]: status
     }));
@@ -403,6 +415,7 @@ const InputKehadiran = () => {
             kelas_id: selectedKelas,
             tanggal: selectedDate,
             status_kehadiran: attendance[student.id],
+            keaktifan: keaktifan[student.id] || null,
             keterangan: existing?.keterangan || null,
           };
         });
@@ -419,6 +432,7 @@ const InputKehadiran = () => {
           mata_pelajaran_id: selectedMataPelajaran,
           tanggal: record.tanggal,
           status_kehadiran: record.status_kehadiran,
+          keaktifan: record.keaktifan,
           keterangan: record.keterangan,
         });
         if (result.error) throw new Error(result.error);
@@ -428,6 +442,7 @@ const InputKehadiran = () => {
       for (const record of toUpdate) {
         const result = await indexedDB.update("kehadiran", record.id!, {
           status_kehadiran: record.status_kehadiran,
+          keaktifan: record.keaktifan,
           keterangan: record.keterangan,
         });
         if (result.error) throw new Error(result.error);
@@ -690,6 +705,7 @@ const InputKehadiran = () => {
                       <TableHead>NIS</TableHead>
                       <TableHead>Nama Siswa</TableHead>
                       <TableHead className="text-center">Status Kehadiran</TableHead>
+                      <TableHead className="text-center">Keaktifan</TableHead>
                       <TableHead className="text-center">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -701,6 +717,28 @@ const InputKehadiran = () => {
                         <TableCell>{student.nama_siswa}</TableCell>
                         <TableCell className="text-center">
                           {getStatusBadge(attendance[student.id])}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center gap-1">
+                            <Button
+                              size="sm"
+                              variant={keaktifan[student.id] === 'Aktif' ? 'default' : 'outline'}
+                              onClick={() => handleKeaktifanChange(student.id, 'Aktif')}
+                              className="h-7 text-xs"
+                              title="Siswa Aktif"
+                            >
+                              <Star className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={keaktifan[student.id] === 'Pasif' ? 'outline' : 'ghost'}
+                              onClick={() => handleKeaktifanChange(student.id, '')}
+                              className="h-7 text-xs"
+                              title="Reset"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-center gap-1">
