@@ -200,7 +200,7 @@ export function TopBar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2 border-primary">
                     <AvatarImage src={userProfile?.avatar_url} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
@@ -210,7 +210,7 @@ export function TopBar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-background border-border z-50">
                 <div className="flex items-center gap-2 p-2">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2 border-primary">
                     <AvatarImage src={userProfile?.avatar_url} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
