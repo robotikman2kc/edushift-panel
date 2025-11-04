@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,7 @@ interface AgendaMengajar {
 }
 
 const AgendaMengajar = () => {
+  const location = useLocation();
   const [agendaList, setAgendaList] = useState<AgendaMengajar[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -70,6 +72,34 @@ const AgendaMengajar = () => {
     materi: '',
     keterangan: '',
   });
+
+  // Handle data from dashboard navigation
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.fromSchedule && state?.scheduleData) {
+      const { kelas_id, mata_pelajaran_id } = state.scheduleData;
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      setFormData({
+        tanggal: today,
+        kelas_id: kelas_id,
+        mata_pelajaran_id: mata_pelajaran_id,
+        materi: '',
+        keterangan: '',
+      });
+      
+      // Filter kelas and mata pelajaran based on today
+      filterByDate(today);
+      
+      toast({
+        title: "Filter Otomatis",
+        description: "Kelas dan mata pelajaran telah dipilih sesuai jadwal",
+      });
+      
+      // Clear navigation state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   useEffect(() => {
     fetchData();

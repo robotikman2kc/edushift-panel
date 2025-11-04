@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { indexedDB } from "@/lib/indexedDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +66,8 @@ interface ScheduleQuickButton {
 }
 
 const InputKehadiran = () => {
+  const location = useLocation();
+  
   // Load saved state from localStorage
   const getSavedState = (key: string, defaultValue: string) => {
     try {
@@ -98,6 +101,35 @@ const InputKehadiran = () => {
       console.warn('Failed to save state:', error);
     }
   };
+
+  // Handle data from dashboard navigation
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.fromSchedule && state?.scheduleData) {
+      const { kelas_id, mata_pelajaran_id } = state.scheduleData;
+      
+      // Find kelas to get tingkat
+      indexedDB.select("kelas", k => k.id === kelas_id).then(kelasData => {
+        if (kelasData.length > 0) {
+          const tingkat = kelasData[0].tingkat;
+          setSelectedTingkat(tingkat);
+          setSelectedKelas(kelas_id);
+          setSelectedMataPelajaran(mata_pelajaran_id);
+          saveState('tingkat', tingkat);
+          saveState('kelas', kelas_id);
+          saveState('mata_pelajaran', mata_pelajaran_id);
+          
+          toast({
+            title: "Filter Otomatis",
+            description: "Kelas dan mata pelajaran telah dipilih sesuai jadwal",
+          });
+        }
+      });
+      
+      // Clear navigation state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   // Fetch all kelas and mata pelajaran
   useEffect(() => {
