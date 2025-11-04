@@ -31,7 +31,7 @@ export function CalendarDay({
     <button
       onClick={onClick}
       className={cn(
-        "min-h-[70px] p-2 border transition-all hover:bg-accent/50 relative flex flex-col",
+        "min-h-[50px] p-1.5 border transition-all hover:bg-accent/50 relative flex flex-col",
         !isCurrentMonth && "opacity-40",
         isToday && "border-primary border-2",
         isSelected && "bg-accent",
