@@ -64,18 +64,10 @@ const RekapNilai = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedTingkat) {
+    if (selectedTingkat && kelasList.length > 0) {
       const filtered = kelasList.filter(k => k.tingkat === selectedTingkat && k.status === "Aktif");
       setFilteredKelasList(filtered);
-      
-      // Only reset kelas if the current selection is not in the filtered list
-      if (selectedKelas && !filtered.find(k => k.id === selectedKelas)) {
-        setSelectedKelas("");
-        saveState('kelas', '');
-      }
-      
-      saveState('tingkat', selectedTingkat);
-    } else {
+    } else if (kelasList.length > 0) {
       setFilteredKelasList([]);
     }
   }, [selectedTingkat, kelasList]);
@@ -85,20 +77,6 @@ const RekapNilai = () => {
       loadRekapNilai();
     }
   }, [selectedKelas, selectedMataPelajaran]);
-
-  // Save kelas selection
-  useEffect(() => {
-    if (selectedKelas) {
-      saveState('kelas', selectedKelas);
-    }
-  }, [selectedKelas]);
-
-  // Save mapel selection
-  useEffect(() => {
-    if (selectedMataPelajaran) {
-      saveState('mapel', selectedMataPelajaran);
-    }
-  }, [selectedMataPelajaran]);
 
   const loadMasterData = async () => {
     try {
@@ -356,7 +334,13 @@ const RekapNilai = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tingkat</Label>
-              <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+              <Select 
+                value={selectedTingkat} 
+                onValueChange={(value) => {
+                  setSelectedTingkat(value);
+                  saveState('tingkat', value);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tingkat" />
                 </SelectTrigger>
@@ -374,7 +358,10 @@ const RekapNilai = () => {
               <Label>Kelas</Label>
               <Select 
                 value={selectedKelas} 
-                onValueChange={setSelectedKelas}
+                onValueChange={(value) => {
+                  setSelectedKelas(value);
+                  saveState('kelas', value);
+                }}
                 disabled={!selectedTingkat}
               >
                 <SelectTrigger>
@@ -394,7 +381,10 @@ const RekapNilai = () => {
               <Label>Mata Pelajaran</Label>
               <Select 
                 value={selectedMataPelajaran} 
-                onValueChange={setSelectedMataPelajaran}
+                onValueChange={(value) => {
+                  setSelectedMataPelajaran(value);
+                  saveState('mapel', value);
+                }}
                 disabled={!selectedKelas}
               >
                 <SelectTrigger>
