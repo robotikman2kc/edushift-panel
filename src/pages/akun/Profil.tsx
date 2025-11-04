@@ -55,10 +55,45 @@ const Profil = () => {
   }, [user]);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    console.log('Fetching profile, user:', user);
+    
+    if (!user) {
+      console.log('No user found, loading default admin');
+      // Jika tidak ada user dari auth, ambil user admin default
+      try {
+        const allUsers = await indexedDB.select('users' as any);
+        console.log('All users:', allUsers);
+        
+        if (allUsers.length > 0) {
+          const adminUser = allUsers.find((u: any) => u.role === 'admin') || allUsers[0];
+          console.log('Using user:', adminUser);
+          
+          setProfile(adminUser);
+          setFormData({
+            nama: adminUser.nama,
+            email: adminUser.email,
+            telepon: adminUser.telepon || "",
+            alamat: adminUser.alamat || "",
+            tanggal_lahir: adminUser.tanggal_lahir || "",
+            tempat_lahir: adminUser.tempat_lahir || "",
+            bio: adminUser.bio || "",
+            jenis_kelamin: adminUser.jenis_kelamin || "",
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: ""
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching default user:', error);
+      }
+      setIsLoading(false);
+      return;
+    }
     
     try {
       const userData = await indexedDB.selectById('users' as any, user.id);
+      console.log('User data:', userData);
+      
       if (!userData) {
         throw new Error('Profile not found');
       }
@@ -96,8 +131,14 @@ const Profil = () => {
         throw new Error("Password baru dan konfirmasi password tidak sama");
       }
 
+      // Tentukan user ID yang akan di-update
+      const userId = user?.id || profile?.id;
+      if (!userId) {
+        throw new Error('User ID tidak ditemukan');
+      }
+
       // Update profile data
-      const result = await indexedDB.update('users' as any, user?.id!, {
+      const result = await indexedDB.update('users' as any, userId, {
         nama: formData.nama,
         email: formData.email,
         telepon: formData.telepon,
@@ -139,7 +180,17 @@ const Profil = () => {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
+    
+    const userId = user?.id || profile?.id;
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "User ID tidak ditemukan",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsUploadingAvatar(true);
     try {
@@ -149,7 +200,7 @@ const Profil = () => {
         const base64 = e.target?.result as string;
         
         // Update user profile with avatar URL (base64)
-        const result = await indexedDB.update('users' as any, user.id, { avatar_url: base64 });
+        const result = await indexedDB.update('users' as any, userId, { avatar_url: base64 });
         
         if (result.error) {
           throw new Error(result.error);
