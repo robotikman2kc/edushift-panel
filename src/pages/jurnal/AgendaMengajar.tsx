@@ -239,10 +239,15 @@ const AgendaMengajar = () => {
     }
 
     try {
+      // Insert agenda
       await indexedDB.insert('agenda_mengajar', formData);
+      
+      // Auto-create jurnal guru
+      await createAutoJurnal(formData.tanggal, formData.kelas_id, formData.mata_pelajaran_id);
+      
       toast({
         title: "Berhasil",
-        description: "Agenda berhasil ditambahkan",
+        description: "Agenda dan jurnal berhasil ditambahkan",
       });
       resetForm();
       fetchData();
@@ -253,6 +258,52 @@ const AgendaMengajar = () => {
         description: "Gagal menambahkan agenda",
         variant: "destructive",
       });
+    }
+  };
+
+  const createAutoJurnal = async (tanggal: string, kelasId: string, mataPelajaranId: string) => {
+    try {
+      // Get jenis kegiatan "Mengajar"
+      const jenisKegiatanList = await indexedDB.select('jenis_kegiatan');
+      const jenisKegiatanMengajar = jenisKegiatanList.find((jk: any) => jk.nama_kegiatan === 'Mengajar');
+      
+      if (!jenisKegiatanMengajar) {
+        console.warn('Jenis kegiatan "Mengajar" tidak ditemukan');
+        return;
+      }
+
+      // Get kelas name
+      const kelas = kelasList.find((k) => k.id === kelasId);
+      const kelasNama = kelas ? kelas.nama_kelas : 'kelas';
+
+      // Get day of week and find jadwal
+      const date = new Date(tanggal);
+      const dayOfWeek = date.getDay();
+      const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const selectedDay = dayNames[dayOfWeek];
+
+      // Find jadwal for this day, kelas, and mata pelajaran
+      const jadwal = jadwalPelajaranList.find((j: any) => 
+        j.hari === selectedDay && 
+        j.kelas_id === kelasId && 
+        j.mata_pelajaran_id === mataPelajaranId
+      );
+
+      const jumlahJP = jadwal?.jumlah_jp || 1;
+
+      // Create jurnal
+      await indexedDB.insert('jurnal', {
+        tanggal: tanggal,
+        jenis_kegiatan_id: jenisKegiatanMengajar.id,
+        volume: jumlahJP,
+        uraian_kegiatan: `Melaksanakan KBM di kelas ${kelasNama}`,
+        satuan_hasil: 'JP'
+      });
+      
+      console.log('Auto-jurnal created successfully');
+    } catch (error) {
+      console.error('Error creating auto jurnal:', error);
+      // Don't throw error to prevent blocking agenda creation
     }
   };
 
