@@ -19,7 +19,7 @@ interface CalendarData {
 
 export default function Kalender() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [calendarData, setCalendarData] = useState<Map<string, CalendarData>>(new Map());
   
   const [allSchedules, setAllSchedules] = useState<Array<JadwalPelajaran & { kelas_name?: string; mata_pelajaran_name?: string; jam_mulai?: string; jam_selesai?: string }>>([]);
@@ -307,18 +307,16 @@ export default function Kalender() {
           </Card>
         </div>
 
-        {selectedDate && (
-          <div>
-            <DayDetailPanel
-              selectedDate={selectedDate}
-              schedules={selectedDaySchedules}
-              agendas={selectedDayAgendas}
-              journals={selectedDayJournals}
-              attendanceCount={selectedDayAttendanceCount}
-              onClose={() => setSelectedDate(null)}
-            />
-          </div>
-        )}
+        <div>
+          <DayDetailPanel
+            selectedDate={selectedDate || new Date()}
+            schedules={selectedDaySchedules}
+            agendas={selectedDayAgendas}
+            journals={selectedDayJournals}
+            attendanceCount={selectedDayAttendanceCount}
+            onClose={() => setSelectedDate(null)}
+          />
+        </div>
       </div>
     </div>
   );
