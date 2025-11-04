@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Save, Calendar, CheckCheck, X, Clock, UserX, BookOpen, Star } from "lucide-react";
+import { Save, Calendar, CheckCheck, X, Clock, UserX, BookOpen, Star, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Kelas {
   id: string;
@@ -68,6 +69,7 @@ interface ScheduleQuickButton {
 
 const InputKehadiran = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Load saved state from localStorage
   const getSavedState = (key: string, defaultValue: string) => {
@@ -383,6 +385,18 @@ const InputKehadiran = () => {
     setAttendance(bulkAttendance);
   };
 
+  const handleGoToAgenda = () => {
+    // Save filters to localStorage for Agenda Mengajar to read
+    localStorage.setItem('agenda_mengajar_from_kehadiran', JSON.stringify({
+      tingkat: selectedTingkat,
+      kelas_id: selectedKelas,
+      mata_pelajaran_id: selectedMataPelajaran,
+      tanggal: selectedDate
+    }));
+    
+    navigate('/jurnal/agenda-mengajar');
+  };
+
   const handleSave = async () => {
     if (!selectedKelas) {
       toast({
@@ -604,6 +618,17 @@ const InputKehadiran = () => {
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {loading ? "Menyimpan..." : "Simpan Kehadiran"}
+                </Button>
+
+                <Button 
+                  onClick={handleGoToAgenda}
+                  variant="outline"
+                  className="w-full"
+                  disabled={!selectedKelas || !selectedMataPelajaran}
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Buka Agenda Mengajar
                 </Button>
 
                 <div className="pt-4 border-t space-y-2">

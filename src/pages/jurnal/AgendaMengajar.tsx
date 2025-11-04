@@ -73,8 +73,44 @@ const AgendaMengajar = () => {
     keterangan: '',
   });
 
-  // Handle data from dashboard navigation
+
+  // Handle data from dashboard navigation or kehadiran page
   useEffect(() => {
+    // Check for filter from kehadiran page
+    const savedFilters = localStorage.getItem('agenda_mengajar_from_kehadiran');
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        const { kelas_id, mata_pelajaran_id, tanggal } = filters;
+        
+        setFormData({
+          tanggal: tanggal || format(new Date(), 'yyyy-MM-dd'),
+          kelas_id: kelas_id || '',
+          mata_pelajaran_id: mata_pelajaran_id || '',
+          materi: '',
+          keterangan: '',
+        });
+        
+        setSelectedKelasFilter(kelas_id || 'all');
+        
+        // Filter kelas and mata pelajaran based on date
+        if (tanggal) {
+          filterByDate(tanggal);
+        }
+        
+        toast({
+          title: "Filter Diterapkan",
+          description: "Filter dari Input Kehadiran telah diterapkan",
+        });
+        
+        // Clear saved filters
+        localStorage.removeItem('agenda_mengajar_from_kehadiran');
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
+    }
+    
+    // Check for navigation from dashboard
     const state = location.state as any;
     if (state?.fromSchedule && state?.scheduleData) {
       const { kelas_id, mata_pelajaran_id } = state.scheduleData;
