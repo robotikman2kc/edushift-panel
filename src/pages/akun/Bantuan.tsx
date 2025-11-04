@@ -215,7 +215,7 @@ const Bantuan = () => {
               <div>
                 <p className="font-medium">Email</p>
                 <p className="text-sm text-muted-foreground">
-                  support@sistem-akademik.com
+                  annasjatiabdillah@gmail.com
                 </p>
               </div>
             </div>
@@ -225,9 +225,9 @@ const Bantuan = () => {
                 <Phone className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Telepon</p>
+                <p className="font-medium">WhatsApp</p>
                 <p className="text-sm text-muted-foreground">
-                  (021) 123-4567 (Senin - Jumat, 08:00 - 17:00)
+                  +6287733774277
                 </p>
               </div>
             </div>
@@ -240,7 +240,7 @@ const Bantuan = () => {
         <CardContent className="pt-6">
           <div className="text-center text-sm text-muted-foreground">
             <p>Sistem Informasi Akademik v1.0.0</p>
-            <p className="mt-1">© 2024 - Dikembangkan dengan ❤️ untuk pendidikan Indonesia</p>
+            <p className="mt-1">© 2025 - Dikembangkan dengan ❤️ untuk pendidikan Indonesia</p>
           </div>
         </CardContent>
       </Card>
