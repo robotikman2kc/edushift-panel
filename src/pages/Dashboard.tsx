@@ -91,21 +91,21 @@ const Dashboard = () => {
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
       
-      // Enrich schedule with names and sort by jam
+      // Enrich schedule with names and sort by jam_ke
       const enrichedSchedules = schedules
         .map((schedule: any) => {
           const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
           const mataPelajaran = mataPelajaranData.find((m: any) => m.id === schedule.mata_pelajaran_id);
-          const timeSlot = timeSlots.find((t: any) => t.jam === schedule.jam);
+          const timeSlot = timeSlots.find((t: any) => t.jam_ke === schedule.jam_ke);
           
           return {
             ...schedule,
             kelas_nama: kelas?.nama_kelas || "N/A",
-            mata_pelajaran_nama: mataPelajaran?.nama || "N/A",
-            waktu: timeSlot?.waktu_mulai || "N/A"
+            mata_pelajaran_nama: mataPelajaran?.nama_mata_pelajaran || "N/A",
+            waktu: timeSlot ? `${timeSlot.waktu_mulai} - ${timeSlot.waktu_selesai}` : "N/A"
           };
         })
-        .sort((a: any, b: any) => a.jam - b.jam);
+        .sort((a: any, b: any) => a.jam_ke - b.jam_ke);
       
       setTodaySchedule(enrichedSchedules);
     } catch (error) {
@@ -202,7 +202,7 @@ const Dashboard = () => {
                   <div className="flex items-center gap-3">
                     <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10">
                       <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
-                      <span className="text-lg font-bold text-primary">{schedule.jam}</span>
+                      <span className="text-lg font-bold text-primary">{schedule.jam_ke}</span>
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{schedule.mata_pelajaran_nama}</p>
