@@ -193,9 +193,8 @@ const RekapNilai = () => {
       const selectedKelasData = kelasList.find(k => k.id === selectedKelas);
       const selectedMapelData = mataPelajaranList.find(m => m.id === selectedMataPelajaran);
 
-      const exportData = studentGrades.map((student, index) => {
+      const exportData = studentGrades.map((student) => {
         const rowData: any = {
-          'No': index + 1,
           'NIS': student.nis,
           'Nama Siswa': student.nama_siswa
         };
@@ -211,7 +210,6 @@ const RekapNilai = () => {
       });
 
       const exportColumns = [
-        { key: 'No', label: 'No' },
         { key: 'NIS', label: 'NIS' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
