@@ -396,7 +396,7 @@ const FormatPDF: React.FC = () => {
                 <Label htmlFor="signature-location">Lokasi Tanda Tangan</Label>
                 <Input
                   id="signature-location"
-                  value={settings.schoolInfo.signatureLocation || 'Jakarta'}
+                  value={settings.schoolInfo.signatureLocation ?? ''}
                   onChange={(e) =>
                     setSettings(prev => ({
                       ...prev,
