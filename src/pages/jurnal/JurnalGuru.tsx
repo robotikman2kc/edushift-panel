@@ -448,16 +448,12 @@ const JurnalGuru = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                data={filteredJurnal.map((item, index) => ({
+                data={filteredJurnal.map((item) => ({
                   ...item,
-                  no: index + 1,
                   tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
                   jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
                 }))}
-                columns={[
-                  { key: "no", label: "No.", sortable: false },
-                  ...columns
-                ]}
+                columns={columns}
                 loading={loading}
                 onEdit={(id) => handleEdit(id)}
                 onDelete={handleDelete}
@@ -478,12 +474,8 @@ const JurnalGuru = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                data={jenisKegiatan.map((item, index) => ({
-                  ...item,
-                  no: index + 1,
-                }))}
+                data={jenisKegiatan}
                 columns={[
-                  { key: "no", label: "No.", sortable: false },
                   { key: "nama_kegiatan", label: "Nama Kegiatan", sortable: true },
                   { key: "deskripsi", label: "Deskripsi", sortable: false },
                 ]}
