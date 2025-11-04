@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,9 @@ import {
   BarChart3,
   Download,
   RefreshCw,
-  Clock
+  Clock,
+  ClipboardList,
+  BookMarked
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +25,7 @@ import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
   const { toast } = useToast();
   
@@ -251,6 +255,53 @@ const Dashboard = () => {
                             )}
                           </div>
                         )}
+                        
+                        <div className="flex gap-2 mt-3 pt-2 border-t">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => navigate('/kehadiran/input-kehadiran', { 
+                              state: { 
+                                fromSchedule: true,
+                                scheduleData: {
+                                  kelas_id: schedule.kelas_id,
+                                  mata_pelajaran_id: schedule.mata_pelajaran_id,
+                                  jam_ke: schedule.jam_ke,
+                                  jumlah_jp: schedule.jumlah_jp,
+                                  kelas_nama: schedule.kelas_nama,
+                                  mata_pelajaran_nama: schedule.mata_pelajaran_nama,
+                                  jadwal_id: schedule.id
+                                }
+                              } 
+                            })}
+                          >
+                            <ClipboardList className="h-4 w-4 mr-1" />
+                            Presensi
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => navigate('/jurnal/agenda-mengajar', { 
+                              state: { 
+                                fromSchedule: true,
+                                scheduleData: {
+                                  kelas_id: schedule.kelas_id,
+                                  mata_pelajaran_id: schedule.mata_pelajaran_id,
+                                  jam_ke: schedule.jam_ke,
+                                  jumlah_jp: schedule.jumlah_jp,
+                                  kelas_nama: schedule.kelas_nama,
+                                  mata_pelajaran_nama: schedule.mata_pelajaran_nama,
+                                  jadwal_id: schedule.id
+                                }
+                              } 
+                            })}
+                          >
+                            <BookMarked className="h-4 w-4 mr-1" />
+                            Agenda
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
