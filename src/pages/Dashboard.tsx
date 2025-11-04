@@ -16,7 +16,9 @@ import {
   RefreshCw,
   Clock,
   ClipboardList,
-  BookMarked
+  BookMarked,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
@@ -89,12 +91,18 @@ const Dashboard = () => {
       setLoadingSchedule(true);
       const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
       const today = days[new Date().getDay()];
+      const todayDate = format(new Date(), "yyyy-MM-dd");
       
       const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
       const agendaData = await indexedDB.select("agenda_mengajar");
+      const kehadiranData = await indexedDB.select("kehadiran");
+      
+      // Filter today's agenda and attendance
+      const todayAgenda = agendaData.filter((a: any) => a.tanggal === todayDate);
+      const todayKehadiran = kehadiranData.filter((k: any) => k.tanggal === todayDate);
       
       // Enrich schedule with names and sort by jam_ke
       const enrichedSchedules = schedules
@@ -102,6 +110,17 @@ const Dashboard = () => {
           const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
           const mataPelajaran = mataPelajaranData.find((m: any) => m.id === schedule.mata_pelajaran_id);
           const timeSlot = timeSlots.find((t: any) => t.jam_ke === schedule.jam_ke);
+          
+          // Check if agenda and attendance exist for today
+          const hasAgendaToday = todayAgenda.some((a: any) => 
+            a.kelas_id === schedule.kelas_id && 
+            a.mata_pelajaran_id === schedule.mata_pelajaran_id
+          );
+          
+          const hasKehadiranToday = todayKehadiran.some((k: any) => 
+            k.kelas_id === schedule.kelas_id && 
+            k.mata_pelajaran_id === schedule.mata_pelajaran_id
+          );
           
           // Find latest agenda for this kelas and mata pelajaran
           const relatedAgenda = agendaData
@@ -120,7 +139,9 @@ const Dashboard = () => {
             waktu: timeSlot ? `${timeSlot.waktu_mulai} - ${timeSlot.waktu_selesai}` : "N/A",
             materi_terakhir: latestAgenda?.materi || null,
             keterangan_terakhir: latestAgenda?.keterangan || null,
-            tanggal_terakhir: latestAgenda?.tanggal || null
+            tanggal_terakhir: latestAgenda?.tanggal || null,
+            hasAgendaToday,
+            hasKehadiranToday
           };
         })
         .sort((a: any, b: any) => a.jam_ke - b.jam_ke);
@@ -233,11 +254,42 @@ const Dashboard = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <p className="font-semibold">{schedule.mata_pelajaran_nama}</p>
-                          {schedule.jumlah_jp > 1 && (
-                            <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium flex-shrink-0">
-                              {schedule.jumlah_jp} JP
-                            </div>
-                          )}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {schedule.jumlah_jp > 1 && (
+                              <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium">
+                                {schedule.jumlah_jp} JP
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Status Indicators */}
+                        <div className="flex gap-2 mb-2">
+                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded ${
+                            schedule.hasAgendaToday 
+                              ? 'bg-green-50 text-green-700 border border-green-200' 
+                              : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}>
+                            {schedule.hasAgendaToday ? (
+                              <CheckCircle2 className="h-3 w-3" />
+                            ) : (
+                              <XCircle className="h-3 w-3" />
+                            )}
+                            <span>{schedule.hasAgendaToday ? 'Agenda ✓' : 'Agenda belum diisi'}</span>
+                          </div>
+                          
+                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded ${
+                            schedule.hasKehadiranToday 
+                              ? 'bg-green-50 text-green-700 border border-green-200' 
+                              : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}>
+                            {schedule.hasKehadiranToday ? (
+                              <CheckCircle2 className="h-3 w-3" />
+                            ) : (
+                              <XCircle className="h-3 w-3" />
+                            )}
+                            <span>{schedule.hasKehadiranToday ? 'Presensi ✓' : 'Presensi belum diisi'}</span>
+                          </div>
                         </div>
                         
                         <div className="space-y-1">
