@@ -32,6 +32,7 @@ interface Siswa {
   kelas_id: string;
   status: string;
   jenis_kelamin?: string;
+  tanggal_masuk?: string;
 }
 
 interface KehadiranData {
@@ -215,11 +216,23 @@ const RekapKehadiran = () => {
       const report: KehadiranReport[] = students.map(student => {
         const studentAttendance = attendance.filter(a => a.siswa_id === student.id);
         
+        // Determine effective dates based on student's tanggal_masuk
+        let effectiveDates = dates;
+        if (student.tanggal_masuk) {
+          // Only count dates from student's tanggal_masuk onwards
+          effectiveDates = dates.filter((date: string) => date >= student.tanggal_masuk!);
+        }
+        
         // Create attendance map by date
         const kehadiranPerTanggal: { [tanggal: string]: string } = {};
         dates.forEach((date: string) => {
           const attendanceRecord = studentAttendance.find(a => a.tanggal === date);
-          kehadiranPerTanggal[date] = attendanceRecord ? attendanceRecord.status_kehadiran : '-';
+          // Mark as '-' if before student's tanggal_masuk
+          if (student.tanggal_masuk && date < student.tanggal_masuk) {
+            kehadiranPerTanggal[date] = '-';
+          } else {
+            kehadiranPerTanggal[date] = attendanceRecord ? attendanceRecord.status_kehadiran : '-';
+          }
         });
 
         // Calculate totals
@@ -229,7 +242,8 @@ const RekapKehadiran = () => {
         const totalAlpha = studentAttendance.filter(a => a.status_kehadiran === 'Alpha').length;
         
         const totalKehadiran = totalHadir; // Hanya status "Hadir" yang dihitung sebagai kehadiran
-        const persentaseKehadiran = dates.length > 0 ? Math.round((totalKehadiran / dates.length) * 100) : 0;
+        // Calculate percentage based on effective dates (from tanggal_masuk onwards)
+        const persentaseKehadiran = effectiveDates.length > 0 ? Math.round((totalKehadiran / effectiveDates.length) * 100) : 0;
 
         return {
           siswa_id: student.id,

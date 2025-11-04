@@ -61,6 +61,7 @@ export interface Siswa extends BaseRecord {
   nama_orang_tua?: string;
   telepon_orang_tua?: string;
   email?: string;
+  tanggal_masuk?: string;
   status: string;
 }
 
@@ -140,6 +141,7 @@ class LocalDB {
       // Import IndexedDB utilities dynamically to avoid blocking
       const { indexedDB } = await import('./indexedDB');
       const { DataMigration } = await import('./migrationUtils');
+      const { schemaMigrations } = await import('./dataMigrations');
       
       await indexedDB.initDB();
       const migration = new DataMigration();
@@ -156,6 +158,9 @@ class LocalDB {
           console.warn('IndexedDB migration failed, continuing with localStorage:', result.error);
         }
       }
+      
+      // Run schema migrations
+      await schemaMigrations.runAllMigrations();
     } catch (error) {
       console.warn('IndexedDB not available, using localStorage only:', error);
     }
