@@ -19,6 +19,7 @@ interface PDFFormatSettings {
     phone: string;
     email: string;
     logo?: string;
+    signatureLocation?: string;
   };
   defaultTeacher: {
     name: string;
@@ -68,6 +69,7 @@ const FormatPDF: React.FC = () => {
             phone: parsedSettings.schoolInfo?.phone || '(021) 1234-5678',
             email: parsedSettings.schoolInfo?.email || 'info@sekolah.ac.id',
             logo: parsedSettings.schoolInfo?.logo,
+            signatureLocation: parsedSettings.schoolInfo?.signatureLocation || 'Jakarta',
           },
           defaultTeacher: {
             name: parsedSettings.defaultTeacher?.name || '',
@@ -111,6 +113,7 @@ const FormatPDF: React.FC = () => {
         address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
         phone: '(021) 1234-5678',
         email: 'info@sekolah.ac.id',
+        signatureLocation: 'Jakarta',
       },
       defaultTeacher: {
         name: '',
@@ -387,6 +390,24 @@ const FormatPDF: React.FC = () => {
                     )}
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signature-location">Lokasi Tanda Tangan</Label>
+                <Input
+                  id="signature-location"
+                  value={settings.schoolInfo.signatureLocation || 'Jakarta'}
+                  onChange={(e) =>
+                    setSettings(prev => ({
+                      ...prev,
+                      schoolInfo: { ...prev.schoolInfo, signatureLocation: e.target.value },
+                    }))
+                  }
+                  placeholder="Contoh: Jakarta, Bandung, Surabaya"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Lokasi ini akan muncul di bagian tanda tangan pada PDF
+                </p>
               </div>
 
               <div className="space-y-2">

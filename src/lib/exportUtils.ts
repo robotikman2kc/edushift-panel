@@ -55,6 +55,7 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
         orientation: format?.orientation || 'portrait',
       },
       teacherInfo: settings.defaultTeacher && settings.defaultTeacher.name ? settings.defaultTeacher : undefined,
+      signatureLocation: settings.schoolInfo?.signatureLocation || 'Jakarta',
     };
     
     console.log('Generated custom template:', customTemplate); // Debug log
@@ -276,7 +277,8 @@ export const generatePDFBlob = (
       
       // Right side: Signature section
       const rightColumnX = pageWidth - 80;
-      doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
+      const signatureLocation = template.signatureLocation || 'Jakarta';
+      doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
       doc.text('Mengetahui,', rightColumnX, signatureStartY + 5);
       doc.text(signerPosition, rightColumnX, signatureStartY + 10);
       doc.text('', rightColumnX, signatureStartY + 25); // Space for signature

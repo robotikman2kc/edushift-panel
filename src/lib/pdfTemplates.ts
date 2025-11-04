@@ -46,6 +46,7 @@ export interface PDFTemplate {
     kepala_sekolah_nama?: string;
     kepala_sekolah_nip?: string;
   };
+  signatureLocation?: string;
 }
 
 export const defaultTemplate: PDFTemplate = {
