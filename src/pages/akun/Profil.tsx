@@ -60,6 +60,10 @@ const Profil = () => {
     try {
       localStorage.setItem('userProfile', JSON.stringify(profile));
       setIsEditing(false);
+      
+      // Trigger custom event to update other components
+      window.dispatchEvent(new Event('profileUpdated'));
+      
       toast({
         title: "Berhasil",
         description: "Profil berhasil diperbarui"
@@ -87,6 +91,9 @@ const Profil = () => {
         const base64 = e.target?.result as string;
         setProfile(prev => ({ ...prev, avatar_url: base64 }));
         localStorage.setItem('userProfile', JSON.stringify({ ...profile, avatar_url: base64 }));
+        
+        // Trigger custom event to update other components
+        window.dispatchEvent(new Event('profileUpdated'));
         
         toast({
           title: "Berhasil",

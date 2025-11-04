@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState, useEffect } from "react";
 
 const menuItems = [
   {
@@ -102,7 +103,43 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Load profile from localStorage
+  useEffect(() => {
+    const loadProfile = () => {
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        try {
+          setUserProfile(JSON.parse(savedProfile));
+        } catch (error) {
+          console.error('Error loading profile:', error);
+        }
+      }
+    };
+
+    loadProfile();
+
+    // Listen for profile updates
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userProfile') {
+        loadProfile();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for same-window updates
+    const handleProfileUpdate = () => {
+      loadProfile();
+    };
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
@@ -131,13 +168,15 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder.svg" />
+              <AvatarImage src={userProfile?.avatar_url} />
               <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                AD
+                {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-sidebar-foreground">Admin</span>
+              <span className="text-sm font-medium text-sidebar-foreground">
+                {userProfile?.nama || 'Admin'}
+              </span>
               <span className="text-xs text-sidebar-foreground/70">Administrator</span>
             </div>
           </div>

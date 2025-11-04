@@ -38,15 +38,41 @@ export function TopBar() {
     return () => clearInterval(timer);
   }, []);
 
+  // Load profile from localStorage
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        const profile = await indexedDB.selectById('users' as any, user.id);
-        setUserProfile(profile);
+    const loadProfile = () => {
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        try {
+          setUserProfile(JSON.parse(savedProfile));
+        } catch (error) {
+          console.error('Error loading profile:', error);
+        }
       }
     };
-    fetchUserProfile();
-  }, [user]);
+
+    loadProfile();
+
+    // Listen for profile updates
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userProfile') {
+        loadProfile();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for same-window updates
+    const handleProfileUpdate = () => {
+      loadProfile();
+    };
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   // Check last backup date
   useEffect(() => {
