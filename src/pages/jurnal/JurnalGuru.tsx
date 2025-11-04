@@ -304,6 +304,7 @@ const JurnalGuru = () => {
   };
 
   const columns = [
+    { key: "no", label: "No", sortable: false },
     { key: "tanggal", label: "Tanggal", sortable: true },
     { key: "uraian_kegiatan", label: "Uraian Kegiatan", sortable: true },
     { key: "volume", label: "Volume", sortable: true },
@@ -440,16 +441,11 @@ const JurnalGuru = () => {
 
         <TabsContent value="jurnal">
           <Card>
-            <CardHeader>
-              <CardTitle>Daftar Jurnal</CardTitle>
-              <CardDescription>
-                Lihat dan kelola jurnal kegiatan mengajar
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <DataTable
-                data={filteredJurnal.map((item) => ({
+                data={filteredJurnal.map((item, index) => ({
                   ...item,
+                  no: index + 1,
                   tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
                   jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
                 }))}
@@ -466,13 +462,7 @@ const JurnalGuru = () => {
 
         <TabsContent value="jenis-kegiatan">
           <Card>
-            <CardHeader>
-              <CardTitle>Daftar Jenis Kegiatan</CardTitle>
-              <CardDescription>
-                Kelola jenis kegiatan yang tersedia
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <DataTable
                 data={jenisKegiatan}
                 columns={[
