@@ -58,7 +58,7 @@ const AgendaMengajar = () => {
   const [jadwalPelajaranList, setJadwalPelajaranList] = useState<any[]>([]);
   
   // Dialog states
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAgenda, setSelectedAgenda] = useState<AgendaMengajar | null>(null);
@@ -169,7 +169,7 @@ const AgendaMengajar = () => {
         title: "Berhasil",
         description: "Agenda berhasil ditambahkan",
       });
-      setIsAddDialogOpen(false);
+      setShowAddForm(false);
       resetForm();
       fetchData();
     } catch (error) {
@@ -326,13 +326,13 @@ const AgendaMengajar = () => {
               </Select>
               <Button
                 onClick={() => {
-                  resetForm();
-                  setIsAddDialogOpen(true);
+                  if (!showAddForm) resetForm();
+                  setShowAddForm(!showAddForm);
                 }}
                 className="w-full sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Tambah Agenda
+                {showAddForm ? 'Tutup Form' : 'Tambah Agenda'}
               </Button>
               <Button
                 onClick={handleExportExcel}
@@ -347,6 +347,92 @@ const AgendaMengajar = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Add Form */}
+          {showAddForm && (
+            <div className="mb-6 p-6 border rounded-lg bg-muted/50">
+              <h3 className="text-lg font-semibold mb-4">Tambah Agenda Mengajar</h3>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="tanggal">Tanggal *</Label>
+                  <Input
+                    id="tanggal"
+                    type="date"
+                    value={formData.tanggal}
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
+                      filterByDate(newDate);
+                    }}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="kelas">Kelas *</Label>
+                  <Select
+                    value={formData.kelas_id}
+                    onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
+                    disabled={!formData.tanggal || filteredKelasList.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih kelas"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredKelasList.map((kelas) => (
+                        <SelectItem key={kelas.id} value={kelas.id}>
+                          {kelas.nama_kelas}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="mata_pelajaran">Mata Pelajaran *</Label>
+                  <Select
+                    value={formData.mata_pelajaran_id}
+                    onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
+                    disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih mata pelajaran"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredMataPelajaranList.map((mapel) => (
+                        <SelectItem key={mapel.id} value={mapel.id}>
+                          {mapel.nama_mata_pelajaran}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="materi">Materi *</Label>
+                  <Textarea
+                    id="materi"
+                    value={formData.materi}
+                    onChange={(e) => setFormData({ ...formData, materi: e.target.value })}
+                    placeholder="Masukkan materi yang diajarkan"
+                    rows={3}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="keterangan">Keterangan</Label>
+                  <Textarea
+                    id="keterangan"
+                    value={formData.keterangan}
+                    onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
+                    placeholder="Keterangan tambahan (opsional)"
+                    rows={2}
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                    Batal
+                  </Button>
+                  <Button onClick={handleAdd}>Simpan</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="text-center py-8">Memuat data...</div>
           ) : agendaList.length === 0 ? (
@@ -406,97 +492,6 @@ const AgendaMengajar = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Add Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Tambah Agenda Mengajar</DialogTitle>
-            <DialogDescription>
-              Isi form di bawah untuk menambahkan agenda mengajar baru
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="tanggal">Tanggal *</Label>
-              <Input
-                id="tanggal"
-                type="date"
-                value={formData.tanggal}
-                onChange={(e) => {
-                  const newDate = e.target.value;
-                  setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
-                  filterByDate(newDate);
-                }}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="kelas">Kelas *</Label>
-              <Select
-                value={formData.kelas_id}
-                onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
-                disabled={!formData.tanggal || filteredKelasList.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih kelas"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredKelasList.map((kelas) => (
-                    <SelectItem key={kelas.id} value={kelas.id}>
-                      {kelas.nama_kelas}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="mata_pelajaran">Mata Pelajaran *</Label>
-              <Select
-                value={formData.mata_pelajaran_id}
-                onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
-                disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih mata pelajaran"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredMataPelajaranList.map((mapel) => (
-                    <SelectItem key={mapel.id} value={mapel.id}>
-                      {mapel.nama_mata_pelajaran}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="materi">Materi *</Label>
-              <Textarea
-                id="materi"
-                value={formData.materi}
-                onChange={(e) => setFormData({ ...formData, materi: e.target.value })}
-                placeholder="Masukkan materi yang diajarkan"
-                rows={3}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="keterangan">Keterangan</Label>
-              <Textarea
-                id="keterangan"
-                value={formData.keterangan}
-                onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
-                placeholder="Keterangan tambahan (opsional)"
-                rows={2}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleAdd}>Simpan</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
