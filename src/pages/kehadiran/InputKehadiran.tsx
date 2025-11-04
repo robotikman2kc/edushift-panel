@@ -620,17 +620,6 @@ const InputKehadiran = () => {
                   {loading ? "Menyimpan..." : "Simpan Kehadiran"}
                 </Button>
 
-                <Button 
-                  onClick={handleGoToAgenda}
-                  variant="outline"
-                  className="w-full"
-                  disabled={!selectedKelas || !selectedMataPelajaran}
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Buka Agenda Mengajar
-                </Button>
-
                 <div className="pt-4 border-t space-y-2">
                   <h4 className="font-medium text-sm">Statistik Hari Ini</h4>
                   <div className="space-y-1 text-sm">
@@ -723,7 +712,20 @@ const InputKehadiran = () => {
                   <p className="text-muted-foreground">Tidak ada siswa dalam kelas ini</p>
                 </div>
               ) : (
-                <Table>
+                <>
+                  <div className="flex justify-end mb-4">
+                    <Button 
+                      onClick={handleGoToAgenda}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Buka Agenda Mengajar
+                    </Button>
+                  </div>
+                  
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>No</TableHead>
@@ -805,6 +807,7 @@ const InputKehadiran = () => {
                     ))}
                   </TableBody>
                 </Table>
+                </>
               )}
             </CardContent>
           </Card>
