@@ -653,15 +653,28 @@ const InputKehadiran = () => {
         <div className="lg:col-span-3">
           <Card>
             <CardHeader>
-              <CardTitle>
-                Daftar Siswa
-                {selectedKelasData && (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {" "}
-                    - {selectedKelasData.nama_kelas} {selectedKelasData.jurusan && `- ${selectedKelasData.jurusan}`}
-                  </span>
+              <div className="flex items-center justify-between">
+                <CardTitle>
+                  Daftar Siswa
+                  {selectedKelasData && (
+                    <span className="text-sm font-normal text-muted-foreground">
+                      {" "}
+                      - {selectedKelasData.nama_kelas} {selectedKelasData.jurusan && `- ${selectedKelasData.jurusan}`}
+                    </span>
+                  )}
+                </CardTitle>
+                {selectedKelas && selectedMataPelajaran && (
+                  <Button 
+                    onClick={handleGoToAgenda}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Buka Agenda Mengajar
+                  </Button>
                 )}
-              </CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               {todaySchedules.length > 0 && (
