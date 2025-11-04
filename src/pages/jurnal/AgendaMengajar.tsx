@@ -73,6 +73,7 @@ const AgendaMengajar = () => {
 
   useEffect(() => {
     fetchData();
+    resetForm(); // Initialize form with today's date
   }, [selectedMonth, selectedKelasFilter]);
 
   const fetchData = async () => {
@@ -111,14 +112,15 @@ const AgendaMengajar = () => {
   };
 
   const resetForm = () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
     setFormData({
-      tanggal: format(new Date(), 'yyyy-MM-dd'),
+      tanggal: today,
       kelas_id: '',
       mata_pelajaran_id: '',
       materi: '',
       keterangan: '',
     });
-    filterByDate(format(new Date(), 'yyyy-MM-dd'));
+    filterByDate(today);
   };
 
   // Filter kelas and mata pelajaran based on selected date
