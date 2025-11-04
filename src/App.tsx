@@ -33,6 +33,9 @@ import BackupRestore from "./pages/data/BackupRestore";
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
 import AgendaMengajar from "./pages/jurnal/AgendaMengajar";
 
+// Kalender Pages
+import Kalender from "./pages/kalender/Kalender";
+
 // Akun Pages
 import Profil from "./pages/akun/Profil";
 import FormatPDF from "./pages/pengaturan/FormatPDF";
@@ -90,6 +93,9 @@ const App = () => (
                     path="/jurnal/input-jurnal" 
                     element={<PlaceholderPage title="Input Jurnal" description="Input jurnal mengajar" />} 
                   />
+
+                  {/* Kalender Route */}
+                  <Route path="/kalender" element={<Kalender />} />
 
                   {/* Data Routes */}
                   <Route path="/data/manajemen-data" element={<ManajemenData />} />

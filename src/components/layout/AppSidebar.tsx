@@ -43,6 +43,7 @@ const menuItems = [
     icon: Settings,
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Kalender", url: "/kalender", icon: CalendarDays },
       { title: "Daftar Guru", url: "/pengaturan/guru", icon: UserCheck },
       { title: "Daftar Kelas", url: "/pengaturan/kelas", icon: GraduationCap },
       { title: "Daftar Siswa", url: "/pengaturan/siswa", icon: Users },
