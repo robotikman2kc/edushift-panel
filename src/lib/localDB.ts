@@ -14,6 +14,12 @@ export interface User extends BaseRecord {
   role: 'admin' | 'guru';
   status: string;
   avatar_url?: string;
+  telepon?: string;
+  alamat?: string;
+  tanggal_lahir?: string;
+  tempat_lahir?: string;
+  bio?: string;
+  jenis_kelamin?: 'Laki-laki' | 'Perempuan';
 }
 
 export interface Guru extends BaseRecord {

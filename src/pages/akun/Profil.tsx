@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
-import { User, Mail, Save, Eye, EyeOff, Camera, Upload } from "lucide-react";
+import { User, Mail, Save, Eye, EyeOff, Camera, Upload, Phone, MapPin, Calendar as CalendarIcon, FileText } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,6 +19,12 @@ interface UserProfile {
   role: string;
   status: string;
   avatar_url?: string;
+  telepon?: string;
+  alamat?: string;
+  tanggal_lahir?: string;
+  tempat_lahir?: string;
+  bio?: string;
+  jenis_kelamin?: 'Laki-laki' | 'Perempuan';
 }
 
 const Profil = () => {
@@ -29,6 +37,12 @@ const Profil = () => {
   const [formData, setFormData] = useState({
     nama: "",
     email: "",
+    telepon: "",
+    alamat: "",
+    tanggal_lahir: "",
+    tempat_lahir: "",
+    bio: "",
+    jenis_kelamin: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
@@ -53,6 +67,12 @@ const Profil = () => {
       setFormData({
         nama: userData.nama,
         email: userData.email,
+        telepon: userData.telepon || "",
+        alamat: userData.alamat || "",
+        tanggal_lahir: userData.tanggal_lahir || "",
+        tempat_lahir: userData.tempat_lahir || "",
+        bio: userData.bio || "",
+        jenis_kelamin: userData.jenis_kelamin || "",
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
@@ -79,7 +99,13 @@ const Profil = () => {
       // Update profile data
       const result = await indexedDB.update('users' as any, user?.id!, {
         nama: formData.nama,
-        email: formData.email
+        email: formData.email,
+        telepon: formData.telepon,
+        alamat: formData.alamat,
+        tanggal_lahir: formData.tanggal_lahir,
+        tempat_lahir: formData.tempat_lahir,
+        bio: formData.bio,
+        jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan'
       });
 
       if (result.error) {
@@ -169,6 +195,12 @@ const Profil = () => {
       setFormData({
         nama: profile.nama,
         email: profile.email,
+        telepon: profile.telepon || "",
+        alamat: profile.alamat || "",
+        tanggal_lahir: profile.tanggal_lahir || "",
+        tempat_lahir: profile.tempat_lahir || "",
+        bio: profile.bio || "",
+        jenis_kelamin: profile.jenis_kelamin || "",
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
@@ -263,43 +295,146 @@ const Profil = () => {
             </div>
 
             <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nama">Nama Lengkap</Label>
-                <Input
-                  id="nama"
-                  value={formData.nama}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
-                  disabled={!isEditing}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nama">Nama Lengkap</Label>
+                  <Input
+                    id="nama"
+                    value={formData.nama}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="telepon">Nomor Telepon</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="telepon"
+                      type="tel"
+                      placeholder="08xxxxxxxxxx"
+                      value={formData.telepon}
+                      onChange={(e) => setFormData(prev => ({ ...prev, telepon: e.target.value }))}
+                      disabled={!isEditing}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="jenis_kelamin">Jenis Kelamin</Label>
+                  <Select
+                    value={formData.jenis_kelamin}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, jenis_kelamin: value }))}
+                    disabled={!isEditing}
+                  >
+                    <SelectTrigger id="jenis_kelamin">
+                      <SelectValue placeholder="Pilih jenis kelamin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                      <SelectItem value="Perempuan">Perempuan</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tempat_lahir">Tempat Lahir</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="tempat_lahir"
+                      placeholder="Jakarta"
+                      value={formData.tempat_lahir}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tempat_lahir: e.target.value }))}
+                      disabled={!isEditing}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tanggal_lahir">Tanggal Lahir</Label>
+                  <div className="relative">
+                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="tanggal_lahir"
+                      type="date"
+                      value={formData.tanggal_lahir}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tanggal_lahir: e.target.value }))}
+                      disabled={!isEditing}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  disabled={!isEditing}
-                />
+                <Label htmlFor="alamat">Alamat</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Textarea
+                    id="alamat"
+                    placeholder="Masukkan alamat lengkap"
+                    value={formData.alamat}
+                    onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
+                    disabled={!isEditing}
+                    className="pl-10 min-h-20"
+                    rows={3}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Role</Label>
-                <Input
-                  value={profile.role}
-                  disabled
-                  className="bg-muted"
-                />
+                <Label htmlFor="bio">Bio / Deskripsi</Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Textarea
+                    id="bio"
+                    placeholder="Ceritakan tentang diri Anda"
+                    value={formData.bio}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                    disabled={!isEditing}
+                    className="pl-10 min-h-24"
+                    rows={4}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Input
-                  value={profile.status}
-                  disabled
-                  className="bg-muted"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Input
+                    value={profile.role}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Input
+                    value={profile.status}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
               </div>
             </div>
 
