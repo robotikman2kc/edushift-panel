@@ -154,6 +154,20 @@ export function DataTable({
   };
 
   const handleAddSubmit = async () => {
+    // Validate required fields
+    const missingFields = formFields
+      .filter(field => field.required && !formData[field.key]?.trim())
+      .map(field => field.label);
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Validasi Gagal",
+        description: `Field berikut wajib diisi: ${missingFields.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (onAdd) {
       await onAdd(formData);
       setIsAddDialogOpen(false);
@@ -162,6 +176,20 @@ export function DataTable({
   };
 
   const handleEditSubmit = async () => {
+    // Validate required fields
+    const missingFields = formFields
+      .filter(field => field.required && !formData[field.key]?.trim())
+      .map(field => field.label);
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Validasi Gagal",
+        description: `Field berikut wajib diisi: ${missingFields.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (onEdit && selectedItem) {
       await onEdit(selectedItem.id, formData);
       setIsEditDialogOpen(false);
@@ -341,7 +369,7 @@ export function DataTable({
     <div key={field.key} className="space-y-2">
       <Label htmlFor={field.key}>
         {field.label}
-        {field.required && <span className="text-red-500 ml-1">*</span>}
+        {field.required && <span className="text-destructive ml-1">*</span>}
       </Label>
       {field.type === "select" ? (
         <Select
@@ -368,8 +396,10 @@ export function DataTable({
           onChange={(e) =>
             setFormData({ ...formData, [field.key]: e.target.value })
           }
-          required={field.required}
         />
+      )}
+      {field.required && !formData[field.key]?.trim() && (
+        <p className="text-xs text-muted-foreground">Field ini wajib diisi</p>
       )}
     </div>
   );
