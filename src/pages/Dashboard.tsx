@@ -216,7 +216,12 @@ const Dashboard = () => {
                   <div className="flex items-start gap-4">
                     <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10 flex-shrink-0">
                       <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
-                      <span className="text-lg font-bold text-primary">{schedule.jam_ke}</span>
+                      <span className="text-lg font-bold text-primary">
+                        {schedule.jumlah_jp > 1 
+                          ? `${schedule.jam_ke}-${schedule.jam_ke + schedule.jumlah_jp - 1}`
+                          : schedule.jam_ke
+                        }
+                      </span>
                     </div>
                     
                     <div className="flex-1 min-w-0">
