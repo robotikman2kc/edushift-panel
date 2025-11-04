@@ -197,156 +197,161 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* Today's Schedule */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMMM yyyy", { locale: idLocale })}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingSchedule ? (
-            <p className="text-sm text-muted-foreground">Memuat jadwal...</p>
-          ) : todaySchedule.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Tidak ada jadwal untuk hari ini</p>
-          ) : (
-            <div className="space-y-3">
-              {todaySchedule.map((schedule, index) => (
-                <div 
-                  key={index}
-                  className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10 flex-shrink-0">
-                      <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
-                      <span className="text-lg font-bold text-primary">
-                        {schedule.jumlah_jp > 1 
-                          ? `${schedule.jam_ke}-${schedule.jam_ke + schedule.jumlah_jp - 1}`
-                          : schedule.jam_ke
-                        }
-                      </span>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="font-semibold">{schedule.mata_pelajaran_nama}</p>
-                        {schedule.jumlah_jp > 1 && (
-                          <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium flex-shrink-0">
-                            {schedule.jumlah_jp} JP
-                          </div>
-                        )}
+      {/* Today's Schedule & PWA Controls */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Today's Schedule */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMMM yyyy", { locale: idLocale })}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingSchedule ? (
+              <p className="text-sm text-muted-foreground">Memuat jadwal...</p>
+            ) : todaySchedule.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Tidak ada jadwal untuk hari ini</p>
+            ) : (
+              <div className="space-y-3">
+                {todaySchedule.map((schedule, index) => (
+                  <div 
+                    key={index}
+                    className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10 flex-shrink-0">
+                        <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
+                        <span className="text-lg font-bold text-primary">
+                          {schedule.jumlah_jp > 1 
+                            ? `${schedule.jam_ke}-${schedule.jam_ke + schedule.jumlah_jp - 1}`
+                            : schedule.jam_ke
+                          }
+                        </span>
                       </div>
                       
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">Kelas: {schedule.kelas_nama}</p>
-                        <p className="text-sm text-muted-foreground">Waktu: {schedule.waktu}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className="font-semibold">{schedule.mata_pelajaran_nama}</p>
+                          {schedule.jumlah_jp > 1 && (
+                            <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium flex-shrink-0">
+                              {schedule.jumlah_jp} JP
+                            </div>
+                          )}
+                        </div>
                         
-                        {schedule.materi_terakhir && (
-                          <div className="mt-2 pt-2 border-t">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">
-                              Materi Terakhir ({format(new Date(schedule.tanggal_terakhir), "dd MMM yyyy", { locale: idLocale })}):
-                            </p>
-                            <p className="text-sm text-foreground">{schedule.materi_terakhir}</p>
-                            {schedule.keterangan_terakhir && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Ket: {schedule.keterangan_terakhir}
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground">Kelas: {schedule.kelas_nama}</p>
+                          <p className="text-sm text-muted-foreground">Waktu: {schedule.waktu}</p>
+                          
+                          {schedule.materi_terakhir && (
+                            <div className="mt-2 pt-2 border-t">
+                              <p className="text-xs font-medium text-muted-foreground mb-1">
+                                Materi Terakhir ({format(new Date(schedule.tanggal_terakhir), "dd MMM yyyy", { locale: idLocale })}):
                               </p>
-                            )}
+                              <p className="text-sm text-foreground">{schedule.materi_terakhir}</p>
+                              {schedule.keterangan_terakhir && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Ket: {schedule.keterangan_terakhir}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2 mt-3 pt-2 border-t">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => navigate('/kehadiran/input-kehadiran', { 
+                                state: { 
+                                  fromSchedule: true,
+                                  scheduleData: {
+                                    kelas_id: schedule.kelas_id,
+                                    mata_pelajaran_id: schedule.mata_pelajaran_id,
+                                    jam_ke: schedule.jam_ke,
+                                    jumlah_jp: schedule.jumlah_jp,
+                                    kelas_nama: schedule.kelas_nama,
+                                    mata_pelajaran_nama: schedule.mata_pelajaran_nama,
+                                    jadwal_id: schedule.id
+                                  }
+                                } 
+                              })}
+                            >
+                              <ClipboardList className="h-4 w-4 mr-1" />
+                              Presensi
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => navigate('/jurnal/agenda-mengajar', { 
+                                state: { 
+                                  fromSchedule: true,
+                                  scheduleData: {
+                                    kelas_id: schedule.kelas_id,
+                                    mata_pelajaran_id: schedule.mata_pelajaran_id,
+                                    jam_ke: schedule.jam_ke,
+                                    jumlah_jp: schedule.jumlah_jp,
+                                    kelas_nama: schedule.kelas_nama,
+                                    mata_pelajaran_nama: schedule.mata_pelajaran_nama,
+                                    jadwal_id: schedule.id
+                                  }
+                                } 
+                              })}
+                            >
+                              <BookMarked className="h-4 w-4 mr-1" />
+                              Agenda
+                            </Button>
                           </div>
-                        )}
-                        
-                        <div className="flex gap-2 mt-3 pt-2 border-t">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1"
-                            onClick={() => navigate('/kehadiran/input-kehadiran', { 
-                              state: { 
-                                fromSchedule: true,
-                                scheduleData: {
-                                  kelas_id: schedule.kelas_id,
-                                  mata_pelajaran_id: schedule.mata_pelajaran_id,
-                                  jam_ke: schedule.jam_ke,
-                                  jumlah_jp: schedule.jumlah_jp,
-                                  kelas_nama: schedule.kelas_nama,
-                                  mata_pelajaran_nama: schedule.mata_pelajaran_nama,
-                                  jadwal_id: schedule.id
-                                }
-                              } 
-                            })}
-                          >
-                            <ClipboardList className="h-4 w-4 mr-1" />
-                            Presensi
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1"
-                            onClick={() => navigate('/jurnal/agenda-mengajar', { 
-                              state: { 
-                                fromSchedule: true,
-                                scheduleData: {
-                                  kelas_id: schedule.kelas_id,
-                                  mata_pelajaran_id: schedule.mata_pelajaran_id,
-                                  jam_ke: schedule.jam_ke,
-                                  jumlah_jp: schedule.jumlah_jp,
-                                  kelas_nama: schedule.kelas_nama,
-                                  mata_pelajaran_nama: schedule.mata_pelajaran_nama,
-                                  jadwal_id: schedule.id
-                                }
-                              } 
-                            })}
-                          >
-                            <BookMarked className="h-4 w-4 mr-1" />
-                            Agenda
-                          </Button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* PWA Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Download className="h-5 w-5" />
-            Kontrol Aplikasi PWA
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button 
-              onClick={handleInstall} 
-              variant={isInstallable && !isInstalled ? "default" : "outline"}
-              disabled={!isInstallable || isInstalled}
-              size="sm"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {isInstalled ? "Aplikasi Sudah Terinstall" : "Install Aplikasi"}
-            </Button>
-            
-            <Button 
-              onClick={handleUpdate} 
-              variant={updateAvailable ? "default" : "outline"}
-              disabled={!updateAvailable}
-              size="sm"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              {updateAvailable ? "Update Tersedia - Klik untuk Update" : "Tidak Ada Update"}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline. Update akan otomatis tersedia saat ada versi baru.
-          </p>
-        </CardContent>
-      </Card>
+        {/* PWA Controls */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Download className="h-5 w-5" />
+              Kontrol Aplikasi PWA
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={handleInstall} 
+                variant={isInstallable && !isInstalled ? "default" : "outline"}
+                disabled={!isInstallable || isInstalled}
+                size="sm"
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isInstalled ? "Sudah Terinstall" : "Install Aplikasi"}
+              </Button>
+              
+              <Button 
+                onClick={handleUpdate} 
+                variant={updateAvailable ? "default" : "outline"}
+                disabled={!updateAvailable}
+                size="sm"
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {updateAvailable ? "Update Tersedia" : "Tidak Ada Update"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
     </div>
   );
