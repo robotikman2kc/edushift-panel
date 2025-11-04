@@ -724,16 +724,16 @@ const InputKehadiran = () => {
                               size="sm"
                               variant={keaktifan[student.id] === 'Aktif' ? 'default' : 'outline'}
                               onClick={() => handleKeaktifanChange(student.id, 'Aktif')}
-                              className="h-7 text-xs"
+                              className={`h-7 text-xs ${keaktifan[student.id] === 'Aktif' ? 'bg-yellow-400 hover:bg-yellow-500 text-yellow-950 border-yellow-500' : ''}`}
                               title="Siswa Aktif"
                             >
-                              <Star className="h-3 w-3" />
+                              <Star className={`h-3 w-3 ${keaktifan[student.id] === 'Aktif' ? 'fill-yellow-950' : ''}`} />
                             </Button>
                             <Button
                               size="sm"
-                              variant={keaktifan[student.id] === 'Pasif' ? 'outline' : 'ghost'}
+                              variant="ghost"
                               onClick={() => handleKeaktifanChange(student.id, '')}
-                              className="h-7 text-xs"
+                              className="h-7 text-xs hover:bg-muted"
                               title="Reset"
                             >
                               <X className="h-3 w-3" />
