@@ -23,9 +23,19 @@ interface StudentGrade {
 }
 
 const RekapNilai = () => {
-  const [selectedTingkat, setSelectedTingkat] = useState("");
-  const [selectedKelas, setSelectedKelas] = useState("");
-  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("");
+  // Load saved state from localStorage
+  const getSavedState = (key: string, defaultValue: string) => {
+    try {
+      const saved = localStorage.getItem(`rekap_nilai_${key}`);
+      return saved || defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  };
+
+  const [selectedTingkat, setSelectedTingkat] = useState(() => getSavedState('tingkat', ''));
+  const [selectedKelas, setSelectedKelas] = useState(() => getSavedState('kelas', ''));
+  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState(() => getSavedState('mapel', ''));
   
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [filteredKelasList, setFilteredKelasList] = useState<Kelas[]>([]);
@@ -40,6 +50,15 @@ const RekapNilai = () => {
 
   const tingkatOptions = ["X", "XI", "XII"];
 
+  // Save state to localStorage
+  const saveState = (key: string, value: string) => {
+    try {
+      localStorage.setItem(`rekap_nilai_${key}`, value);
+    } catch (error) {
+      console.warn('Failed to save state:', error);
+    }
+  };
+
   useEffect(() => {
     loadMasterData();
   }, []);
@@ -48,7 +67,14 @@ const RekapNilai = () => {
     if (selectedTingkat) {
       const filtered = kelasList.filter(k => k.tingkat === selectedTingkat && k.status === "Aktif");
       setFilteredKelasList(filtered);
-      setSelectedKelas("");
+      
+      // Only reset kelas if the current selection is not in the filtered list
+      if (selectedKelas && !filtered.find(k => k.id === selectedKelas)) {
+        setSelectedKelas("");
+        saveState('kelas', '');
+      }
+      
+      saveState('tingkat', selectedTingkat);
     } else {
       setFilteredKelasList([]);
     }
@@ -59,6 +85,20 @@ const RekapNilai = () => {
       loadRekapNilai();
     }
   }, [selectedKelas, selectedMataPelajaran]);
+
+  // Save kelas selection
+  useEffect(() => {
+    if (selectedKelas) {
+      saveState('kelas', selectedKelas);
+    }
+  }, [selectedKelas]);
+
+  // Save mapel selection
+  useEffect(() => {
+    if (selectedMataPelajaran) {
+      saveState('mapel', selectedMataPelajaran);
+    }
+  }, [selectedMataPelajaran]);
 
   const loadMasterData = async () => {
     try {
