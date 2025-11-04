@@ -348,58 +348,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Aksi Cepat
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <p className="font-medium text-sm">Input Kehadiran</p>
-                    <p className="text-xs text-muted-foreground">Catat kehadiran hari ini</p>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="h-8 w-8 text-green-600" />
-                  <div>
-                    <p className="font-medium text-sm">Input Nilai</p>
-                    <p className="text-xs text-muted-foreground">Masukkan nilai siswa</p>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-purple-600" />
-                  <div>
-                    <p className="font-medium text-sm">Jurnal Guru</p>
-                    <p className="text-xs text-muted-foreground">Tulis jurnal mengajar</p>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <Users className="h-8 w-8 text-orange-600" />
-                  <div>
-                    <p className="font-medium text-sm">Data Siswa</p>
-                    <p className="text-xs text-muted-foreground">Kelola data siswa</p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
     </div>
   );
 };
