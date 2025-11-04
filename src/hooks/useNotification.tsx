@@ -48,19 +48,12 @@ export const useNotification = () => {
       return false;
     }
 
-    // Check if permission was already denied
-    if (Notification.permission === 'denied') {
-      toast({
-        title: "Izin Telah Ditolak Sebelumnya",
-        description: "Silakan aktifkan notifikasi melalui pengaturan browser Anda. Klik ikon kunci/info di sebelah URL untuk mengubah izin.",
-        variant: "destructive",
-        duration: 10000,
-      });
-      return false;
-    }
+    // Get fresh permission status from browser
+    const currentPermission = Notification.permission;
+    setPermission(currentPermission);
 
     // Check if permission was already granted
-    if (Notification.permission === 'granted') {
+    if (currentPermission === 'granted') {
       toast({
         title: "Izin Sudah Diberikan",
         description: "Notifikasi sudah aktif",
@@ -68,7 +61,18 @@ export const useNotification = () => {
       return true;
     }
 
-    // Request permission
+    // Check if permission was denied - inform user how to reset
+    if (currentPermission === 'denied') {
+      toast({
+        title: "Izin Telah Ditolak",
+        description: "Untuk mengaktifkan kembali, klik ikon kunci/gembok di sebelah URL lalu ubah pengaturan notifikasi menjadi 'Izinkan', kemudian muat ulang halaman.",
+        variant: "destructive",
+        duration: 10000,
+      });
+      return false;
+    }
+
+    // Request permission (only works if permission is 'default')
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
@@ -79,17 +83,23 @@ export const useNotification = () => {
           description: "Notifikasi telah diaktifkan",
         });
         return true;
-      } else {
+      } else if (result === 'denied') {
         toast({
           title: "Izin Ditolak",
-          description: "Anda menolak izin notifikasi. Untuk mengaktifkan kembali, klik ikon kunci di sebelah URL dan ubah pengaturan notifikasi.",
+          description: "Untuk mengaktifkan kembali, klik ikon kunci/gembok di sebelah URL lalu ubah pengaturan notifikasi, kemudian muat ulang halaman.",
           variant: "destructive",
           duration: 10000,
         });
         return false;
       }
+      return false;
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      toast({
+        title: "Gagal Meminta Izin",
+        description: "Terjadi kesalahan saat meminta izin notifikasi",
+        variant: "destructive",
+      });
       return false;
     }
   };

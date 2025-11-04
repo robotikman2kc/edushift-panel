@@ -33,6 +33,8 @@ const Notifikasi = () => {
     const granted = await requestPermission();
     if (granted) {
       handleSave();
+      // Reload to refresh UI
+      window.location.reload();
     }
   };
 
