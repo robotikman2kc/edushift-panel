@@ -58,7 +58,6 @@ const AgendaMengajar = () => {
   const [jadwalPelajaranList, setJadwalPelajaranList] = useState<any[]>([]);
   
   // Dialog states
-  const [showAddForm, setShowAddForm] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAgenda, setSelectedAgenda] = useState<AgendaMengajar | null>(null);
@@ -169,7 +168,6 @@ const AgendaMengajar = () => {
         title: "Berhasil",
         description: "Agenda berhasil ditambahkan",
       });
-      setShowAddForm(false);
       resetForm();
       fetchData();
     } catch (error) {
@@ -297,6 +295,105 @@ const AgendaMengajar = () => {
         description="Kelola catatan agenda mengajar harian"
       />
 
+      {/* Form Tambah Agenda */}
+      <Card className="border-primary/20">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">Tambah Agenda Baru</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="tanggal" className="text-sm font-medium">Tanggal *</Label>
+              <Input
+                id="tanggal"
+                type="date"
+                value={formData.tanggal}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
+                  filterByDate(newDate);
+                }}
+                className="w-full"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="kelas" className="text-sm font-medium">Kelas *</Label>
+              <Select
+                value={formData.kelas_id}
+                onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
+                disabled={!formData.tanggal || filteredKelasList.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal" : "Pilih kelas"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredKelasList.map((kelas) => (
+                    <SelectItem key={kelas.id} value={kelas.id}>
+                      {kelas.nama_kelas}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mata_pelajaran" className="text-sm font-medium">Mata Pelajaran *</Label>
+              <Select
+                value={formData.mata_pelajaran_id}
+                onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
+                disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal" : "Pilih mata pelajaran"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredMataPelajaranList.map((mapel) => (
+                    <SelectItem key={mapel.id} value={mapel.id}>
+                      {mapel.nama_mata_pelajaran}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="materi" className="text-sm font-medium">Materi *</Label>
+              <Textarea
+                id="materi"
+                value={formData.materi}
+                onChange={(e) => setFormData({ ...formData, materi: e.target.value })}
+                placeholder="Masukkan materi yang diajarkan"
+                rows={2}
+                className="resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="keterangan" className="text-sm font-medium">Keterangan</Label>
+              <Textarea
+                id="keterangan"
+                value={formData.keterangan}
+                onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
+                placeholder="Keterangan (opsional)"
+                rows={2}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={resetForm} size="sm">
+              Reset
+            </Button>
+            <Button onClick={handleAdd} size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Simpan Agenda
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -325,16 +422,6 @@ const AgendaMengajar = () => {
                 </SelectContent>
               </Select>
               <Button
-                onClick={() => {
-                  if (!showAddForm) resetForm();
-                  setShowAddForm(!showAddForm);
-                }}
-                className="w-full sm:w-auto"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {showAddForm ? 'Tutup Form' : 'Tambah Agenda'}
-              </Button>
-              <Button
                 onClick={handleExportExcel}
                 variant="outline"
                 className="w-full sm:w-auto"
@@ -347,92 +434,6 @@ const AgendaMengajar = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Add Form */}
-          {showAddForm && (
-            <div className="mb-6 p-6 border rounded-lg bg-muted/50">
-              <h3 className="text-lg font-semibold mb-4">Tambah Agenda Mengajar</h3>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="tanggal">Tanggal *</Label>
-                  <Input
-                    id="tanggal"
-                    type="date"
-                    value={formData.tanggal}
-                    onChange={(e) => {
-                      const newDate = e.target.value;
-                      setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
-                      filterByDate(newDate);
-                    }}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="kelas">Kelas *</Label>
-                  <Select
-                    value={formData.kelas_id}
-                    onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
-                    disabled={!formData.tanggal || filteredKelasList.length === 0}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih kelas"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredKelasList.map((kelas) => (
-                        <SelectItem key={kelas.id} value={kelas.id}>
-                          {kelas.nama_kelas}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="mata_pelajaran">Mata Pelajaran *</Label>
-                  <Select
-                    value={formData.mata_pelajaran_id}
-                    onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
-                    disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal terlebih dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal untuk hari ini" : "Pilih mata pelajaran"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredMataPelajaranList.map((mapel) => (
-                        <SelectItem key={mapel.id} value={mapel.id}>
-                          {mapel.nama_mata_pelajaran}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="materi">Materi *</Label>
-                  <Textarea
-                    id="materi"
-                    value={formData.materi}
-                    onChange={(e) => setFormData({ ...formData, materi: e.target.value })}
-                    placeholder="Masukkan materi yang diajarkan"
-                    rows={3}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="keterangan">Keterangan</Label>
-                  <Textarea
-                    id="keterangan"
-                    value={formData.keterangan}
-                    onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
-                    placeholder="Keterangan tambahan (opsional)"
-                    rows={2}
-                  />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                    Batal
-                  </Button>
-                  <Button onClick={handleAdd}>Simpan</Button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {loading ? (
             <div className="text-center py-8">Memuat data...</div>
           ) : agendaList.length === 0 ? (
