@@ -10,9 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, Users, BookOpen, BarChart3 } from "lucide-react";
 import { exportToExcel, getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
-import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
-import { attendanceTemplate, PDFTemplate } from "@/lib/pdfTemplates";
-import { PDFPreviewDialog } from "@/components/common/PDFPreviewDialog";
 
 interface Kelas {
   id: string;
@@ -80,9 +77,6 @@ const RekapKehadiran = () => {
   const [reportData, setReportData] = useState<KehadiranReport[]>([]);
   const [uniqueDates, setUniqueDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [pdfFilename, setPdfFilename] = useState("");
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -353,9 +347,20 @@ const RekapKehadiran = () => {
       );
       
       if (blob) {
-        setPdfBlob(blob);
-        setPdfFilename(filename);
-        setPdfPreviewOpen(true);
+        // Download PDF directly
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: "Export Berhasil",
+          description: "Rekap kehadiran berhasil diekspor ke PDF",
+        });
       } else {
         throw new Error('Failed to generate PDF');
       }
@@ -724,13 +729,6 @@ const RekapKehadiran = () => {
           </Card>
         </div>
       </div>
-
-      <PDFPreviewDialog
-        open={pdfPreviewOpen}
-        onOpenChange={setPdfPreviewOpen}
-        pdfBlob={pdfBlob}
-        filename={pdfFilename}
-      />
     </div>
   );
 };

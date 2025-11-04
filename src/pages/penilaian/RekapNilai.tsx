@@ -10,7 +10,6 @@ import { toast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, Star } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa, Kehadiran } from "@/lib/indexedDB";
 import { exportToExcel, generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
-import { PDFPreviewDialog } from "@/components/common/PDFPreviewDialog";
 
 interface StudentGrade {
   siswa_id: string;
@@ -44,9 +43,6 @@ const RekapNilai = () => {
   const [kategoriList, setKategoriList] = useState<JenisPenilaian[]>([]);
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [pdfFilename, setPdfFilename] = useState("");
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -234,13 +230,19 @@ const RekapNilai = () => {
         customTemplate
       );
 
-      setPdfBlob(blob);
-      setPdfFilename(filename);
-      setPdfPreviewOpen(true);
+      // Download PDF directly
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
-        title: "PDF Siap",
-        description: "Preview PDF telah disiapkan",
+        title: "Export Berhasil",
+        description: "Rekap nilai berhasil diekspor ke PDF",
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -514,13 +516,6 @@ const RekapNilai = () => {
           </CardContent>
         </Card>
       </div>
-
-      <PDFPreviewDialog
-        open={pdfPreviewOpen}
-        onOpenChange={setPdfPreviewOpen}
-        pdfBlob={pdfBlob}
-        filename={pdfFilename}
-      />
     </div>
   );
 };
