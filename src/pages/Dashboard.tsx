@@ -177,18 +177,18 @@ const Dashboard = () => {
           const IconComponent = stat.icon;
           return (
             <Card key={index}>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">
+                    <p className="text-xs font-medium text-muted-foreground">
                       {stat.title}
                     </p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-xl font-bold text-foreground">
                       {stat.value}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                    <IconComponent className={`h-6 w-6 ${stat.color}`} />
+                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                    <IconComponent className={`h-5 w-5 ${stat.color}`} />
                   </div>
                 </div>
               </CardContent>
