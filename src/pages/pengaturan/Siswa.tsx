@@ -40,11 +40,12 @@ const Siswa = () => {
   const [loading, setLoading] = useState(true);
 
   const columns = [
+    { key: "no", label: "No", sortable: false },
     { key: "nis", label: "NIS", sortable: true },
     { key: "nama_siswa", label: "Nama Siswa", sortable: true },
     { key: "kelas_nama", label: "Kelas", sortable: true },
     { key: "jenis_kelamin", label: "Jenis Kelamin", sortable: true },
-    { key: "nama_orang_tua", label: "Orang Tua", sortable: false },
+    { key: "tanggal_masuk", label: "Tanggal Masuk", sortable: true },
     { key: "status", label: "Status", sortable: false },
   ];
 
@@ -94,6 +95,7 @@ const Siswa = () => {
           jenis_kelamin: item.jenis_kelamin as 'Laki-laki' | 'Perempuan',
           kelas_nama: kelas?.nama_kelas || 'Tidak ada kelas',
           tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toLocaleDateString('id-ID') : '',
+          tanggal_masuk: item.tanggal_masuk ? new Date(item.tanggal_masuk).toLocaleDateString('id-ID') : '-',
           created_at: new Date(item.created_at).toLocaleDateString('id-ID')
         };
       });
