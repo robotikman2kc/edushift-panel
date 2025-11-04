@@ -17,7 +17,8 @@ import {
   ClipboardList,
   UserCog,
   CalendarDays,
-  LayoutDashboard
+  LayoutDashboard,
+  Bell
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -49,6 +50,7 @@ const menuItems = [
       { title: "Jadwal Pelajaran", url: "/pengaturan/jadwal-pelajaran", icon: CalendarDays },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
+      { title: "Notifikasi", url: "/pengaturan/notifikasi", icon: Bell },
     ],
   },
   {

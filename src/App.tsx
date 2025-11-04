@@ -36,6 +36,7 @@ import AgendaMengajar from "./pages/jurnal/AgendaMengajar";
 // Akun Pages
 import Profil from "./pages/akun/Profil";
 import FormatPDF from "./pages/pengaturan/FormatPDF";
+import Notifikasi from "./pages/pengaturan/Notifikasi";
 
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/pengaturan/jadwal-pelajaran" element={<JadwalPelajaran />} />
                   <Route path="/pengaturan/bobot-penilaian" element={<BobotPenilaian />} />
                   <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
+                  <Route path="/pengaturan/notifikasi" element={<Notifikasi />} />
 
                   {/* Penilaian Routes */}
                   <Route path="/penilaian/input-nilai" element={<InputNilai />} />
