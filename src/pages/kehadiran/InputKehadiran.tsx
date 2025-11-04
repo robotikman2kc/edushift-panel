@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Save, Calendar, CheckCheck, X, Clock, UserX } from "lucide-react";
+import { Save, Calendar, CheckCheck, X, Clock, UserX, BookOpen } from "lucide-react";
 
 interface Kelas {
   id: string;
@@ -43,6 +43,27 @@ interface Kehadiran {
   keterangan?: string;
 }
 
+interface JadwalPelajaran {
+  id: string;
+  kelas_id: string;
+  mata_pelajaran_id: string;
+  hari: string;
+  jam_ke: number;
+  jumlah_jp: number;
+  status: string;
+}
+
+interface ScheduleQuickButton {
+  jadwal_id: string;
+  kelas_id: string;
+  kelas_nama: string;
+  kelas_tingkat: string;
+  mata_pelajaran_id: string;
+  mata_pelajaran_nama: string;
+  jam_ke: number;
+  jumlah_jp: number;
+}
+
 const InputKehadiran = () => {
   // Load saved state from localStorage
   const getSavedState = (key: string, defaultValue: string) => {
@@ -65,6 +86,7 @@ const InputKehadiran = () => {
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: Kehadiran}>({});
   const [loading, setLoading] = useState(false);
+  const [todaySchedules, setTodaySchedules] = useState<ScheduleQuickButton[]>([]);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -99,6 +121,11 @@ const InputKehadiran = () => {
       fetchMataPelajaran();
     });
   }, []);
+
+  // Fetch today's schedule when date changes
+  useEffect(() => {
+    fetchTodaySchedule();
+  }, [selectedDate, allKelas, mataPelajaran]);
 
   // Initialize filtered kelas when allKelas is loaded and we have saved tingkat
   useEffect(() => {
@@ -180,6 +207,49 @@ const InputKehadiran = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const fetchTodaySchedule = async () => {
+    if (allKelas.length === 0 || mataPelajaran.length === 0) return;
+
+    try {
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const today = days[new Date(selectedDate).getDay()];
+      
+      const jadwalData = await indexedDB.select("jadwal_pelajaran", (jadwal) => 
+        jadwal.hari === today && jadwal.status === "Aktif"
+      );
+
+      const scheduleButtons: ScheduleQuickButton[] = jadwalData.map(jadwal => {
+        const kelas = allKelas.find(k => k.id === jadwal.kelas_id);
+        const mapel = mataPelajaran.find(m => m.id === jadwal.mata_pelajaran_id);
+        
+        return {
+          jadwal_id: jadwal.id,
+          kelas_id: jadwal.kelas_id,
+          kelas_nama: kelas?.nama_kelas || '',
+          kelas_tingkat: kelas?.tingkat || '',
+          mata_pelajaran_id: jadwal.mata_pelajaran_id,
+          mata_pelajaran_nama: mapel?.nama_mata_pelajaran || '',
+          jam_ke: jadwal.jam_ke,
+          jumlah_jp: jadwal.jumlah_jp,
+        };
+      }).filter(s => s.kelas_nama && s.mata_pelajaran_nama)
+        .sort((a, b) => a.jam_ke - b.jam_ke);
+
+      setTodaySchedules(scheduleButtons);
+    } catch (error) {
+      console.error("Error fetching today's schedule:", error);
+    }
+  };
+
+  const handleQuickSelect = (schedule: ScheduleQuickButton) => {
+    setSelectedTingkat(schedule.kelas_tingkat);
+    setSelectedKelas(schedule.kelas_id);
+    setSelectedMataPelajaran(schedule.mata_pelajaran_id);
+    saveState('tingkat', schedule.kelas_tingkat);
+    saveState('kelas', schedule.kelas_id);
+    saveState('mata_pelajaran', schedule.mata_pelajaran_id);
   };
 
   const fetchStudentsAndAttendance = async () => {
@@ -369,6 +439,38 @@ const InputKehadiran = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {todaySchedules.length > 0 && (
+              <div className="space-y-2 pb-4 border-b">
+                <Label className="text-sm font-medium">Jadwal Hari Ini</Label>
+                <div className="space-y-2">
+                  {todaySchedules.map((schedule) => (
+                    <Button
+                      key={schedule.jadwal_id}
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start text-left h-auto py-2"
+                      onClick={() => handleQuickSelect(schedule)}
+                    >
+                      <div className="flex items-start gap-2 w-full">
+                        <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium truncate">
+                            {schedule.kelas_tingkat} {schedule.kelas_nama}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {schedule.mata_pelajaran_nama}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Jam ke {schedule.jam_ke}{schedule.jumlah_jp > 1 && `-${schedule.jam_ke + schedule.jumlah_jp - 1}`}
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="tanggal">Tanggal</Label>
               <input
