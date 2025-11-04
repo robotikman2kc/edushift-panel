@@ -20,6 +20,7 @@ import BobotPenilaian from "./pages/pengaturan/BobotPenilaian";
 
 // Penilaian Pages
 import InputNilai from "./pages/penilaian/InputNilai";
+import RekapNilai from "./pages/penilaian/RekapNilai";
 
 // Kehadiran Pages
 import InputKehadiran from "./pages/kehadiran/InputKehadiran";
@@ -73,10 +74,7 @@ const App = () => (
 
                   {/* Penilaian Routes */}
                   <Route path="/penilaian/input-nilai" element={<InputNilai />} />
-                  <Route 
-                    path="/penilaian/rekap-nilai" 
-                    element={<PlaceholderPage title="Rekap Nilai" description="Lihat rekap nilai siswa" />} 
-                  />
+                  <Route path="/penilaian/rekap-nilai" element={<RekapNilai />} />
 
                   {/* Kehadiran Routes */}
                   <Route path="/kehadiran/input-kehadiran" element={<InputKehadiran />} />

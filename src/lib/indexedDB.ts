@@ -79,6 +79,7 @@ export interface Kehadiran extends BaseRecord {
   mata_pelajaran_id?: string;
   status_kehadiran: string;
   keterangan?: string;
+  keaktifan?: string;
 }
 
 export interface JenisPenilaian extends BaseRecord {
