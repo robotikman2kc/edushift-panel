@@ -727,7 +727,7 @@ const InputKehadiran = () => {
                               className={`h-7 text-xs ${keaktifan[student.id] === 'Aktif' ? 'bg-yellow-400 hover:bg-yellow-500 text-yellow-950 border-yellow-500' : ''}`}
                               title="Siswa Aktif"
                             >
-                              <Star className={`h-3 w-3 ${keaktifan[student.id] === 'Aktif' ? 'fill-yellow-950' : ''}`} />
+                              <Star className="h-3 w-3" />
                             </Button>
                             <Button
                               size="sm"
