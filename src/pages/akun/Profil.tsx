@@ -152,7 +152,7 @@ const Profil = () => {
           <CardContent className="space-y-4">
             {/* Avatar Section */}
             <div className="flex items-center gap-4 p-4 border rounded-lg">
-              <Avatar className="h-20 w-20">
+              <Avatar className="h-20 w-20 border-2 border-primary">
                 <AvatarImage src={profile.avatar_url} alt={profile.nama} />
                 <AvatarFallback className="text-lg">
                   {profile.nama ? profile.nama.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
