@@ -14,6 +14,7 @@ import {
 import { User, Settings, Circle, Clock, Calendar, RotateCcw, AlertTriangle, Moon, Sun } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { indexedDB } from "@/lib/indexedDB";
 import { format, differenceInDays } from "date-fns";
 import { id } from "date-fns/locale";
@@ -23,9 +24,11 @@ export function TopBar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showBackupWarning, setShowBackupWarning] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState(0);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,6 +37,16 @@ export function TopBar() {
 
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const profile = await indexedDB.selectById('users' as any, user.id);
+        setUserProfile(profile);
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   // Check last backup date
   useEffect(() => {
@@ -162,9 +175,9 @@ export function TopBar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarImage src={userProfile?.avatar_url} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      AD
+                      {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -172,18 +185,18 @@ export function TopBar() {
               <DropdownMenuContent align="end" className="w-56 bg-background border-border z-50">
                 <div className="flex items-center gap-2 p-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarImage src={userProfile?.avatar_url} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      AD
+                      {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">Administrator</span>
-                    <span className="text-xs text-muted-foreground">admin@sekolah.com</span>
+                    <span className="text-sm font-medium">{userProfile?.nama || 'Administrator'}</span>
+                    <span className="text-xs text-muted-foreground">{userProfile?.email || 'admin@sekolah.com'}</span>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/akun/profil')}>
                   <User className="mr-2 h-4 w-4" />
                   <span>Profil</span>
                 </DropdownMenuItem>
