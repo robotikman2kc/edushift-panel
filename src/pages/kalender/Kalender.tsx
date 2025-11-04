@@ -255,65 +255,6 @@ export default function Kalender() {
         description="Lihat jadwal mengajar, agenda, kehadiran, dan jurnal dalam satu tampilan"
       />
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.totalTeachingDays}</div>
-                <div className="text-xs text-muted-foreground">Hari Mengajar</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <BookOpen className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.totalAgendas}</div>
-                <div className="text-xs text-muted-foreground">Agenda Dibuat</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Users className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.totalAttendance}</div>
-                <div className="text-xs text-muted-foreground">Kehadiran Tercatat</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-500/10 rounded-lg">
-                <FileText className="h-5 w-5 text-yellow-500" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats.completionPercentage}%</div>
-                <div className="text-xs text-muted-foreground">Pencapaian</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Legend */}
       <Card>
         <CardContent className="p-4">
