@@ -216,23 +216,38 @@ const InputKehadiran = () => {
       const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
       const today = days[new Date(selectedDate).getDay()];
       
-      // Fetch all active schedules first to debug
-      const allJadwal = await indexedDB.select("jadwal_pelajaran", (jadwal) => 
-        jadwal.status === "Aktif"
-      );
+      // Fetch all schedules first to debug
+      const allJadwal = await indexedDB.select("jadwal_pelajaran");
       
-      console.log("All active schedules:", allJadwal);
+      console.log("=== DEBUGGING JADWAL PELAJARAN ===");
+      console.log("All schedules in database:", allJadwal);
+      console.log("Total schedules found:", allJadwal.length);
       console.log("Today is:", today);
       console.log("Selected date:", selectedDate);
       console.log("Day index:", new Date(selectedDate).getDay());
       
-      const jadwalData = allJadwal.filter(jadwal => jadwal.hari === today);
+      // Group by day to see what we have
+      const byDay = allJadwal.reduce((acc: any, j: any) => {
+        if (!acc[j.hari]) acc[j.hari] = [];
+        acc[j.hari].push(j);
+        return acc;
+      }, {});
+      console.log("Schedules grouped by day:", byDay);
+      
+      // Filter for today and active status
+      const jadwalData = allJadwal.filter(jadwal => 
+        jadwal.hari === today && jadwal.status === "Aktif"
+      );
 
-      console.log("Today's schedule data:", jadwalData);
+      console.log("Today's filtered schedule data:", jadwalData);
 
       const scheduleButtons: ScheduleQuickButton[] = jadwalData.map(jadwal => {
         const kelas = allKelas.find(k => k.id === jadwal.kelas_id);
         const mapel = mataPelajaran.find(m => m.id === jadwal.mata_pelajaran_id);
+        
+        console.log("Processing jadwal:", jadwal);
+        console.log("Found kelas:", kelas);
+        console.log("Found mapel:", mapel);
         
         return {
           jadwal_id: jadwal.id,
@@ -248,6 +263,7 @@ const InputKehadiran = () => {
         .sort((a, b) => a.jam_ke - b.jam_ke);
 
       console.log("Processed schedule buttons:", scheduleButtons);
+      console.log("=== END DEBUGGING ===");
       setTodaySchedules(scheduleButtons);
     } catch (error) {
       console.error("Error fetching today's schedule:", error);
