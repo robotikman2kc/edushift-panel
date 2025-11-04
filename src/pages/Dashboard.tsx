@@ -90,6 +90,7 @@ const Dashboard = () => {
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
+      const agendaData = await indexedDB.select("agenda_mengajar");
       
       // Enrich schedule with names and sort by jam_ke
       const enrichedSchedules = schedules
@@ -98,11 +99,24 @@ const Dashboard = () => {
           const mataPelajaran = mataPelajaranData.find((m: any) => m.id === schedule.mata_pelajaran_id);
           const timeSlot = timeSlots.find((t: any) => t.jam_ke === schedule.jam_ke);
           
+          // Find latest agenda for this kelas and mata pelajaran
+          const relatedAgenda = agendaData
+            .filter((a: any) => 
+              a.kelas_id === schedule.kelas_id && 
+              a.mata_pelajaran_id === schedule.mata_pelajaran_id
+            )
+            .sort((a: any, b: any) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
+          
+          const latestAgenda = relatedAgenda[0];
+          
           return {
             ...schedule,
             kelas_nama: kelas?.nama_kelas || "N/A",
             mata_pelajaran_nama: mataPelajaran?.nama_mata_pelajaran || "N/A",
-            waktu: timeSlot ? `${timeSlot.waktu_mulai} - ${timeSlot.waktu_selesai}` : "N/A"
+            waktu: timeSlot ? `${timeSlot.waktu_mulai} - ${timeSlot.waktu_selesai}` : "N/A",
+            materi_terakhir: latestAgenda?.materi || null,
+            keterangan_terakhir: latestAgenda?.keterangan || null,
+            tanggal_terakhir: latestAgenda?.tanggal || null
           };
         })
         .sort((a: any, b: any) => a.jam_ke - b.jam_ke);
@@ -193,28 +207,48 @@ const Dashboard = () => {
           ) : todaySchedule.length === 0 ? (
             <p className="text-sm text-muted-foreground">Tidak ada jadwal untuk hari ini</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {todaySchedule.map((schedule, index) => (
                 <div 
                   key={index}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10">
+                  <div className="flex items-start gap-4">
+                    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10 flex-shrink-0">
                       <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
                       <span className="text-lg font-bold text-primary">{schedule.jam_ke}</span>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm">{schedule.mata_pelajaran_nama}</p>
-                      <p className="text-xs text-muted-foreground">Kelas: {schedule.kelas_nama}</p>
-                      <p className="text-xs text-muted-foreground">Waktu: {schedule.waktu}</p>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="font-semibold">{schedule.mata_pelajaran_nama}</p>
+                        {schedule.jumlah_jp > 1 && (
+                          <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium flex-shrink-0">
+                            {schedule.jumlah_jp} JP
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Kelas: {schedule.kelas_nama}</p>
+                        <p className="text-sm text-muted-foreground">Waktu: {schedule.waktu}</p>
+                        
+                        {schedule.materi_terakhir && (
+                          <div className="mt-2 pt-2 border-t">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">
+                              Materi Terakhir ({format(new Date(schedule.tanggal_terakhir), "dd MMM yyyy", { locale: idLocale })}):
+                            </p>
+                            <p className="text-sm text-foreground">{schedule.materi_terakhir}</p>
+                            {schedule.keterangan_terakhir && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Ket: {schedule.keterangan_terakhir}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {schedule.jumlah_jp > 1 && (
-                    <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium">
-                      {schedule.jumlah_jp} JP
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
