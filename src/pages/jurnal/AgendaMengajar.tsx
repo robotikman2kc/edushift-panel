@@ -64,7 +64,7 @@ const AgendaMengajar = () => {
   
   // Form states
   const [formData, setFormData] = useState({
-    tanggal: '',
+    tanggal: format(new Date(), 'yyyy-MM-dd'),
     kelas_id: '',
     mata_pelajaran_id: '',
     materi: '',
@@ -73,7 +73,6 @@ const AgendaMengajar = () => {
 
   useEffect(() => {
     fetchData();
-    resetForm(); // Initialize form with today's date
   }, [selectedMonth, selectedKelasFilter]);
 
   const fetchData = async () => {
@@ -99,6 +98,11 @@ const AgendaMengajar = () => {
       setKelasList(kelas);
       setMataPelajaranList(mataPelajaran);
       setJadwalPelajaranList(jadwalPelajaran);
+      
+      // Filter by current date if form has a date
+      if (formData.tanggal) {
+        filterByDateWithData(formData.tanggal, kelas, mataPelajaran, jadwalPelajaran);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -124,7 +128,7 @@ const AgendaMengajar = () => {
   };
 
   // Filter kelas and mata pelajaran based on selected date
-  const filterByDate = (selectedDate: string) => {
+  const filterByDateWithData = (selectedDate: string, kelasList: any[], mataPelajaranList: any[], jadwalPelajaranList: any[]) => {
     if (!selectedDate) {
       setFilteredKelasList([]);
       setFilteredMataPelajaranList([]);
@@ -152,6 +156,10 @@ const AgendaMengajar = () => {
 
     setFilteredKelasList(filteredKelas);
     setFilteredMataPelajaranList(filteredMataPelajaran);
+  };
+
+  const filterByDate = (selectedDate: string) => {
+    filterByDateWithData(selectedDate, kelasList, mataPelajaranList, jadwalPelajaranList);
   };
 
   const handleAdd = async () => {
