@@ -712,20 +712,7 @@ const InputKehadiran = () => {
                   <p className="text-muted-foreground">Tidak ada siswa dalam kelas ini</p>
                 </div>
               ) : (
-                <>
-                  <div className="flex justify-end mb-4">
-                    <Button 
-                      onClick={handleGoToAgenda}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Buka Agenda Mengajar
-                    </Button>
-                  </div>
-                  
-                  <Table>
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>No</TableHead>
@@ -807,7 +794,6 @@ const InputKehadiran = () => {
                     ))}
                   </TableBody>
                 </Table>
-                </>
               )}
             </CardContent>
           </Card>
