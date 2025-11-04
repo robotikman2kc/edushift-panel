@@ -220,6 +220,8 @@ const InputKehadiran = () => {
         jadwal.hari === today && jadwal.status === "Aktif"
       );
 
+      console.log("Today's schedule data:", jadwalData);
+
       const scheduleButtons: ScheduleQuickButton[] = jadwalData.map(jadwal => {
         const kelas = allKelas.find(k => k.id === jadwal.kelas_id);
         const mapel = mataPelajaran.find(m => m.id === jadwal.mata_pelajaran_id);
@@ -237,6 +239,7 @@ const InputKehadiran = () => {
       }).filter(s => s.kelas_nama && s.mata_pelajaran_nama)
         .sort((a, b) => a.jam_ke - b.jam_ke);
 
+      console.log("Processed schedule buttons:", scheduleButtons);
       setTodaySchedules(scheduleButtons);
     } catch (error) {
       console.error("Error fetching today's schedule:", error);
