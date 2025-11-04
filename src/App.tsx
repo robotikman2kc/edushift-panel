@@ -39,6 +39,7 @@ import Kalender from "./pages/kalender/Kalender";
 
 // Akun Pages
 import Profil from "./pages/akun/Profil";
+import Bantuan from "./pages/akun/Bantuan";
 import FormatPDF from "./pages/pengaturan/FormatPDF";
 import Notifikasi from "./pages/pengaturan/Notifikasi";
 
@@ -101,10 +102,7 @@ const App = () => (
 
                   {/* Akun Routes */}
                   <Route path="/akun/profil" element={<Profil />} />
-                  <Route 
-                    path="/akun/bantuan" 
-                    element={<PlaceholderPage title="Bantuan" description="Panduan penggunaan sistem" />} 
-                  />
+                  <Route path="/akun/bantuan" element={<Bantuan />} />
 
                   {/* Catch all route */}
                   <Route path="*" element={<NotFound />} />
