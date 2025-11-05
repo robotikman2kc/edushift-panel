@@ -211,6 +211,28 @@ export default function Kalender() {
         dataMap.set(holiday.tanggal, existing);
       });
 
+      // Mark all Sundays as holidays
+      let date = new Date(monthStart);
+      while (date <= monthEnd) {
+        if (date.getDay() === 0) { // Sunday
+          const dateKey = format(date, "yyyy-MM-dd");
+          const existing = dataMap.get(dateKey) || {
+            date: dateKey,
+            hasAgenda: false,
+            hasAttendance: false,
+            hasJournal: false,
+            hasSchedule: false,
+            isHoliday: false,
+          };
+          existing.isHoliday = true;
+          if (!existing.holidayName) {
+            existing.holidayName = "Hari Minggu";
+          }
+          dataMap.set(dateKey, existing);
+        }
+        date.setDate(date.getDate() + 1);
+      }
+
       setCalendarData(dataMap);
 
       // Calculate stats
@@ -364,7 +386,7 @@ export default function Kalender() {
             <span className="font-semibold">Indikator:</span>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500" />
-              <span>Hari Libur</span>
+              <span>Hari Libur (Minggu & Libur Nasional)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -381,10 +403,6 @@ export default function Kalender() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-muted-foreground/50" />
               <span>Jadwal (belum ada aktivitas)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 border-2 border-destructive/20 bg-destructive/5 rounded" />
-              <span>Hari kerja tanpa aktivitas</span>
             </div>
           </div>
         </CardContent>

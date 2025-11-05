@@ -41,8 +41,7 @@ export function CalendarDay({
         !isCurrentMonth && "bg-muted/20 text-muted-foreground",
         isToday && "bg-primary/10 font-semibold",
         isSelected && "bg-primary/20 ring-2 ring-primary",
-        isHoliday && "bg-red-50 dark:bg-red-950",
-        isWorkingDay && !hasAnyActivity && "border-2 border-destructive/20 bg-destructive/5"
+        isHoliday && "bg-red-50 dark:bg-red-950"
       )}
     >
       <div className="flex flex-col h-full">
@@ -70,7 +69,7 @@ export function CalendarDay({
           {hasAgenda && <div className="w-2 h-2 rounded-full bg-green-500" />}
           {hasAttendance && <div className="w-2 h-2 rounded-full bg-blue-500" />}
           {hasJournal && <div className="w-2 h-2 rounded-full bg-yellow-500" />}
-          {isWorkingDay && !hasAnyActivity && (
+          {hasSchedule && !hasAnyActivity && (
             <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
           )}
         </div>
