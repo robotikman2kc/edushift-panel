@@ -82,9 +82,14 @@ const RekapNilai = () => {
         indexedDB.select("jenis_penilaian")
       ]);
       
+      console.log("=== LOAD MASTER DATA ===");
+      console.log("Raw kategori data:", kategori);
+      const filteredKategori = kategori.filter((k: JenisPenilaian) => k.status === "Aktif");
+      console.log("Filtered kategori (Aktif only):", filteredKategori);
+      
       setKelasList(kelas.filter((k: Kelas) => k.status === "Aktif"));
       setMataPelajaranList(mapel.filter((m: MataPelajaran) => m.status === "Aktif"));
-      setKategoriList(kategori.filter((k: JenisPenilaian) => k.status === "Aktif"));
+      setKategoriList(filteredKategori);
     } catch (error) {
       console.error("Error loading master data:", error);
       toast({
