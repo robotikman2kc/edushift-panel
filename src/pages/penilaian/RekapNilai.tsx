@@ -69,10 +69,10 @@ const RekapNilai = () => {
   }, [selectedTingkat, kelasList]);
 
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran) {
+    if (selectedKelas && selectedMataPelajaran && kategoriList.length > 0) {
       loadRekapNilai();
     }
-  }, [selectedKelas, selectedMataPelajaran]);
+  }, [selectedKelas, selectedMataPelajaran, kategoriList]);
 
   const loadMasterData = async () => {
     try {
