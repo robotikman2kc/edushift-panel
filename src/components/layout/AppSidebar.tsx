@@ -18,7 +18,8 @@ import {
   UserCog,
   CalendarDays,
   LayoutDashboard,
-  Bell
+  Bell,
+  Cloud
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
@@ -53,6 +54,7 @@ const menuItems = [
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
       { title: "Notifikasi", url: "/pengaturan/notifikasi", icon: Bell },
+      { title: "Backup Google Drive", url: "/pengaturan/backup-google-drive", icon: Cloud },
     ],
   },
   {

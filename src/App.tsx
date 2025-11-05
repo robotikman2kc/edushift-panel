@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { AuthProvider } from "@/hooks/useAuth";
+import { schemaMigrations } from "@/lib/dataMigrations";
+import { googleDriveBackup } from "@/lib/googleDriveBackup";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
@@ -29,6 +32,7 @@ import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 // Data Pages
 import ManajemenData from "./pages/data/ManajemenData";
 import BackupRestore from "./pages/data/BackupRestore";
+import BackupGoogleDrive from "./pages/pengaturan/BackupGoogleDrive";
 
 // Jurnal Pages
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
@@ -48,7 +52,29 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    // Run data migrations on app start
+    const runMigrations = async () => {
+      await schemaMigrations.runAllMigrations();
+    };
+    runMigrations();
+
+    // Check and perform auto backup
+    const checkAutoBackup = async () => {
+      await googleDriveBackup.autoBackup();
+    };
+    checkAutoBackup();
+
+    // Setup periodic backup check (every hour)
+    const backupInterval = setInterval(() => {
+      checkAutoBackup();
+    }, 60 * 60 * 1000); // 1 hour
+
+    return () => clearInterval(backupInterval);
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
@@ -72,6 +98,7 @@ const App = () => (
                   <Route path="/pengaturan/bobot-penilaian" element={<BobotPenilaian />} />
                   <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
                   <Route path="/pengaturan/notifikasi" element={<Notifikasi />} />
+                  <Route path="/pengaturan/backup-google-drive" element={<BackupGoogleDrive />} />
 
                   {/* Penilaian Routes */}
                   <Route path="/penilaian/input-nilai" element={<InputNilai />} />
@@ -114,6 +141,7 @@ const App = () => (
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
