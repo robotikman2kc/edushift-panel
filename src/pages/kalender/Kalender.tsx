@@ -9,8 +9,9 @@ import { CalendarNoteDialog } from "@/components/kalender/CalendarNoteDialog";
 import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender, type HariLibur } from "@/lib/indexedDB";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { syncHolidaysForYears } from "@/lib/googleCalendar";
 
 interface CalendarData {
   date: string;
@@ -249,6 +250,34 @@ export default function Kalender() {
     setIsNoteDialogOpen(true);
   };
 
+  const handleSyncHolidays = async () => {
+    try {
+      toast({
+        title: "Sinkronisasi Dimulai",
+        description: "Mengambil data hari libur dari Google Calendar...",
+      });
+
+      const currentYear = new Date().getFullYear();
+      const holidays = await syncHolidaysForYears(currentYear, currentYear + 1);
+      
+      await indexedDB.syncHolidaysFromGoogle(holidays);
+      
+      await fetchData();
+      
+      toast({
+        title: "Sinkronisasi Berhasil",
+        description: `${holidays.length} hari libur berhasil disinkronkan`,
+      });
+    } catch (error) {
+      console.error("Error syncing holidays:", error);
+      toast({
+        title: "Sinkronisasi Gagal",
+        description: "Gagal mengambil data dari Google Calendar. Pastikan Anda terhubung ke internet.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSaveNote = async (catatan: string) => {
     if (!selectedDate) return;
 
@@ -360,10 +389,16 @@ export default function Kalender() {
                   onYearChange={handleYearChange}
                   onToday={handleToday}
                 />
-                <Button onClick={handleAddNote} size="sm" disabled={!selectedDate}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Tambah Catatan
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleSyncHolidays} size="sm" variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sinkron Libur
+                  </Button>
+                  <Button onClick={handleAddNote} size="sm" disabled={!selectedDate}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah Catatan
+                  </Button>
+                </div>
               </div>
               <CalendarGrid
                 currentDate={currentDate}

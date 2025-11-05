@@ -216,16 +216,23 @@ class IndexedDBManager {
       }
     }
 
-    // Add hari libur nasional if empty
-    const hariLibur = await this.select('hari_libur');
-    if (hariLibur.length === 0) {
-      const { hariLiburNasional } = await import('./hariLiburData');
-      for (const libur of hariLiburNasional) {
-        await this.insert('hari_libur', libur);
-      }
-    }
-
     // Default jenis penilaian removed - user will create their own categories
+  }
+
+  // Sync holidays from Google Calendar
+  async syncHolidaysFromGoogle(holidays: Array<{ tanggal: string; nama: string; keterangan: string }>): Promise<void> {
+    await this.ensureDB();
+    
+    // Clear existing holidays
+    const existingHolidays = await this.select('hari_libur');
+    for (const holiday of existingHolidays) {
+      await this.delete('hari_libur', holiday.id);
+    }
+    
+    // Insert new holidays from Google Calendar
+    for (const holiday of holidays) {
+      await this.insert('hari_libur', holiday);
+    }
   }
 
   // Select all records from table
