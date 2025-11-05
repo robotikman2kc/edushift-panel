@@ -136,6 +136,7 @@ export interface AgendaMengajar extends BaseRecord {
 export interface CatatanKalender extends BaseRecord {
   tanggal: string;
   catatan: string;
+  warna?: string;
 }
 
 export interface HariLibur extends BaseRecord {

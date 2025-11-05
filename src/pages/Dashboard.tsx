@@ -97,16 +97,35 @@ const Dashboard = () => {
     try {
       setLoadingNotes(true);
       const today = new Date();
-      const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-      const todayStr = format(today, "yyyy-MM-dd");
-      const oneMonthAgoStr = format(oneMonthAgo, "yyyy-MM-dd");
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      
+      // Get first and last day of current month
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      
+      const firstDayStr = format(firstDay, "yyyy-MM-dd");
+      const lastDayStr = format(lastDay, "yyyy-MM-dd");
 
+      // Get calendar notes for current month
       const notes = await indexedDB.select("catatan_kalender", (n: any) => 
-        n.tanggal >= oneMonthAgoStr && n.tanggal <= todayStr
+        n.tanggal >= firstDayStr && n.tanggal <= lastDayStr
       );
 
-      setCalendarNotes(notes.sort((a: any, b: any) => 
-        new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+      // Get holidays for current month
+      const holidays = await indexedDB.select("hari_libur", (h: any) => 
+        h.tanggal >= firstDayStr && h.tanggal <= lastDayStr
+      );
+
+      // Combine notes and holidays with type indicator
+      const combined = [
+        ...notes.map((n: any) => ({ ...n, type: 'note' })),
+        ...holidays.map((h: any) => ({ ...h, type: 'holiday', catatan: h.nama }))
+      ];
+
+      // Sort by date (earliest first)
+      setCalendarNotes(combined.sort((a: any, b: any) => 
+        new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
       ));
     } catch (error) {
       console.error("Error fetching calendar notes:", error);
@@ -411,7 +430,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Calendar className="h-5 w-5" />
-                Catatan Kegiatan (1 Bulan Terakhir)
+                Catatan Kegiatan Bulan {format(new Date(), "MMMM yyyy", { locale: idLocale })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -431,13 +450,32 @@ const Dashboard = () => {
                   {calendarNotes.map((note) => (
                     <div 
                       key={note.id}
-                      className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg hover:shadow-sm transition-shadow"
+                      className={`p-3 border rounded-lg hover:shadow-sm transition-shadow ${
+                        note.type === 'holiday' 
+                          ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
+                          : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm flex-1">{note.catatan}</p>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(note.tanggal), "dd MMM", { locale: idLocale })}
-                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{note.catatan}</p>
+                          {note.type === 'holiday' && note.keterangan && (
+                            <p className="text-xs text-muted-foreground mt-1">{note.keterangan}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {note.type === 'holiday' ? (
+                            <CalendarDays className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          ) : note.warna ? (
+                            <div 
+                              className="w-4 h-4 rounded border border-gray-300"
+                              style={{ backgroundColor: note.warna }}
+                            />
+                          ) : null}
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(new Date(note.tanggal), "dd MMM", { locale: idLocale })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
