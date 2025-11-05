@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,7 +21,8 @@ import {
   BookMarked,
   CheckCircle2,
   XCircle,
-  Info
+  Info,
+  CalendarDays
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
@@ -219,30 +222,34 @@ const Dashboard = () => {
       />
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const IconComponent = stat.icon;
-          return (
-            <Card key={index}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {stat.title}
-                    </p>
-                    <p className="text-xl font-bold text-foreground">
-                      {stat.value}
-                    </p>
+      {loading ? (
+        <LoadingSkeleton type="stats" />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <Card key={index} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {stat.title}
+                      </p>
+                      <p className="text-xl font-bold text-foreground">
+                        {stat.value}
+                      </p>
+                    </div>
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <IconComponent className={`h-5 w-5 ${stat.color}`} />
+                    </div>
                   </div>
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                    <IconComponent className={`h-5 w-5 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Today's Schedule & PWA Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -256,15 +263,20 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             {loadingSchedule ? (
-              <p className="text-sm text-muted-foreground">Memuat jadwal...</p>
+              <LoadingSkeleton type="schedule" count={3} />
             ) : todaySchedule.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Tidak ada jadwal untuk hari ini</p>
+              <EmptyState
+                icon={CalendarDays}
+                title="Tidak ada jadwal hari ini"
+                description="Jadwal pelajaran untuk hari ini kosong. Nikmati waktu luang Anda atau gunakan untuk persiapan."
+                variant="minimal"
+              />
             ) : (
               <div className="space-y-3">
                 {todaySchedule.map((schedule, index) => (
                   <div 
                     key={index}
-                    className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 hover:shadow-sm"
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10 flex-shrink-0">
@@ -291,10 +303,10 @@ const Dashboard = () => {
                         
                         {/* Status Indicators */}
                         <div className="flex gap-2 mb-2">
-                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded ${
+                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
                             schedule.hasAgendaToday 
-                              ? 'bg-green-50 text-green-700 border border-green-200' 
-                              : 'bg-red-50 text-red-700 border border-red-200'
+                              ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800' 
+                              : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
                           }`}>
                             {schedule.hasAgendaToday ? (
                               <CheckCircle2 className="h-3 w-3" />
@@ -304,10 +316,10 @@ const Dashboard = () => {
                             <span>{schedule.hasAgendaToday ? 'Agenda ✓' : 'Agenda belum diisi'}</span>
                           </div>
                           
-                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded ${
+                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
                             schedule.hasKehadiranToday 
-                              ? 'bg-green-50 text-green-700 border border-green-200' 
-                              : 'bg-red-50 text-red-700 border border-red-200'
+                              ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800' 
+                              : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
                           }`}>
                             {schedule.hasKehadiranToday ? (
                               <CheckCircle2 className="h-3 w-3" />
@@ -340,7 +352,7 @@ const Dashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1"
+                              className="flex-1 hover:scale-105 transition-transform"
                               onClick={() => navigate('/kehadiran/input-kehadiran', { 
                                 state: { 
                                   fromSchedule: true,
@@ -362,7 +374,7 @@ const Dashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1"
+                              className="flex-1 hover:scale-105 transition-transform"
                               onClick={() => navigate('/jurnal/agenda-mengajar', { 
                                 state: { 
                                   fromSchedule: true,
@@ -404,15 +416,22 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {loadingNotes ? (
-                <p className="text-sm text-muted-foreground">Memuat catatan...</p>
+                <LoadingSkeleton type="list" count={3} />
               ) : calendarNotes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Belum ada catatan kegiatan</p>
+                <EmptyState
+                  icon={Calendar}
+                  title="Belum ada catatan"
+                  description="Tambahkan catatan kegiatan di kalender untuk tracking lebih baik"
+                  actionLabel="Buka Kalender"
+                  onAction={() => navigate('/kalender')}
+                  variant="minimal"
+                />
               ) : (
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {calendarNotes.map((note) => (
                     <div 
                       key={note.id}
-                      className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+                      className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg hover:shadow-sm transition-shadow"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm flex-1">{note.catatan}</p>
