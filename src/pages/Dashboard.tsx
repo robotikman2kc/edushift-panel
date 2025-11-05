@@ -18,7 +18,8 @@ import {
   ClipboardList,
   BookMarked,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Info
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
@@ -461,6 +462,30 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground mt-3">
                 Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline.
               </p>
+            </CardContent>
+          </Card>
+
+          {/* App Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Info className="h-5 w-5" />
+                Informasi Aplikasi
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Versi</span>
+                  <span className="text-sm font-medium">1.0.0</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Update Terakhir</span>
+                  <span className="text-sm font-medium">
+                    {format(new Date('2025-01-15'), "dd MMM yyyy", { locale: idLocale })}
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
