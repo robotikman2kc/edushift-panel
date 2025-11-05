@@ -35,6 +35,36 @@ export class SchemaMigrations {
     }
   }
   
+  // Migration: Rename 'nis' field to 'nisn' for all students
+  async migrateSiswaNisToNisn(): Promise<{ success: boolean; updated: number; error?: string }> {
+    try {
+      console.log('Starting siswa nis to nisn migration...');
+      
+      const allSiswa = await indexedDB.select('siswa');
+      let updatedCount = 0;
+      
+      for (const siswa of allSiswa) {
+        // Check if old 'nis' field exists and 'nisn' doesn't
+        if (siswa.nis && !siswa.nisn) {
+          // Create updated object with nisn instead of nis
+          const updatedData = {
+            nisn: siswa.nis,
+          };
+          
+          await indexedDB.update('siswa', siswa.id, updatedData);
+          updatedCount++;
+        }
+      }
+      
+      console.log(`Migration completed: ${updatedCount} students migrated from nis to nisn`);
+      return { success: true, updated: updatedCount };
+      
+    } catch (error) {
+      console.error('Migration failed:', error);
+      return { success: false, updated: 0, error: `Migration failed: ${error}` };
+    }
+  }
+  
   // Run all pending migrations
   async runAllMigrations(): Promise<void> {
     try {
@@ -46,6 +76,14 @@ export class SchemaMigrations {
         if (result.success) {
           await this.setMigrationStatus('siswa_tanggal_masuk_v1', true);
           console.log('✓ siswa_tanggal_masuk_v1 migration completed');
+        }
+      }
+      
+      if (!migrationStatus.siswa_nis_to_nisn_v1) {
+        const result = await this.migrateSiswaNisToNisn();
+        if (result.success) {
+          await this.setMigrationStatus('siswa_nis_to_nisn_v1', true);
+          console.log('✓ siswa_nis_to_nisn_v1 migration completed');
         }
       }
     } catch (error) {
