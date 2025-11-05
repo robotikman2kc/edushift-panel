@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { indexedDB } from "@/lib/indexedDB";
+import { opfsStorage } from "@/lib/opfsStorage";
 import { format, differenceInDays } from "date-fns";
 import { id } from "date-fns/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -40,11 +41,22 @@ export function TopBar() {
 
   // Load profile from localStorage
   useEffect(() => {
-    const loadProfile = () => {
+    const loadProfile = async () => {
       const savedProfile = localStorage.getItem('userProfile');
       if (savedProfile) {
         try {
-          setUserProfile(JSON.parse(savedProfile));
+          const parsed = JSON.parse(savedProfile);
+          
+          // Load avatar dari OPFS jika ada
+          if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
+            const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
+            if (opfsUrl) {
+              setUserProfile({ ...parsed, avatar_url: opfsUrl });
+              return;
+            }
+          }
+          
+          setUserProfile(parsed);
         } catch (error) {
           console.error('Error loading profile:', error);
         }

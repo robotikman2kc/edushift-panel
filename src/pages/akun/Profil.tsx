@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { User, Save, Camera, Upload, Phone, MapPin, Calendar as CalendarIcon, FileText } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
+import { opfsStorage } from "@/lib/opfsStorage";
 
 interface UserProfile {
   nama: string;
@@ -43,11 +44,41 @@ const Profil = () => {
     loadProfile();
   }, []);
 
-  const loadProfile = () => {
+  const loadProfile = async () => {
     const savedProfile = localStorage.getItem('userProfile');
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile);
+        
+        // Load avatar dari OPFS jika ada
+        if (parsed.avatar_url) {
+          if (parsed.avatar_url.startsWith('opfs://')) {
+            const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
+            if (opfsUrl) {
+              setProfile({ ...parsed, avatar_url: opfsUrl });
+              return;
+            }
+          } else if (parsed.avatar_url.startsWith('data:')) {
+            // Migrate dari base64 ke OPFS
+            const userId = 'default-user';
+            const migratedPath = await opfsStorage.migrateFromBase64(
+              parsed.avatar_url,
+              `avatars/${userId}.jpg`
+            );
+            
+            if (migratedPath.startsWith('opfs://')) {
+              parsed.avatar_url = migratedPath;
+              localStorage.setItem('userProfile', JSON.stringify(parsed));
+              
+              const opfsUrl = await opfsStorage.getFile(migratedPath);
+              if (opfsUrl) {
+                setProfile({ ...parsed, avatar_url: opfsUrl });
+                return;
+              }
+            }
+          }
+        }
+        
         setProfile(parsed);
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -84,35 +115,62 @@ const Profil = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validasi ukuran file (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Ukuran file maksimal 2MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validasi tipe file
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: "File harus berupa gambar",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsUploadingAvatar(true);
     try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        setProfile(prev => ({ ...prev, avatar_url: base64 }));
-        localStorage.setItem('userProfile', JSON.stringify({ ...profile, avatar_url: base64 }));
-        
-        // Trigger custom event to update other components
-        window.dispatchEvent(new Event('profileUpdated'));
-        
-        toast({
-          title: "Berhasil",
-          description: "Foto profil berhasil diperbarui"
-        });
-        
-        setIsUploadingAvatar(false);
-      };
+      // Get user ID (default untuk sekarang)
+      const userId = 'default-user';
       
-      reader.onerror = () => {
-        toast({
-          title: "Error",
-          description: "Gagal membaca file gambar",
-          variant: "destructive"
-        });
-        setIsUploadingAvatar(false);
-      };
+      // Simpan ke OPFS
+      const avatarPath = await opfsStorage.saveFile(
+        `avatars/${userId}.jpg`,
+        file
+      );
       
-      reader.readAsDataURL(file);
+      if (!avatarPath) {
+        throw new Error('Failed to save avatar');
+      }
+      
+      // Untuk preview, load dari OPFS
+      const previewUrl = avatarPath.startsWith('opfs://') 
+        ? await opfsStorage.getFile(avatarPath)
+        : avatarPath;
+      
+      // Update state dengan preview URL untuk display
+      setProfile(prev => ({ ...prev, avatar_url: previewUrl || avatarPath }));
+      
+      // Save path (bukan blob URL) ke localStorage
+      const profileToSave = { ...profile, avatar_url: avatarPath };
+      localStorage.setItem('userProfile', JSON.stringify(profileToSave));
+      
+      // Trigger custom event to update other components
+      window.dispatchEvent(new Event('profileUpdated'));
+      
+      toast({
+        title: "Berhasil",
+        description: "Foto profil berhasil diperbarui"
+      });
+      
+      setIsUploadingAvatar(false);
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
