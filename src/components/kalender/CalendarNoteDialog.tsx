@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,16 +7,41 @@ import { Label } from "@/components/ui/label";
 interface CalendarNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (catatan: string) => void;
+  onSave: (catatan: string, noteId?: string) => void;
+  onDelete?: (noteId: string) => void;
   selectedDate: Date | null;
+  editingNote?: { id: string; catatan: string } | null;
 }
 
-export function CalendarNoteDialog({ open, onOpenChange, onSave, selectedDate }: CalendarNoteDialogProps) {
+export function CalendarNoteDialog({ 
+  open, 
+  onOpenChange, 
+  onSave, 
+  onDelete,
+  selectedDate,
+  editingNote 
+}: CalendarNoteDialogProps) {
   const [catatan, setCatatan] = useState("");
+
+  useEffect(() => {
+    if (editingNote) {
+      setCatatan(editingNote.catatan);
+    } else {
+      setCatatan("");
+    }
+  }, [editingNote, open]);
 
   const handleSave = () => {
     if (catatan.trim()) {
-      onSave(catatan);
+      onSave(catatan, editingNote?.id);
+      setCatatan("");
+      onOpenChange(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (editingNote && onDelete) {
+      onDelete(editingNote.id);
       setCatatan("");
       onOpenChange(false);
     }
@@ -31,9 +56,11 @@ export function CalendarNoteDialog({ open, onOpenChange, onSave, selectedDate }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Tambah Catatan Kegiatan</DialogTitle>
+          <DialogTitle>
+            {editingNote ? "Edit Catatan Kegiatan" : "Tambah Catatan Kegiatan"}
+          </DialogTitle>
           <DialogDescription>
-            Tambahkan catatan kegiatan untuk tanggal {selectedDate?.toLocaleDateString('id-ID', { 
+            {editingNote ? "Ubah" : "Tambahkan"} catatan kegiatan untuk tanggal {selectedDate?.toLocaleDateString('id-ID', { 
               day: 'numeric', 
               month: 'long', 
               year: 'numeric' 
@@ -52,12 +79,17 @@ export function CalendarNoteDialog({ open, onOpenChange, onSave, selectedDate }:
             />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
+          {editingNote && onDelete && (
+            <Button variant="destructive" onClick={handleDelete} className="mr-auto">
+              Hapus
+            </Button>
+          )}
           <Button variant="outline" onClick={handleClose}>
             Batal
           </Button>
           <Button onClick={handleSave} disabled={!catatan.trim()}>
-            Simpan
+            {editingNote ? "Update" : "Simpan"}
           </Button>
         </DialogFooter>
       </DialogContent>

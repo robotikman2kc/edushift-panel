@@ -21,6 +21,7 @@ interface CalendarData {
   hasSchedule: boolean;
   isHoliday: boolean;
   holidayName?: string;
+  hasNotes: boolean;
 }
 
 export default function Kalender() {
@@ -29,6 +30,7 @@ export default function Kalender() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [calendarData, setCalendarData] = useState<Map<string, CalendarData>>(new Map());
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<{ id: string; catatan: string } | null>(null);
   const [calendarNotes, setCalendarNotes] = useState<CatatanKalender[]>([]);
   const [hariLibur, setHariLibur] = useState<HariLibur[]>([]);
   
@@ -146,6 +148,7 @@ export default function Kalender() {
               hasJournal: false,
               hasSchedule: false,
               isHoliday: false,
+              hasNotes: false,
             };
             existing.hasSchedule = true;
             dataMap.set(dateKey, existing);
@@ -163,6 +166,7 @@ export default function Kalender() {
           hasJournal: false,
           hasSchedule: false,
           isHoliday: false,
+          hasNotes: false,
         };
         existing.hasAgenda = true;
         dataMap.set(agenda.tanggal, existing);
@@ -177,6 +181,7 @@ export default function Kalender() {
           hasJournal: false,
           hasSchedule: false,
           isHoliday: false,
+          hasNotes: false,
         };
         existing.hasAttendance = true;
         dataMap.set(att.tanggal, existing);
@@ -191,6 +196,7 @@ export default function Kalender() {
           hasJournal: false,
           hasSchedule: false,
           isHoliday: false,
+          hasNotes: false,
         };
         existing.hasJournal = true;
         dataMap.set(journal.tanggal, existing);
@@ -205,10 +211,26 @@ export default function Kalender() {
           hasJournal: false,
           hasSchedule: false,
           isHoliday: false,
+          hasNotes: false,
         };
         existing.isHoliday = true;
         existing.holidayName = holiday.nama;
         dataMap.set(holiday.tanggal, existing);
+      });
+
+      // Process notes
+      filteredNotes.forEach((note) => {
+        const existing = dataMap.get(note.tanggal) || {
+          date: note.tanggal,
+          hasAgenda: false,
+          hasAttendance: false,
+          hasJournal: false,
+          hasSchedule: false,
+          isHoliday: false,
+          hasNotes: false,
+        };
+        existing.hasNotes = true;
+        dataMap.set(note.tanggal, existing);
       });
 
       // Mark all Sundays as holidays
@@ -223,6 +245,7 @@ export default function Kalender() {
             hasJournal: false,
             hasSchedule: false,
             isHoliday: false,
+            hasNotes: false,
           };
           existing.isHoliday = true;
           if (!existing.holidayName) {
@@ -284,7 +307,33 @@ export default function Kalender() {
   };
 
   const handleAddNote = () => {
+    setEditingNote(null);
     setIsNoteDialogOpen(true);
+  };
+
+  const handleEditNote = (note: CatatanKalender) => {
+    setEditingNote({ id: note.id, catatan: note.catatan });
+    setSelectedDate(new Date(note.tanggal));
+    setIsNoteDialogOpen(true);
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await indexedDB.delete("catatan_kalender", noteId);
+      
+      toast({
+        title: "Catatan Dihapus",
+        description: "Catatan kegiatan berhasil dihapus",
+      });
+
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal menghapus catatan",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSyncHolidays = async () => {
@@ -315,29 +364,40 @@ export default function Kalender() {
     }
   };
 
-  const handleSaveNote = async (catatan: string) => {
+  const handleSaveNote = async (catatan: string, noteId?: string) => {
     if (!selectedDate) return;
 
     try {
-      const result = await indexedDB.insert("catatan_kalender", {
-        tanggal: format(selectedDate, "yyyy-MM-dd"),
-        catatan,
-      });
+      if (noteId) {
+        // Update existing note
+        await indexedDB.update("catatan_kalender", noteId, { catatan });
+        toast({
+          title: "Catatan Diperbarui",
+          description: "Catatan kegiatan berhasil diperbarui",
+        });
+      } else {
+        // Create new note
+        const result = await indexedDB.insert("catatan_kalender", {
+          tanggal: format(selectedDate, "yyyy-MM-dd"),
+          catatan,
+        });
 
-      if (result.error) {
-        throw new Error(result.error);
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        toast({
+          title: "Catatan Ditambahkan",
+          description: "Catatan kegiatan berhasil ditambahkan",
+        });
       }
 
-      toast({
-        title: "Catatan Ditambahkan",
-        description: "Catatan kegiatan berhasil ditambahkan",
-      });
-
+      setEditingNote(null);
       fetchData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Gagal menambahkan catatan",
+        description: noteId ? "Gagal memperbarui catatan" : "Gagal menambahkan catatan",
         variant: "destructive",
       });
     }
@@ -401,6 +461,10 @@ export default function Kalender() {
               <span>Jurnal</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <span>Catatan</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-muted-foreground/50" />
               <span>Jadwal (belum ada aktivitas)</span>
             </div>
@@ -453,6 +517,8 @@ export default function Kalender() {
             notes={selectedDayNotes}
             holiday={selectedDayHoliday}
             onClose={() => setSelectedDate(null)}
+            onEditNote={handleEditNote}
+            onDeleteNote={handleDeleteNote}
           />
         </div>
       </div>
@@ -461,7 +527,9 @@ export default function Kalender() {
         open={isNoteDialogOpen}
         onOpenChange={setIsNoteDialogOpen}
         onSave={handleSaveNote}
+        onDelete={handleDeleteNote}
         selectedDate={selectedDate}
+        editingNote={editingNote}
       />
     </div>
   );

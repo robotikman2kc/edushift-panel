@@ -12,6 +12,7 @@ interface CalendarDayProps {
   hasSchedule: boolean;
   isHoliday?: boolean;
   holidayName?: string;
+  hasNotes?: boolean;
   onClick: () => void;
 }
 
@@ -26,6 +27,7 @@ export function CalendarDay({
   hasSchedule,
   isHoliday = false,
   holidayName,
+  hasNotes = false,
   onClick,
 }: CalendarDayProps) {
   const dayNumber = format(date, "d");
@@ -66,11 +68,12 @@ export function CalendarDay({
         )}
         
         <div className="flex flex-wrap gap-1 mt-auto">
-          {hasAgenda && <div className="w-2 h-2 rounded-full bg-green-500" />}
-          {hasAttendance && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-          {hasJournal && <div className="w-2 h-2 rounded-full bg-yellow-500" />}
+          {hasAgenda && <div className="w-2 h-2 rounded-full bg-green-500" title="Agenda" />}
+          {hasAttendance && <div className="w-2 h-2 rounded-full bg-blue-500" title="Kehadiran" />}
+          {hasJournal && <div className="w-2 h-2 rounded-full bg-yellow-500" title="Jurnal" />}
+          {hasNotes && <div className="w-2 h-2 rounded-full bg-purple-500" title="Catatan" />}
           {hasSchedule && !hasAnyActivity && (
-            <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+            <div className="w-2 h-2 rounded-full bg-muted-foreground/50" title="Jadwal" />
           )}
         </div>
       </div>

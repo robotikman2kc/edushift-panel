@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { Calendar, BookOpen, Users, FileText, X, StickyNote, PartyPopper } from "lucide-react";
+import { Calendar, BookOpen, Users, FileText, X, StickyNote, PartyPopper, Edit, Trash2 } from "lucide-react";
 import type { JadwalPelajaran, AgendaMengajar, Jurnal, CatatanKalender, HariLibur } from "@/lib/indexedDB";
 
 interface DayDetailPanelProps {
@@ -17,6 +17,8 @@ interface DayDetailPanelProps {
   notes?: CatatanKalender[];
   holiday?: HariLibur;
   onClose: () => void;
+  onEditNote?: (note: CatatanKalender) => void;
+  onDeleteNote?: (noteId: string) => void;
 }
 
 export function DayDetailPanel({
@@ -28,6 +30,8 @@ export function DayDetailPanel({
   notes = [],
   holiday,
   onClose,
+  onEditNote,
+  onDeleteNote,
 }: DayDetailPanelProps) {
   const navigate = useNavigate();
 
@@ -158,8 +162,30 @@ export function DayDetailPanel({
           {notes.length > 0 ? (
             <div className="space-y-2">
               {notes.map((note) => (
-                <div key={note.id} className="text-sm p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md">
-                  {note.catatan}
+                <div key={note.id} className="text-sm p-3 bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-md group relative">
+                  <p className="pr-16">{note.catatan}</p>
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {onEditNote && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={() => onEditNote(note)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {onDeleteNote && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => onDeleteNote(note.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
