@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, Star } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa, Kehadiran } from "@/lib/indexedDB";
 import { exportToExcel, generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
+import { getBobotForKelas } from "@/lib/bobotUtils";
 
 interface StudentGrade {
   siswa_id: string;
@@ -43,6 +44,7 @@ const RekapNilai = () => {
   const [kategoriList, setKategoriList] = useState<JenisPenilaian[]>([]);
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [loading, setLoading] = useState(false);
+  const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -69,10 +71,16 @@ const RekapNilai = () => {
   }, [selectedTingkat, kelasList]);
 
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran && kategoriList.length > 0) {
+    if (selectedKelas && kategoriList.length > 0) {
+      loadBobotForKelas();
+    }
+  }, [selectedKelas, kategoriList]);
+
+  useEffect(() => {
+    if (selectedKelas && selectedMataPelajaran && kategoriList.length > 0 && Object.keys(bobotMap).length > 0) {
       loadRekapNilai();
     }
-  }, [selectedKelas, selectedMataPelajaran, kategoriList]);
+  }, [selectedKelas, selectedMataPelajaran, kategoriList, bobotMap]);
 
   const loadMasterData = async () => {
     try {
@@ -97,6 +105,18 @@ const RekapNilai = () => {
         description: "Gagal memuat data master",
         variant: "destructive"
       });
+    }
+  };
+
+  const loadBobotForKelas = async () => {
+    try {
+      const bobot = await getBobotForKelas(selectedKelas, kategoriList);
+      console.log("=== LOADED BOBOT FOR KELAS ===");
+      console.log("Kelas ID:", selectedKelas);
+      console.log("Bobot Map:", bobot);
+      setBobotMap(bobot);
+    } catch (error) {
+      console.error("Error loading bobot:", error);
     }
   };
 
@@ -146,17 +166,18 @@ const RekapNilai = () => {
         });
         console.log(`Final grades object for ${siswa.nama_siswa}:`, grades);
 
-        // Calculate weighted average
+        // Calculate weighted average using bobot from pengaturan
         let totalBobot = 0;
         let totalNilaiBerbobot = 0;
         kategoriList.forEach(kategori => {
           if (grades[kategori.id] !== undefined) {
-            const bobot = kategori.bobot || 0;
+            const bobot = bobotMap[kategori.id] || 0;
             totalBobot += bobot;
             totalNilaiBerbobot += grades[kategori.id] * bobot;
           }
         });
         const rata_rata = totalBobot > 0 ? totalNilaiBerbobot / totalBobot : 0;
+        console.log(`Rata-rata for ${siswa.nama_siswa}: ${rata_rata.toFixed(2)} (total bobot: ${totalBobot})`);
 
         // Calculate keaktifan statistics
         const studentKehadiran = kehadiran.filter((k: Kehadiran) => 
@@ -477,16 +498,17 @@ const RekapNilai = () => {
                       <TableHead className="w-12">No</TableHead>
                       <TableHead>NIS</TableHead>
                       <TableHead>Nama Siswa</TableHead>
-                      {kategoriList.map(kategori => (
-                        <TableHead key={kategori.id} className="text-center">
-                          {kategori.nama_kategori}
-                          {kategori.bobot && (
+                      {kategoriList.map(kategori => {
+                        const bobot = bobotMap[kategori.id] || 0;
+                        return (
+                          <TableHead key={kategori.id} className="text-center">
+                            {kategori.nama_kategori}
                             <span className="text-xs text-muted-foreground ml-1">
-                              ({kategori.bobot}%)
+                              ({bobot}%)
                             </span>
-                          )}
-                        </TableHead>
-                      ))}
+                          </TableHead>
+                        );
+                      })}
                       <TableHead className="text-center font-semibold">Rata-rata</TableHead>
                       <TableHead className="text-center">
                         <div className="flex items-center justify-center gap-1">
