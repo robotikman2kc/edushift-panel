@@ -1,7 +1,7 @@
 // Google Calendar API untuk hari libur Indonesia (public calendar, no auth needed)
 
 const GOOGLE_CALENDAR_API_KEY = "AIzaSyBNlYH01_9Hc5S1J9vuFmu2nUqBZJNAXxs"; // Public API key
-const INDONESIAN_HOLIDAY_CALENDAR_ID = "en.indonesian%23holiday%40group.v3.google.com";
+const INDONESIAN_HOLIDAY_CALENDAR_ID = "en.indonesian.official%23holiday%40group.v.calendar.google.com";
 
 export interface GoogleCalendarHoliday {
   id: string;
