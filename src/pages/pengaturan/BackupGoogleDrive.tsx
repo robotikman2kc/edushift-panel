@@ -266,9 +266,17 @@ function doOptions(e) {
               <Badge variant="outline" className="mt-1">4</Badge>
               <div className="flex-1">
                 <p className="font-medium">Deploy sebagai Web App</p>
-                <p className="text-sm text-muted-foreground">
-                  Klik Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone → Deploy
+                <p className="text-sm text-muted-foreground mb-2">
+                  Klik Deploy → <strong>New deployment</strong> (BUKAN Manage deployments!)
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  Select type: Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy
+                </p>
+                <div className="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                  <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                    ⚠️ Penting: Setiap kali update script, buat <strong>New deployment</strong> baru untuk mendapatkan URL terbaru!
+                  </p>
+                </div>
               </div>
             </div>
 
