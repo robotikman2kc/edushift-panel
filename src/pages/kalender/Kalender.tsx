@@ -196,6 +196,21 @@ export default function Kalender() {
         dataMap.set(journal.tanggal, existing);
       });
 
+      // Process holidays
+      filteredHolidays.forEach((holiday) => {
+        const existing = dataMap.get(holiday.tanggal) || {
+          date: holiday.tanggal,
+          hasAgenda: false,
+          hasAttendance: false,
+          hasJournal: false,
+          hasSchedule: false,
+          isHoliday: false,
+        };
+        existing.isHoliday = true;
+        existing.holidayName = holiday.nama;
+        dataMap.set(holiday.tanggal, existing);
+      });
+
       setCalendarData(dataMap);
 
       // Calculate stats
