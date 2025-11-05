@@ -59,6 +59,14 @@ const AgendaMengajar = () => {
   const [filteredMataPelajaranList, setFilteredMataPelajaranList] = useState<any[]>([]);
   const [jadwalPelajaranList, setJadwalPelajaranList] = useState<any[]>([]);
   
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Inline editing states
+  const [editingCell, setEditingCell] = useState<{ rowId: string; columnKey: string } | null>(null);
+  const [editValue, setEditValue] = useState("");
+  
   // Dialog states
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -415,6 +423,47 @@ const AgendaMengajar = () => {
     });
   };
 
+  const handleCellEdit = (rowId: string, columnKey: string, currentValue: string) => {
+    setEditingCell({ rowId, columnKey });
+    setEditValue(currentValue);
+  };
+
+  const handleCellSave = async (rowId: string, columnKey: string) => {
+    if (editValue !== null) {
+      const agenda = agendaList.find(a => a.id === rowId);
+      if (agenda) {
+        try {
+          const updatedData = { ...agenda, [columnKey]: editValue };
+          await indexedDB.update('agenda_mengajar', rowId, updatedData);
+          toast({
+            title: "Berhasil",
+            description: "Data berhasil diperbarui",
+          });
+          fetchData();
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Gagal memperbarui data",
+            variant: "destructive",
+          });
+        }
+      }
+    }
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  const handleCellCancel = () => {
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(agendaList.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedAgenda = agendaList.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -568,7 +617,7 @@ const AgendaMengajar = () => {
               Belum ada agenda untuk bulan ini
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="border rounded-lg max-h-[600px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -583,17 +632,71 @@ const AgendaMengajar = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {agendaList.map((agenda, index) => (
+                  {paginatedAgenda.map((agenda, index) => (
                     <TableRow key={agenda.id}>
-                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{startIndex + index + 1}</TableCell>
                       <TableCell>{getNamaHari(agenda.tanggal)}</TableCell>
                       <TableCell>
                         {format(new Date(agenda.tanggal), 'dd MMM yyyy', { locale: localeId })}
                       </TableCell>
                       <TableCell>{getKelasName(agenda.kelas_id)}</TableCell>
                       <TableCell>{getMataPelajaranName(agenda.mata_pelajaran_id)}</TableCell>
-                      <TableCell>{agenda.materi}</TableCell>
-                      <TableCell>{agenda.keterangan || '-'}</TableCell>
+                      <TableCell
+                        onDoubleClick={() => handleCellEdit(agenda.id, 'materi', agenda.materi)}
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      >
+                        {editingCell?.rowId === agenda.id && editingCell?.columnKey === 'materi' ? (
+                          <div className="flex gap-1">
+                            <Textarea
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && e.ctrlKey) handleCellSave(agenda.id, 'materi');
+                                if (e.key === 'Escape') handleCellCancel();
+                              }}
+                              className="min-h-[60px] text-sm"
+                              autoFocus
+                            />
+                            <div className="flex flex-col gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => handleCellSave(agenda.id, 'materi')} className="h-8 px-2">
+                                ✓
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={handleCellCancel} className="h-8 px-2">
+                                ✗
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          agenda.materi
+                        )}
+                      </TableCell>
+                      <TableCell
+                        onDoubleClick={() => handleCellEdit(agenda.id, 'keterangan', agenda.keterangan || '')}
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      >
+                        {editingCell?.rowId === agenda.id && editingCell?.columnKey === 'keterangan' ? (
+                          <div className="flex gap-1">
+                            <Input
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleCellSave(agenda.id, 'keterangan');
+                                if (e.key === 'Escape') handleCellCancel();
+                              }}
+                              className="h-8 text-sm"
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={() => handleCellSave(agenda.id, 'keterangan')} className="h-8 px-2">
+                              ✓
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleCellCancel} className="h-8 px-2">
+                              ✗
+                            </Button>
+                          </div>
+                        ) : (
+                          agenda.keterangan || '-'
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
@@ -616,6 +719,82 @@ const AgendaMengajar = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {agendaList.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Tampilkan</span>
+                <Select
+                  value={rowsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setRowsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">
+                  dari {agendaList.length} data
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Sebelumnya
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-10"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Berikutnya
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
