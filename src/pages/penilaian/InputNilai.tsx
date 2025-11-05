@@ -211,6 +211,11 @@ const InputNilai = () => {
       let successCount = 0;
       let errorCount = 0;
 
+      console.log("=== SAVING GRADES ===");
+      console.log("Selected Class:", selectedClass);
+      console.log("Selected Subject:", selectedSubject);
+      console.log("Selected Category:", selectedCategory);
+
       for (const student of students) {
         const gradeValue = grades[student.id];
         if (gradeValue && gradeValue.trim() !== "") {
@@ -221,18 +226,21 @@ const InputNilai = () => {
             
             if (existingGrade) {
               // Update existing grade
+              console.log("Updating grade for student:", student.nama_siswa, "ID:", student.id);
               const result = await indexedDB.update('nilai_siswa', existingGrade.id, {
                 nilai: nilai,
                 updated_at: new Date().toISOString()
               });
               if (result.error) {
                 errorCount++;
+                console.error("Error updating grade:", result.error);
               } else {
                 successCount++;
+                console.log("Grade updated successfully");
               }
             } else {
               // Insert new grade
-              const result = await indexedDB.insert('nilai_siswa', {
+              const gradeData = {
                 siswa_id: student.id,
                 mata_pelajaran_id: selectedSubject,
                 jenis_penilaian_id: selectedCategory,
@@ -240,11 +248,15 @@ const InputNilai = () => {
                 tanggal: new Date().toISOString().split('T')[0],
                 semester: "1", // Default semester
                 tahun_ajaran: "2024/2025" // Default tahun ajaran
-              });
+              };
+              console.log("Inserting new grade for student:", student.nama_siswa, gradeData);
+              const result = await indexedDB.insert('nilai_siswa', gradeData);
               if (result.error) {
                 errorCount++;
+                console.error("Error inserting grade:", result.error);
               } else {
                 successCount++;
+                console.log("Grade inserted successfully");
               }
             }
           }

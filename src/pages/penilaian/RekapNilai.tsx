@@ -98,21 +98,32 @@ const RekapNilai = () => {
   const loadRekapNilai = async () => {
     setLoading(true);
     try {
+      console.log("=== LOADING REKAP NILAI ===");
+      console.log("Selected Kelas:", selectedKelas);
+      console.log("Selected Mata Pelajaran:", selectedMataPelajaran);
+
       const [siswa, nilai, kehadiran] = await Promise.all([
         indexedDB.select("siswa"),
         indexedDB.select("nilai_siswa"),
         indexedDB.select("kehadiran")
       ]);
 
+      console.log("All nilai data:", nilai);
+      console.log("Total nilai records:", nilai.length);
+
       const filteredSiswa = siswa.filter((s: Siswa) => 
         s.kelas_id === selectedKelas && s.status === "Aktif"
       );
+
+      console.log("Filtered students:", filteredSiswa.length);
 
       const rekapData: StudentGrade[] = filteredSiswa.map((siswa: Siswa) => {
         // Get all grades for this student and subject
         const studentNilai = nilai.filter((n: NilaiSiswa) => 
           n.siswa_id === siswa.id && n.mata_pelajaran_id === selectedMataPelajaran
         );
+
+        console.log(`Student ${siswa.nama_siswa} (${siswa.id}) grades:`, studentNilai);
 
         // Calculate grades by category
         const grades: { [kategori_id: string]: number } = {};
