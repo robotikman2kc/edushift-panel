@@ -6,7 +6,7 @@ import { CalendarGrid } from "@/components/kalender/CalendarGrid";
 import { CalendarHeader } from "@/components/kalender/CalendarHeader";
 import { DayDetailPanel } from "@/components/kalender/DayDetailPanel";
 import { CalendarNoteDialog } from "@/components/kalender/CalendarNoteDialog";
-import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender } from "@/lib/indexedDB";
+import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender, type HariLibur } from "@/lib/indexedDB";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus } from "lucide-react";
@@ -18,6 +18,8 @@ interface CalendarData {
   hasAttendance: boolean;
   hasJournal: boolean;
   hasSchedule: boolean;
+  isHoliday: boolean;
+  holidayName?: string;
 }
 
 export default function Kalender() {
@@ -27,6 +29,7 @@ export default function Kalender() {
   const [calendarData, setCalendarData] = useState<Map<string, CalendarData>>(new Map());
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [calendarNotes, setCalendarNotes] = useState<CatatanKalender[]>([]);
+  const [hariLibur, setHariLibur] = useState<HariLibur[]>([]);
   
   const [allSchedules, setAllSchedules] = useState<Array<JadwalPelajaran & { kelas_name?: string; mata_pelajaran_name?: string; jam_mulai?: string; jam_selesai?: string }>>([]);
   const [allAgendas, setAllAgendas] = useState<Array<AgendaMengajar & { kelas_name?: string; mata_pelajaran_name?: string }>>([]);
@@ -53,7 +56,7 @@ export default function Kalender() {
       const monthEnd = endOfMonth(currentDate);
 
       // Fetch all data
-      const [schedules, agendas, journals, attendance, jamPelajaran, kelasList, mataPelajaranList, notes] = await Promise.all([
+      const [schedules, agendas, journals, attendance, jamPelajaran, kelasList, mataPelajaranList, notes, holidays] = await Promise.all([
         indexedDB.select("jadwal_pelajaran"),
         indexedDB.select("agenda_mengajar"),
         indexedDB.select("jurnal"),
@@ -62,6 +65,7 @@ export default function Kalender() {
         indexedDB.select("kelas"),
         indexedDB.select("mata_pelajaran"),
         indexedDB.select("catatan_kalender"),
+        indexedDB.select("hari_libur"),
       ]);
 
       // Filter data untuk bulan ini
@@ -80,8 +84,12 @@ export default function Kalender() {
       const filteredNotes = (notes as CatatanKalender[]).filter(
         (n) => n.tanggal >= monthStartStr && n.tanggal <= monthEndStr
       );
+      const filteredHolidays = (holidays as HariLibur[]).filter(
+        (h) => h.tanggal >= monthStartStr && h.tanggal <= monthEndStr
+      );
 
       setCalendarNotes(filteredNotes);
+      setHariLibur(filteredHolidays);
 
       // Enrich schedules dengan nama
       const enrichedSchedules = (schedules as JadwalPelajaran[]).map((schedule) => {
@@ -136,6 +144,7 @@ export default function Kalender() {
               hasAttendance: false,
               hasJournal: false,
               hasSchedule: false,
+              isHoliday: false,
             };
             existing.hasSchedule = true;
             dataMap.set(dateKey, existing);
@@ -152,6 +161,7 @@ export default function Kalender() {
           hasAttendance: false,
           hasJournal: false,
           hasSchedule: false,
+          isHoliday: false,
         };
         existing.hasAgenda = true;
         dataMap.set(agenda.tanggal, existing);
@@ -165,6 +175,7 @@ export default function Kalender() {
           hasAttendance: false,
           hasJournal: false,
           hasSchedule: false,
+          isHoliday: false,
         };
         existing.hasAttendance = true;
         dataMap.set(att.tanggal, existing);
@@ -178,6 +189,7 @@ export default function Kalender() {
           hasAttendance: false,
           hasJournal: false,
           hasSchedule: false,
+          isHoliday: false,
         };
         existing.hasJournal = true;
         dataMap.set(journal.tanggal, existing);
@@ -280,6 +292,7 @@ export default function Kalender() {
     ? allAttendance.filter((a) => a.tanggal === selectedDateKey).length
     : 0;
   const selectedDayNotes = selectedDateKey ? calendarNotes.filter((n) => n.tanggal === selectedDateKey) : [];
+  const selectedDayHoliday = selectedDateKey ? hariLibur.find((h) => h.tanggal === selectedDateKey) : undefined;
 
   if (loading) {
     return (
@@ -305,6 +318,10 @@ export default function Kalender() {
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4 items-center text-sm">
             <span className="font-semibold">Indikator:</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <span>Hari Libur</span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <span>Agenda</span>
@@ -366,6 +383,7 @@ export default function Kalender() {
             journals={selectedDayJournals}
             attendanceCount={selectedDayAttendanceCount}
             notes={selectedDayNotes}
+            holiday={selectedDayHoliday}
             onClose={() => setSelectedDate(null)}
           />
         </div>

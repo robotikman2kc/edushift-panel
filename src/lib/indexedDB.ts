@@ -138,7 +138,13 @@ export interface CatatanKalender extends BaseRecord {
   catatan: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender';
+export interface HariLibur extends BaseRecord {
+  tanggal: string;
+  nama: string;
+  keterangan?: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur';
 
 // Generate UUID function
 function generateId(): string {
@@ -152,7 +158,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 5;
+  private dbVersion = 6;
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -170,7 +176,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {
@@ -207,6 +213,15 @@ class IndexedDBManager {
 
       for (const kegiatan of defaultKegiatan) {
         await this.insert('jenis_kegiatan', kegiatan);
+      }
+    }
+
+    // Add hari libur nasional if empty
+    const hariLibur = await this.select('hari_libur');
+    if (hariLibur.length === 0) {
+      const { hariLiburNasional } = await import('./hariLiburData');
+      for (const libur of hariLiburNasional) {
+        await this.insert('hari_libur', libur);
       }
     }
 

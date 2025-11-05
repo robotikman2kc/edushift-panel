@@ -1,5 +1,5 @@
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ActivityIndicator } from "./ActivityIndicator";
 
 interface CalendarDayProps {
   date: Date;
@@ -10,6 +10,8 @@ interface CalendarDayProps {
   hasAttendance: boolean;
   hasJournal: boolean;
   hasSchedule: boolean;
+  isHoliday?: boolean;
+  holidayName?: string;
   onClick: () => void;
 }
 
@@ -22,37 +24,57 @@ export function CalendarDay({
   hasAttendance,
   hasJournal,
   hasSchedule,
+  isHoliday = false,
+  holidayName,
   onClick,
 }: CalendarDayProps) {
-  const day = date.getDate();
-  const hasNoActivity = hasSchedule && !hasAgenda && !hasAttendance && !hasJournal;
+  const dayNumber = format(date, "d");
+  
+  const isWorkingDay = hasSchedule && !isHoliday;
+  const hasAnyActivity = hasAgenda || hasAttendance || hasJournal;
 
   return (
-    <button
+    <div
       onClick={onClick}
       className={cn(
-        "min-h-[60px] p-2 border transition-all hover:bg-accent/50 relative flex flex-col",
-        !isCurrentMonth && "opacity-40",
-        isToday && "border-primary border-2",
-        isSelected && "bg-accent",
-        hasNoActivity && isCurrentMonth && "bg-destructive/5"
+        "min-h-[80px] p-2 border-b border-r cursor-pointer hover:bg-muted/50 transition-colors",
+        !isCurrentMonth && "bg-muted/20 text-muted-foreground",
+        isToday && "bg-primary/10 font-semibold",
+        isSelected && "bg-primary/20 ring-2 ring-primary",
+        isHoliday && "bg-red-50 dark:bg-red-950",
+        isWorkingDay && !hasAnyActivity && "border-2 border-destructive/20 bg-destructive/5"
       )}
     >
-      <span
-        className={cn(
-          "text-xs font-medium mb-1",
-          isToday && "text-primary font-bold",
-          !isCurrentMonth && "text-muted-foreground"
+      <div className="flex flex-col h-full">
+        <div className="flex items-start justify-between mb-1">
+          <span className={cn(
+            "text-sm font-medium",
+            isHoliday && "text-red-600 dark:text-red-400"
+          )}>
+            {dayNumber}
+          </span>
+          {isToday && (
+            <span className="text-[10px] bg-primary text-primary-foreground px-1 rounded">
+              Hari ini
+            </span>
+          )}
+        </div>
+        
+        {isHoliday && (
+          <div className="text-[10px] text-red-600 dark:text-red-400 font-medium mb-1 line-clamp-2">
+            {holidayName}
+          </div>
         )}
-      >
-        {day}
-      </span>
-      <ActivityIndicator
-        hasAgenda={hasAgenda}
-        hasAttendance={hasAttendance}
-        hasJournal={hasJournal}
-        hasSchedule={hasSchedule}
-      />
-    </button>
+        
+        <div className="flex flex-wrap gap-1 mt-auto">
+          {hasAgenda && <div className="w-2 h-2 rounded-full bg-green-500" />}
+          {hasAttendance && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+          {hasJournal && <div className="w-2 h-2 rounded-full bg-yellow-500" />}
+          {isWorkingDay && !hasAnyActivity && (
+            <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

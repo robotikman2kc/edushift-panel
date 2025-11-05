@@ -5,8 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { Calendar, BookOpen, Users, FileText, X, StickyNote } from "lucide-react";
-import type { JadwalPelajaran, AgendaMengajar, Jurnal, CatatanKalender } from "@/lib/indexedDB";
+import { Calendar, BookOpen, Users, FileText, X, StickyNote, PartyPopper } from "lucide-react";
+import type { JadwalPelajaran, AgendaMengajar, Jurnal, CatatanKalender, HariLibur } from "@/lib/indexedDB";
 
 interface DayDetailPanelProps {
   selectedDate: Date | null;
@@ -15,6 +15,7 @@ interface DayDetailPanelProps {
   journals: Jurnal[];
   attendanceCount: number;
   notes?: CatatanKalender[];
+  holiday?: HariLibur;
   onClose: () => void;
 }
 
@@ -25,6 +26,7 @@ export function DayDetailPanel({
   journals,
   attendanceCount,
   notes = [],
+  holiday,
   onClose,
 }: DayDetailPanelProps) {
   const navigate = useNavigate();
@@ -45,6 +47,24 @@ export function DayDetailPanel({
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Hari Libur */}
+        {holiday && (
+          <>
+            <div className="p-4 bg-red-50 dark:bg-red-950 border-2 border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <PartyPopper className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-600 dark:text-red-400">{holiday.nama}</h3>
+                  {holiday.keterangan && (
+                    <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">{holiday.keterangan}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
+
         {/* Jadwal Hari Ini */}
         <div>
           <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">

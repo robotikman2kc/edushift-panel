@@ -1,0 +1,43 @@
+// Data Hari Libur Nasional Indonesia 2025-2026
+
+export const hariLiburNasional = [
+  // 2025
+  { tanggal: "2025-01-01", nama: "Tahun Baru Masehi 2025", keterangan: "Libur Nasional" },
+  { tanggal: "2025-01-29", nama: "Tahun Baru Imlek 2576", keterangan: "Libur Nasional" },
+  { tanggal: "2025-02-12", nama: "Isra Mi'raj Nabi Muhammad SAW", keterangan: "Libur Nasional" },
+  { tanggal: "2025-03-29", nama: "Hari Suci Nyepi Tahun Baru Saka 1947", keterangan: "Libur Nasional" },
+  { tanggal: "2025-03-31", nama: "Wafat Yesus Kristus", keterangan: "Libur Nasional" },
+  { tanggal: "2025-03-31", nama: "Hari Raya Idul Fitri 1446 H", keterangan: "Libur Nasional" },
+  { tanggal: "2025-04-01", nama: "Hari Raya Idul Fitri 1446 H", keterangan: "Libur Nasional" },
+  { tanggal: "2025-04-02", nama: "Cuti Bersama Idul Fitri", keterangan: "Cuti Bersama" },
+  { tanggal: "2025-04-03", nama: "Cuti Bersama Idul Fitri", keterangan: "Cuti Bersama" },
+  { tanggal: "2025-04-04", nama: "Cuti Bersama Idul Fitri", keterangan: "Cuti Bersama" },
+  { tanggal: "2025-05-01", nama: "Hari Buruh Internasional", keterangan: "Libur Nasional" },
+  { tanggal: "2025-05-12", nama: "Kenaikan Yesus Kristus", keterangan: "Libur Nasional" },
+  { tanggal: "2025-05-29", nama: "Hari Raya Waisak 2569", keterangan: "Libur Nasional" },
+  { tanggal: "2025-06-01", nama: "Hari Lahir Pancasila", keterangan: "Libur Nasional" },
+  { tanggal: "2025-06-07", nama: "Hari Raya Idul Adha 1446 H", keterangan: "Libur Nasional" },
+  { tanggal: "2025-06-27", nama: "Tahun Baru Islam 1447 H", keterangan: "Libur Nasional" },
+  { tanggal: "2025-08-17", nama: "Hari Kemerdekaan RI", keterangan: "Libur Nasional" },
+  { tanggal: "2025-09-05", nama: "Maulid Nabi Muhammad SAW", keterangan: "Libur Nasional" },
+  { tanggal: "2025-12-25", nama: "Hari Raya Natal", keterangan: "Libur Nasional" },
+  { tanggal: "2025-12-26", nama: "Cuti Bersama Natal", keterangan: "Cuti Bersama" },
+  
+  // 2026
+  { tanggal: "2026-01-01", nama: "Tahun Baru Masehi 2026", keterangan: "Libur Nasional" },
+  { tanggal: "2026-02-17", nama: "Tahun Baru Imlek 2577", keterangan: "Libur Nasional" },
+  { tanggal: "2026-03-02", nama: "Isra Mi'raj Nabi Muhammad SAW", keterangan: "Libur Nasional" },
+  { tanggal: "2026-03-20", nama: "Hari Raya Idul Fitri 1447 H", keterangan: "Libur Nasional" },
+  { tanggal: "2026-03-21", nama: "Hari Raya Idul Fitri 1447 H", keterangan: "Libur Nasional" },
+  { tanggal: "2026-03-18", nama: "Hari Suci Nyepi Tahun Baru Saka 1948", keterangan: "Libur Nasional" },
+  { tanggal: "2026-04-03", nama: "Wafat Yesus Kristus", keterangan: "Libur Nasional" },
+  { tanggal: "2026-05-01", nama: "Hari Buruh Internasional", keterangan: "Libur Nasional" },
+  { tanggal: "2026-05-14", nama: "Kenaikan Yesus Kristus", keterangan: "Libur Nasional" },
+  { tanggal: "2026-05-18", nama: "Hari Raya Waisak 2570", keterangan: "Libur Nasional" },
+  { tanggal: "2026-05-27", nama: "Hari Raya Idul Adha 1447 H", keterangan: "Libur Nasional" },
+  { tanggal: "2026-06-01", nama: "Hari Lahir Pancasila", keterangan: "Libur Nasional" },
+  { tanggal: "2026-06-17", nama: "Tahun Baru Islam 1448 H", keterangan: "Libur Nasional" },
+  { tanggal: "2026-08-17", nama: "Hari Kemerdekaan RI", keterangan: "Libur Nasional" },
+  { tanggal: "2026-08-26", nama: "Maulid Nabi Muhammad SAW", keterangan: "Libur Nasional" },
+  { tanggal: "2026-12-25", nama: "Hari Raya Natal", keterangan: "Libur Nasional" },
+];

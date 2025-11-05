@@ -7,6 +7,8 @@ interface CalendarData {
   hasAttendance: boolean;
   hasJournal: boolean;
   hasSchedule: boolean;
+  isHoliday: boolean;
+  holidayName?: string;
 }
 
 interface CalendarGridProps {
@@ -47,6 +49,7 @@ export function CalendarGrid({ currentDate, calendarData, selectedDate, onDateCl
             hasAttendance: false,
             hasJournal: false,
             hasSchedule: false,
+            isHoliday: false,
           };
 
           return (
@@ -60,6 +63,8 @@ export function CalendarGrid({ currentDate, calendarData, selectedDate, onDateCl
               hasAttendance={dayData.hasAttendance}
               hasJournal={dayData.hasJournal}
               hasSchedule={dayData.hasSchedule}
+              isHoliday={dayData.isHoliday}
+              holidayName={dayData.holidayName}
               onClick={() => onDateClick(day)}
             />
           );
