@@ -150,17 +150,19 @@ const Profil = () => {
         throw new Error('Failed to save avatar');
       }
       
+      // Update profile dengan OPFS path
+      const updatedProfile = { ...profile, avatar_url: avatarPath };
+      
+      // Save ke localStorage dengan OPFS path
+      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+      
       // Untuk preview, load dari OPFS
       const previewUrl = avatarPath.startsWith('opfs://') 
         ? await opfsStorage.getFile(avatarPath)
         : avatarPath;
       
       // Update state dengan preview URL untuk display
-      setProfile(prev => ({ ...prev, avatar_url: previewUrl || avatarPath }));
-      
-      // Save path (bukan blob URL) ke localStorage
-      const profileToSave = { ...profile, avatar_url: avatarPath };
-      localStorage.setItem('userProfile', JSON.stringify(profileToSave));
+      setProfile({ ...updatedProfile, avatar_url: previewUrl || avatarPath });
       
       // Trigger custom event to update other components
       window.dispatchEvent(new Event('profileUpdated'));
