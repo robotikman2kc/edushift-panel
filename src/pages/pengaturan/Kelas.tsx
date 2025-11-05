@@ -186,9 +186,15 @@ const Kelas = () => {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onDeleteBulk={async (ids) => {
+          for (const id of ids) {
+            await handleDelete(id);
+          }
+        }}
         loading={loading}
         formFields={formFields}
         title="Kelas"
+        enableCheckbox={true}
       />
     </div>
   );

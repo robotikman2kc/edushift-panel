@@ -173,9 +173,16 @@ const MataPelajaran = () => {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onDeleteBulk={async (ids) => {
+          for (const id of ids) {
+            await handleDelete(id);
+          }
+        }}
         loading={loading}
         formFields={formFields}
         searchPlaceholder="Cari nama mata pelajaran atau kode..."
+        title="Mata Pelajaran"
+        enableCheckbox={true}
       />
     </div>
   );

@@ -274,10 +274,17 @@ const Guru = () => {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onDeleteBulk={async (ids) => {
+          for (const id of ids) {
+            await handleDelete(id);
+          }
+        }}
         onImport={handleImport}
         loading={loading}
         formFields={formFields}
         searchPlaceholder="Cari nama guru, NIP, atau mata pelajaran..."
+        title="Guru"
+        enableCheckbox={true}
       />
     </div>
   );
