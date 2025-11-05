@@ -22,6 +22,7 @@ interface CalendarData {
   isHoliday: boolean;
   holidayName?: string;
   hasNotes: boolean;
+  noteColor?: string;
 }
 
 export default function Kalender() {
@@ -30,7 +31,7 @@ export default function Kalender() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [calendarData, setCalendarData] = useState<Map<string, CalendarData>>(new Map());
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<{ id: string; catatan: string } | null>(null);
+  const [editingNote, setEditingNote] = useState<{ id: string; catatan: string; warna?: string } | null>(null);
   const [calendarNotes, setCalendarNotes] = useState<CatatanKalender[]>([]);
   const [hariLibur, setHariLibur] = useState<HariLibur[]>([]);
   
@@ -230,6 +231,7 @@ export default function Kalender() {
           hasNotes: false,
         };
         existing.hasNotes = true;
+        existing.noteColor = (note as any).warna || "bg-purple-500";
         dataMap.set(note.tanggal, existing);
       });
 
@@ -312,7 +314,7 @@ export default function Kalender() {
   };
 
   const handleEditNote = (note: CatatanKalender) => {
-    setEditingNote({ id: note.id, catatan: note.catatan });
+    setEditingNote({ id: note.id, catatan: note.catatan, warna: (note as any).warna });
     setSelectedDate(new Date(note.tanggal));
     setIsNoteDialogOpen(true);
   };
@@ -364,13 +366,13 @@ export default function Kalender() {
     }
   };
 
-  const handleSaveNote = async (catatan: string, noteId?: string) => {
+  const handleSaveNote = async (catatan: string, warna: string, noteId?: string) => {
     if (!selectedDate) return;
 
     try {
       if (noteId) {
         // Update existing note
-        await indexedDB.update("catatan_kalender", noteId, { catatan });
+        await indexedDB.update("catatan_kalender", noteId, { catatan, warna });
         toast({
           title: "Catatan Diperbarui",
           description: "Catatan kegiatan berhasil diperbarui",
@@ -380,6 +382,7 @@ export default function Kalender() {
         const result = await indexedDB.insert("catatan_kalender", {
           tanggal: format(selectedDate, "yyyy-MM-dd"),
           catatan,
+          warna,
         });
 
         if (result.error) {
@@ -445,8 +448,12 @@ export default function Kalender() {
           <div className="flex flex-wrap gap-4 items-center text-sm">
             <span className="font-semibold">Indikator:</span>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
-              <span>Hari Libur (Minggu & Libur Nasional)</span>
+              <div className="w-6 h-6 rounded bg-red-500" />
+              <span>Hari Libur</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-blue-500" />
+              <span>Catatan (Warna bisa dipilih)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -461,12 +468,8 @@ export default function Kalender() {
               <span>Jurnal</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
-              <span>Catatan</span>
-            </div>
-            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-muted-foreground/50" />
-              <span>Jadwal (belum ada aktivitas)</span>
+              <span>Jadwal</span>
             </div>
           </div>
         </CardContent>
