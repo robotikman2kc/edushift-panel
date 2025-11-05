@@ -37,11 +37,11 @@ export function CalendarDay({
     <div
       onClick={onClick}
       className={cn(
-        "min-h-[80px] p-2 border-b border-r cursor-pointer hover:bg-muted/50 transition-colors",
+        "min-h-[80px] p-2 border-b border-r cursor-pointer hover:bg-muted/50 transition-colors relative",
         !isCurrentMonth && "bg-muted/20 text-muted-foreground",
         isToday && "bg-primary/10 font-semibold",
-        isSelected && "bg-primary/20 ring-2 ring-primary",
-        isHoliday && "bg-red-50 dark:bg-red-950"
+        isHoliday && "bg-red-50 dark:bg-red-950",
+        isSelected && "ring-2 ring-inset ring-primary"
       )}
     >
       <div className="flex flex-col h-full">

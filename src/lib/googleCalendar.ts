@@ -34,7 +34,7 @@ export async function fetchIndonesianHolidays(year: number): Promise<Array<{
     const holidays = data.items.map((event: GoogleCalendarHoliday) => ({
       tanggal: event.start.date,
       nama: event.summary,
-      keterangan: "Libur Nasional"
+      keterangan: event.description || "Libur"
     }));
     
     return holidays;
