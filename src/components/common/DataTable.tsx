@@ -104,6 +104,10 @@ export function DataTable({
   const [sortColumn, setSortColumn] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [editingCell, setEditingCell] = useState<{ rowId: string; columnKey: string } | null>(null);
+  const [editValue, setEditValue] = useState("");
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -129,6 +133,12 @@ export function DataTable({
     if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
     return 0;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -235,6 +245,28 @@ export function DataTable({
       await onDeleteBulk(Array.from(selectedIds));
       setSelectedIds(new Set());
     }
+  };
+
+  const handleCellEdit = (rowId: string, columnKey: string, currentValue: string) => {
+    setEditingCell({ rowId, columnKey });
+    setEditValue(currentValue);
+  };
+
+  const handleCellSave = async (rowId: string, columnKey: string) => {
+    if (onEdit && editValue !== null) {
+      const item = sortedData.find(d => d.id === rowId);
+      if (item) {
+        const updatedData = { ...item, [columnKey]: editValue };
+        await onEdit(rowId, updatedData);
+      }
+    }
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  const handleCellCancel = () => {
+    setEditingCell(null);
+    setEditValue("");
   };
 
   const handleExportPDF = () => {
@@ -519,14 +551,14 @@ export function DataTable({
           </div>
 
           {/* Table */}
-          <div className="border rounded-lg">
+          <div className="border rounded-lg max-h-[600px] overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   {enableCheckbox && (
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedIds.size === sortedData.length && sortedData.length > 0}
+                        checked={selectedIds.size === paginatedData.length && paginatedData.length > 0}
                         onCheckedChange={handleToggleAll}
                       />
                     </TableHead>
@@ -551,7 +583,7 @@ export function DataTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedData.length === 0 ? (
+                {paginatedData.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={columns.length + (enableCheckbox ? 2 : 1)}
@@ -561,7 +593,7 @@ export function DataTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sortedData.map((item, index) => (
+                  paginatedData.map((item, index) => (
                     <TableRow key={item.id || index}>
                       {enableCheckbox && (
                         <TableCell>
@@ -571,11 +603,41 @@ export function DataTable({
                           />
                         </TableCell>
                       )}
-                      {columns.map((column) => (
-                        <TableCell key={column.key}>
-                          {column.key === 'no' ? index + 1 : (item[column.key] || "-")}
-                        </TableCell>
-                      ))}
+                      {columns.map((column) => {
+                        const isEditing = editingCell?.rowId === item.id && editingCell?.columnKey === column.key;
+                        const cellValue = column.key === 'no' ? startIndex + index + 1 : (item[column.key] || "-");
+                        
+                        return (
+                          <TableCell 
+                            key={column.key}
+                            onDoubleClick={() => column.key !== 'no' && onEdit && handleCellEdit(item.id, column.key, item[column.key] || "")}
+                            className="cursor-pointer hover:bg-muted/30 transition-colors"
+                          >
+                            {isEditing ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleCellSave(item.id, column.key);
+                                    if (e.key === 'Escape') handleCellCancel();
+                                  }}
+                                  className="h-8 text-sm"
+                                  autoFocus
+                                />
+                                <Button size="sm" variant="ghost" onClick={() => handleCellSave(item.id, column.key)} className="h-8 px-2">
+                                  ✓
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={handleCellCancel} className="h-8 px-2">
+                                  ✗
+                                </Button>
+                              </div>
+                            ) : (
+                              cellValue
+                            )}
+                          </TableCell>
+                        );
+                      })}
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -609,10 +671,81 @@ export function DataTable({
             </Table>
           </div>
 
-          {/* Pagination info */}
-          <div className="text-sm text-muted-foreground">
-            Menampilkan {sortedData.length} dari {data.length} data
-          </div>
+          {/* Pagination controls */}
+          {sortedData.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Tampilkan</span>
+                <Select
+                  value={rowsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setRowsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">
+                  dari {sortedData.length} data
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Sebelumnya
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-10"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Berikutnya
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
