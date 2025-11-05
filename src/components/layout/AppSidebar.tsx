@@ -54,7 +54,6 @@ const menuItems = [
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
       { title: "Notifikasi", url: "/pengaturan/notifikasi", icon: Bell },
-      { title: "Backup Google Drive", url: "/pengaturan/backup-google-drive", icon: Cloud },
     ],
   },
   {
@@ -87,6 +86,7 @@ const menuItems = [
     items: [
       { title: "Manajemen Data", url: "/data/manajemen-data", icon: Database },
       { title: "Backup dan Restore", url: "/data/backup-restore", icon: Download },
+      { title: "Backup Google Drive", url: "/data/backup-google-drive", icon: Cloud },
     ],
   },
   {

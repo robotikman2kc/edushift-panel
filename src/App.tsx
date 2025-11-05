@@ -32,7 +32,7 @@ import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 // Data Pages
 import ManajemenData from "./pages/data/ManajemenData";
 import BackupRestore from "./pages/data/BackupRestore";
-import BackupGoogleDrive from "./pages/pengaturan/BackupGoogleDrive";
+import BackupGoogleDrive from "./pages/data/BackupGoogleDrive";
 
 // Jurnal Pages
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
@@ -98,7 +98,6 @@ const App = () => {
                   <Route path="/pengaturan/bobot-penilaian" element={<BobotPenilaian />} />
                   <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
                   <Route path="/pengaturan/notifikasi" element={<Notifikasi />} />
-                  <Route path="/pengaturan/backup-google-drive" element={<BackupGoogleDrive />} />
 
                   {/* Penilaian Routes */}
                   <Route path="/penilaian/input-nilai" element={<InputNilai />} />
@@ -126,6 +125,7 @@ const App = () => {
                   {/* Data Routes */}
                   <Route path="/data/manajemen-data" element={<ManajemenData />} />
                   <Route path="/data/backup-restore" element={<BackupRestore />} />
+                  <Route path="/data/backup-google-drive" element={<BackupGoogleDrive />} />
 
                   {/* Akun Routes */}
                   <Route path="/akun/profil" element={<Profil />} />
