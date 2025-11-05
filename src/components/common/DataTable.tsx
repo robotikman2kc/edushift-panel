@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,11 +77,13 @@ interface DataTableProps {
   onAdd?: (formData: Record<string, string>) => void | Promise<void>;
   onEdit?: (id: string, formData: Record<string, string>) => void | Promise<void>;
   onDelete?: (id: string) => void | Promise<void>;
+  onDeleteBulk?: (ids: string[]) => void | Promise<void>;
   onImport?: (data: Record<string, string>[]) => void | Promise<void>;
   loading?: boolean;
   formFields?: FormField[];
   searchPlaceholder?: string;
   title?: string;
+  enableCheckbox?: boolean;
 }
 
 export function DataTable({
@@ -89,15 +92,18 @@ export function DataTable({
   onAdd,
   onEdit,
   onDelete,
+  onDeleteBulk,
   onImport,
   loading = false,
   formFields = [],
   searchPlaceholder = "Cari data...",
   title,
+  enableCheckbox = false,
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -203,6 +209,31 @@ export function DataTable({
       await onDelete(selectedItem.id);
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
+    }
+  };
+
+  const handleToggleAll = () => {
+    if (selectedIds.size === sortedData.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedData.map(item => item.id)));
+    }
+  };
+
+  const handleToggleItem = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    if (onDeleteBulk && selectedIds.size > 0) {
+      await onDeleteBulk(Array.from(selectedIds));
+      setSelectedIds(new Set());
     }
   };
 
@@ -421,7 +452,19 @@ export function DataTable({
         <div className="space-y-4">
           {/* Header with actions */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {title && <h2 className="text-xl font-semibold">{title}</h2>}
+            <div className="flex items-center gap-4">
+              {title && <h2 className="text-xl font-semibold">{title}</h2>}
+              {enableCheckbox && selectedIds.size > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={handleBulkDelete}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Hapus {selectedIds.size} data
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               {onImport && (
                 <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
@@ -480,6 +523,14 @@ export function DataTable({
             <Table>
               <TableHeader>
                 <TableRow>
+                  {enableCheckbox && (
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedIds.size === sortedData.length && sortedData.length > 0}
+                        onCheckedChange={handleToggleAll}
+                      />
+                    </TableHead>
+                  )}
                   {columns.map((column) => (
                     <TableHead
                       key={column.key}
@@ -503,7 +554,7 @@ export function DataTable({
                 {sortedData.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={columns.length + 1}
+                      colSpan={columns.length + (enableCheckbox ? 2 : 1)}
                       className="text-center text-muted-foreground py-8"
                     >
                       Tidak ada data
@@ -512,6 +563,14 @@ export function DataTable({
                 ) : (
                   sortedData.map((item, index) => (
                     <TableRow key={item.id || index}>
+                      {enableCheckbox && (
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(item.id)}
+                            onCheckedChange={() => handleToggleItem(item.id)}
+                          />
+                        </TableCell>
+                      )}
                       {columns.map((column) => (
                         <TableCell key={column.key}>
                           {column.key === 'no' ? index + 1 : (item[column.key] || "-")}

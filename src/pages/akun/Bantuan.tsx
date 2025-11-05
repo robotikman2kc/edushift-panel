@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -15,11 +16,32 @@ import {
   FileText,
   HelpCircle,
   Mail,
-  Phone
+  Phone,
+  Code,
+  Save
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const Bantuan = () => {
+  const { toast } = useToast();
+  const [developerNotes, setDeveloperNotes] = useState("");
+
+  useEffect(() => {
+    const savedNotes = localStorage.getItem("developer_notes") || "";
+    setDeveloperNotes(savedNotes);
+  }, []);
+
+  const handleSaveNotes = () => {
+    localStorage.setItem("developer_notes", developerNotes);
+    toast({
+      title: "Catatan Tersimpan",
+      description: "Catatan pengembang berhasil disimpan",
+    });
+  };
+
   const features = [
     {
       icon: UserCheck,
@@ -193,6 +215,31 @@ const Bantuan = () => {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Catatan Pengembang */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Code className="h-5 w-5" />
+            Catatan Pengembang
+          </CardTitle>
+          <CardDescription>
+            Catat bug, saran, atau masukan untuk pengembangan sistem
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea
+            placeholder="Tuliskan catatan Anda di sini... (misal: bug, saran fitur, masukan, dll)"
+            value={developerNotes}
+            onChange={(e) => setDeveloperNotes(e.target.value)}
+            className="min-h-[150px]"
+          />
+          <Button onClick={handleSaveNotes} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            Simpan Catatan
+          </Button>
         </CardContent>
       </Card>
 

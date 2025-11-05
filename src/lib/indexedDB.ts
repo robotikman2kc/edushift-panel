@@ -133,7 +133,13 @@ export interface AgendaMengajar extends BaseRecord {
   keterangan: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar';
+export interface CatatanKalender extends BaseRecord {
+  tanggal: string;
+  judul: string;
+  deskripsi: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender';
 
 // Generate UUID function
 function generateId(): string {
@@ -147,7 +153,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 4;
+  private dbVersion = 5;
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -165,7 +171,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {

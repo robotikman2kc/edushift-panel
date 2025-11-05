@@ -330,14 +330,9 @@ const Siswa = () => {
             continue;
           }
 
-          // Cek apakah NIS sudah ada
+          // Cek apakah NIS sudah ada - jika ada, update data
           const allSiswa = await indexedDB.select('siswa');
           const existingSiswa = allSiswa.find(s => s.nis === row.nis);
-          if (existingSiswa) {
-            errors.push(`NIS "${row.nis}" sudah ada dalam database`);
-            errorCount++;
-            continue;
-          }
 
           // Tentukan kelas_id dari data import atau dari filter yang dipilih
           let kelasId = selectedKelas;
@@ -355,26 +350,52 @@ const Siswa = () => {
             continue;
           }
 
-          const result = await indexedDB.insert('siswa', {
-            nis: row.nis,
-            nama_siswa: row.nama_siswa,
-            kelas_id: kelasId,
-            jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
-            tanggal_masuk: row.tanggal_masuk || new Date().toISOString().split('T')[0],
-            tanggal_lahir: row.tanggal_lahir || undefined,
-            tempat_lahir: row.tempat_lahir || undefined,
-            alamat: row.alamat || undefined,
-            nama_orang_tua: row.nama_orang_tua || undefined,
-            telepon_orang_tua: row.telepon_orang_tua || undefined,
-            email: row.email || undefined,
-            status: row.status || 'Aktif'
-          });
-
-          if (result.error) {
-            errors.push(`NIS "${row.nis}" - ${result.error}`);
-            errorCount++;
+          // Jika siswa sudah ada, update data
+          if (existingSiswa) {
+            const updateData = {
+              nama_siswa: row.nama_siswa,
+              kelas_id: kelasId,
+              jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
+              tanggal_masuk: row.tanggal_masuk || existingSiswa.tanggal_masuk,
+              tanggal_lahir: row.tanggal_lahir || existingSiswa.tanggal_lahir,
+              tempat_lahir: row.tempat_lahir || existingSiswa.tempat_lahir,
+              alamat: row.alamat || existingSiswa.alamat,
+              nama_orang_tua: row.nama_orang_tua || existingSiswa.nama_orang_tua,
+              telepon_orang_tua: row.telepon_orang_tua || existingSiswa.telepon_orang_tua,
+              email: row.email || existingSiswa.email,
+              status: row.status || existingSiswa.status
+            };
+            
+            const result = await indexedDB.update('siswa', existingSiswa.id, updateData);
+            if (result.error) {
+              errors.push(`NIS "${row.nis}" - ${result.error}`);
+              errorCount++;
+            } else {
+              successCount++;
+            }
           } else {
-            successCount++;
+            // Insert siswa baru
+            const result = await indexedDB.insert('siswa', {
+              nis: row.nis,
+              nama_siswa: row.nama_siswa,
+              kelas_id: kelasId,
+              jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
+              tanggal_masuk: row.tanggal_masuk || new Date().toISOString().split('T')[0],
+              tanggal_lahir: row.tanggal_lahir || undefined,
+              tempat_lahir: row.tempat_lahir || undefined,
+              alamat: row.alamat || undefined,
+              nama_orang_tua: row.nama_orang_tua || undefined,
+              telepon_orang_tua: row.telepon_orang_tua || undefined,
+              email: row.email || undefined,
+              status: row.status || 'Aktif'
+            });
+
+            if (result.error) {
+              errors.push(`NIS "${row.nis}" - ${result.error}`);
+              errorCount++;
+            } else {
+              successCount++;
+            }
           }
         } catch (error: any) {
           errors.push(`NIS "${row.nis}" - ${error.message}`);
@@ -470,10 +491,16 @@ const Siswa = () => {
           onAdd={selectedKelas ? handleAdd : undefined}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onDeleteBulk={async (ids) => {
+            for (const id of ids) {
+              await handleDelete(id);
+            }
+          }}
           onImport={selectedKelas ? handleImport : undefined}
           loading={loading}
           formFields={formFields}
           title="Siswa"
+          enableCheckbox={true}
         />
       )}
 

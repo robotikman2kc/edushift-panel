@@ -39,10 +39,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
   const [loadingSchedule, setLoadingSchedule] = useState(true);
+  const [calendarNotes, setCalendarNotes] = useState<any[]>([]);
+  const [loadingNotes, setLoadingNotes] = useState(true);
 
   useEffect(() => {
     fetchStatistics();
     fetchTodaySchedule();
+    fetchCalendarNotes();
   }, []);
 
   const fetchStatistics = async () => {
@@ -84,6 +87,28 @@ const Dashboard = () => {
       title: "Memperbarui Aplikasi",
       description: "Aplikasi akan dimuat ulang untuk menerapkan pembaruan...",
     });
+  };
+
+  const fetchCalendarNotes = async () => {
+    try {
+      setLoadingNotes(true);
+      const today = new Date();
+      const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+      const todayStr = format(today, "yyyy-MM-dd");
+      const oneMonthAgoStr = format(oneMonthAgo, "yyyy-MM-dd");
+
+      const notes = await indexedDB.select("catatan_kalender", (n: any) => 
+        n.tanggal >= oneMonthAgoStr && n.tanggal <= todayStr
+      );
+
+      setCalendarNotes(notes.sort((a: any, b: any) => 
+        new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+      ));
+    } catch (error) {
+      console.error("Error fetching calendar notes:", error);
+    } finally {
+      setLoadingNotes(false);
+    }
   };
 
   const fetchTodaySchedule = async () => {
@@ -366,43 +391,80 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* PWA Controls */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Download className="h-5 w-5" />
-              Kontrol Aplikasi PWA
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3">
-              <Button 
-                onClick={handleInstall} 
-                variant={isInstallable && !isInstalled ? "default" : "outline"}
-                disabled={!isInstallable || isInstalled}
-                size="sm"
-                className="w-full"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isInstalled ? "Sudah Terinstall" : "Install Aplikasi"}
-              </Button>
-              
-              <Button 
-                onClick={handleUpdate} 
-                variant={updateAvailable ? "default" : "outline"}
-                disabled={!updateAvailable}
-                size="sm"
-                className="w-full"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {updateAvailable ? "Update Tersedia" : "Tidak Ada Update"}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Calendar Notes & PWA Controls */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Calendar Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Calendar className="h-5 w-5" />
+                Catatan Kegiatan (1 Bulan Terakhir)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingNotes ? (
+                <p className="text-sm text-muted-foreground">Memuat catatan...</p>
+              ) : calendarNotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Belum ada catatan kegiatan</p>
+              ) : (
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                  {calendarNotes.map((note) => (
+                    <div 
+                      key={note.id}
+                      className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="font-semibold text-sm">{note.judul}</p>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {format(new Date(note.tanggal), "dd MMM", { locale: idLocale })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{note.deskripsi}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* PWA Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Download className="h-5 w-5" />
+                Kontrol Aplikasi PWA
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={handleInstall} 
+                  variant={isInstallable && !isInstalled ? "default" : "outline"}
+                  disabled={!isInstallable || isInstalled}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isInstalled ? "Sudah Terinstall" : "Install Aplikasi"}
+                </Button>
+                
+                <Button 
+                  onClick={handleUpdate} 
+                  variant={updateAvailable ? "default" : "outline"}
+                  disabled={!updateAvailable}
+                  size="sm"
+                  className="w-full"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {updateAvailable ? "Update Tersedia" : "Tidak Ada Update"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
     </div>

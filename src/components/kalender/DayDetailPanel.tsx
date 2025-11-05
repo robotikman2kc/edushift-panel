@@ -5,8 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { Calendar, BookOpen, Users, FileText, X } from "lucide-react";
-import type { JadwalPelajaran, AgendaMengajar, Jurnal } from "@/lib/indexedDB";
+import { Calendar, BookOpen, Users, FileText, X, StickyNote } from "lucide-react";
+import type { JadwalPelajaran, AgendaMengajar, Jurnal, CatatanKalender } from "@/lib/indexedDB";
 
 interface DayDetailPanelProps {
   selectedDate: Date | null;
@@ -14,6 +14,7 @@ interface DayDetailPanelProps {
   agendas: Array<AgendaMengajar & { kelas_name?: string; mata_pelajaran_name?: string }>;
   journals: Jurnal[];
   attendanceCount: number;
+  notes?: CatatanKalender[];
   onClose: () => void;
 }
 
@@ -23,6 +24,7 @@ export function DayDetailPanel({
   agendas,
   journals,
   attendanceCount,
+  notes = [],
   onClose,
 }: DayDetailPanelProps) {
   const navigate = useNavigate();
@@ -122,6 +124,28 @@ export function DayDetailPanel({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Belum ada jurnal</p>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Catatan Kegiatan */}
+        <div>
+          <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+            <StickyNote className="h-4 w-4" />
+            Catatan Kegiatan
+          </h3>
+          {notes.length > 0 ? (
+            <div className="space-y-2">
+              {notes.map((note) => (
+                <div key={note.id} className="text-sm p-2 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                  <div className="font-medium">{note.judul}</div>
+                  <div className="text-xs mt-1">{note.deskripsi}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Belum ada catatan</p>
           )}
         </div>
 
