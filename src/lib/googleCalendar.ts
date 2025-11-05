@@ -12,6 +12,51 @@ export interface GoogleCalendarHoliday {
   description?: string;
 }
 
+// Fungsi untuk menerjemahkan nama hari libur ke Bahasa Indonesia
+function translateHolidayName(englishName: string): string {
+  const translations: Record<string, string> = {
+    "New Year's Day": "Tahun Baru Masehi",
+    "Chinese New Year's Day": "Tahun Baru Imlek",
+    "Chinese New Year Joint Holiday": "Cuti Bersama Tahun Baru Imlek",
+    "Ascension of the Prophet Muhammad": "Isra Mi'raj Nabi Muhammad SAW",
+    "Good Friday": "Wafat Yesus Kristus",
+    "Ascension Day": "Kenaikan Yesus Kristus",
+    "Vesak Day": "Hari Raya Waisak",
+    "Pancasila Day": "Hari Lahir Pancasila",
+    "Independence Day": "Hari Kemerdekaan RI",
+    "Idul Fitri": "Idul Fitri",
+    "Idul Fitri Holiday": "Idul Fitri",
+    "Idul Fitri Joint Holiday": "Cuti Bersama Idul Fitri",
+    "Idul Adha": "Idul Adha",
+    "Idul Adha Joint Holiday": "Cuti Bersama Idul Adha",
+    "Islamic New Year": "Tahun Baru Islam",
+    "Christmas Day": "Hari Raya Natal",
+    "Bali's Day of Silence and Hindu New Year (Nyepi)": "Hari Raya Nyepi",
+    "Joint Holiday for Bali's Day of Silence and Hindu New Year (Nyepi)": "Cuti Bersama Nyepi",
+    "The Birthday of Prophet Muhammad": "Maulid Nabi Muhammad SAW",
+    "Joint Holiday": "Cuti Bersama",
+  };
+
+  // Cek exact match dulu
+  if (translations[englishName]) {
+    return translations[englishName];
+  }
+
+  // Cek partial match untuk tentative dates
+  for (const [key, value] of Object.entries(translations)) {
+    if (englishName.includes(key)) {
+      // Jika ada kata "tentative", tambahkan keterangan
+      if (englishName.toLowerCase().includes("tentative")) {
+        return `${value} (tentatif)`;
+      }
+      return value;
+    }
+  }
+
+  // Jika tidak ada terjemahan, kembalikan nama asli
+  return englishName;
+}
+
 export async function fetchIndonesianHolidays(year: number): Promise<Array<{
   tanggal: string;
   nama: string;
@@ -33,7 +78,7 @@ export async function fetchIndonesianHolidays(year: number): Promise<Array<{
     
     const holidays = data.items.map((event: GoogleCalendarHoliday) => ({
       tanggal: event.start.date,
-      nama: event.summary,
+      nama: translateHolidayName(event.summary),
       keterangan: event.description || "Libur"
     }));
     
