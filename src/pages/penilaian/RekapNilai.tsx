@@ -127,15 +127,19 @@ const RekapNilai = () => {
 
         // Calculate grades by category
         const grades: { [kategori_id: string]: number } = {};
+        console.log(`Processing kategori for ${siswa.nama_siswa}:`, kategoriList.map(k => ({id: k.id, nama: k.nama_kategori})));
         kategoriList.forEach(kategori => {
           const nilaiKategori = studentNilai.filter((n: NilaiSiswa) => 
             n.jenis_penilaian_id === kategori.id
           );
+          console.log(`Kategori ${kategori.nama_kategori} (${kategori.id}):`, nilaiKategori);
           if (nilaiKategori.length > 0) {
             const totalNilai = nilaiKategori.reduce((sum: number, n: NilaiSiswa) => sum + n.nilai, 0);
             grades[kategori.id] = totalNilai / nilaiKategori.length;
+            console.log(`Set grades[${kategori.id}] = ${grades[kategori.id]}`);
           }
         });
+        console.log(`Final grades object for ${siswa.nama_siswa}:`, grades);
 
         // Calculate weighted average
         let totalBobot = 0;
