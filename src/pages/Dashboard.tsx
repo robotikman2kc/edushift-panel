@@ -413,13 +413,12 @@ const Dashboard = () => {
                       key={note.id}
                       className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg"
                     >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="font-semibold text-sm">{note.judul}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm flex-1">{note.catatan}</p>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {format(new Date(note.tanggal), "dd MMM", { locale: idLocale })}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{note.deskripsi}</p>
                     </div>
                   ))}
                 </div>

@@ -237,14 +237,13 @@ export default function Kalender() {
     setIsNoteDialogOpen(true);
   };
 
-  const handleSaveNote = async (judul: string, deskripsi: string) => {
+  const handleSaveNote = async (catatan: string) => {
     if (!selectedDate) return;
 
     try {
       const result = await indexedDB.insert("catatan_kalender", {
         tanggal: format(selectedDate, "yyyy-MM-dd"),
-        judul,
-        deskripsi,
+        catatan,
       });
 
       if (result.error) {

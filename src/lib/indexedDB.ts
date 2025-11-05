@@ -135,8 +135,7 @@ export interface AgendaMengajar extends BaseRecord {
 
 export interface CatatanKalender extends BaseRecord {
   tanggal: string;
-  judul: string;
-  deskripsi: string;
+  catatan: string;
 }
 
 export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender';

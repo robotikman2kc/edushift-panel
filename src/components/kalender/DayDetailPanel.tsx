@@ -138,9 +138,8 @@ export function DayDetailPanel({
           {notes.length > 0 ? (
             <div className="space-y-2">
               {notes.map((note) => (
-                <div key={note.id} className="text-sm p-2 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md">
-                  <div className="font-medium">{note.judul}</div>
-                  <div className="text-xs mt-1">{note.deskripsi}</div>
+                <div key={note.id} className="text-sm p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                  {note.catatan}
                 </div>
               ))}
             </div>
