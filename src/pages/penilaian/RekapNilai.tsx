@@ -14,7 +14,7 @@ import { getBobotForKelas } from "@/lib/bobotUtils";
 
 interface StudentGrade {
   siswa_id: string;
-  nis: string;
+  nisn: string;
   nama_siswa: string;
   grades: { [kategori_id: string]: number };
   rata_rata: number;
@@ -197,7 +197,7 @@ const RekapNilai = () => {
 
         return {
           siswa_id: siswa.id,
-          nis: siswa.nis,
+          nisn: siswa.nisn,
           nama_siswa: siswa.nama_siswa,
           grades,
           rata_rata,
@@ -236,7 +236,7 @@ const RekapNilai = () => {
 
       const exportData = studentGrades.map((student) => {
         const rowData: any = {
-          'NIS': student.nis,
+          'NISN': student.nisn,
           'Nama Siswa': student.nama_siswa
         };
 
@@ -251,7 +251,7 @@ const RekapNilai = () => {
       });
 
       const exportColumns = [
-        { key: 'NIS', label: 'NIS' },
+        { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
         { key: 'Rata-rata', label: 'Rata-rata' },
@@ -310,7 +310,7 @@ const RekapNilai = () => {
       const exportData = studentGrades.map((student, index) => {
         const rowData: any = {
           'No': index + 1,
-          'NIS': student.nis,
+          'NISN': student.nisn,
           'Nama Siswa': student.nama_siswa
         };
 
@@ -327,7 +327,7 @@ const RekapNilai = () => {
 
       const exportColumns = [
         { key: 'No', label: 'No' },
-        { key: 'NIS', label: 'NIS' },
+        { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
         { key: 'Rata-rata', label: 'Rata-rata' },
@@ -496,7 +496,7 @@ const RekapNilai = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">No</TableHead>
-                      <TableHead>NIS</TableHead>
+                      <TableHead>NISN</TableHead>
                       <TableHead>Nama Siswa</TableHead>
                       {kategoriList.map(kategori => {
                         const bobot = bobotMap[kategori.id] || 0;
@@ -522,7 +522,7 @@ const RekapNilai = () => {
                     {studentGrades.map((student, index) => (
                       <TableRow key={student.siswa_id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell>{student.nis}</TableCell>
+                        <TableCell>{student.nisn}</TableCell>
                         <TableCell>{student.nama_siswa}</TableCell>
                         {kategoriList.map(kategori => (
                           <TableCell key={kategori.id} className="text-center">

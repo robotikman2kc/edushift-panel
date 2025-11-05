@@ -27,7 +27,7 @@ interface MataPelajaran {
 
 interface Siswa {
   id: string;
-  nis: string;
+  nisn: string;
   nama_siswa: string;
   kelas_id: string;
   status: string;
@@ -45,7 +45,7 @@ interface KehadiranData {
 interface KehadiranReport {
   siswa_id: string;
   nama_siswa: string;
-  nis: string;
+  nisn: string;
   jenis_kelamin: string;
   kehadiran_per_tanggal: { [tanggal: string]: string };
   total_hadir: number;
@@ -248,7 +248,7 @@ const RekapKehadiran = () => {
         return {
           siswa_id: student.id,
           nama_siswa: student.nama_siswa,
-          nis: student.nis,
+          nisn: student.nisn,
           jenis_kelamin: student.jenis_kelamin || '-',
           kehadiran_per_tanggal: kehadiranPerTanggal,
           total_hadir: totalHadir,
@@ -311,7 +311,7 @@ const RekapKehadiran = () => {
       // Prepare export data with attendance details
       const exportData = reportData.map(student => {
         const baseData = {
-          NIS: student.nis,
+          NISN: student.nisn,
           'Nama Siswa': student.nama_siswa,
           'Jenis Kelamin': student.jenis_kelamin,
           'Total Hadir': student.total_hadir,
@@ -330,7 +330,7 @@ const RekapKehadiran = () => {
       });
       
       const exportColumns = [
-        { key: 'NIS', label: 'NIS' },
+        { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         { key: 'Jenis Kelamin', label: 'Jenis Kelamin' },
         ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
@@ -392,7 +392,7 @@ const RekapKehadiran = () => {
       // Prepare export data with attendance details
       const exportData = reportData.map(student => {
         const baseData = {
-          NIS: student.nis,
+          NISN: student.nisn,
           'Nama Siswa': student.nama_siswa,
           'Jenis Kelamin': student.jenis_kelamin,
           'Total Hadir': student.total_hadir,
@@ -411,7 +411,7 @@ const RekapKehadiran = () => {
       });
       
       const exportColumns = [
-        { key: 'NIS', label: 'NIS' },
+        { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         { key: 'Jenis Kelamin', label: 'Jenis Kelamin' },
         ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
@@ -675,7 +675,7 @@ const RekapKehadiran = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>No</TableHead>
-                        <TableHead>NIS</TableHead>
+                        <TableHead>NISN</TableHead>
                         <TableHead>Nama Siswa</TableHead>
                         <TableHead>Jenis Kelamin</TableHead>
                         {uniqueDates.map((date) => (
@@ -691,7 +691,7 @@ const RekapKehadiran = () => {
                       {reportData.map((student, index) => (
                         <TableRow key={student.siswa_id}>
                           <TableCell className="font-medium">{index + 1}</TableCell>
-                          <TableCell className="font-medium">{student.nis}</TableCell>
+                          <TableCell className="font-medium">{student.nisn}</TableCell>
                           <TableCell>{student.nama_siswa}</TableCell>
                           <TableCell>{student.jenis_kelamin}</TableCell>
                           {uniqueDates.map((date) => (

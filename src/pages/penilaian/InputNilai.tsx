@@ -482,7 +482,7 @@ const InputNilai = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>NIS</TableHead>
+                    <TableHead>NISN</TableHead>
                     <TableHead>Nama Siswa</TableHead>
                     <TableHead className="text-center">Nilai</TableHead>
                     <TableHead className="text-center">Grade</TableHead>
@@ -500,7 +500,7 @@ const InputNilai = () => {
                       const grade = grades[student.id] || "";
                       return (
                         <TableRow key={student.id}>
-                          <TableCell className="font-medium">{student.nis}</TableCell>
+                          <TableCell className="font-medium">{student.nisn}</TableCell>
                           <TableCell>{student.nama_siswa}</TableCell>
                           <TableCell>
                             <Input

@@ -45,7 +45,7 @@ export interface Kelas extends BaseRecord {
 }
 
 export interface Siswa extends BaseRecord {
-  nis: string;
+  nisn: string;
   nama_siswa: string;
   kelas_id?: string;
   jenis_kelamin?: 'Laki-laki' | 'Perempuan';

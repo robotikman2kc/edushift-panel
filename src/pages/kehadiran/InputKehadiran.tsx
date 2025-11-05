@@ -29,7 +29,7 @@ interface MataPelajaran {
 
 interface Siswa {
   id: string;
-  nis: string;
+  nisn: string;
   nama_siswa: string;
   kelas_id: string;
   status: string;
@@ -729,7 +729,7 @@ const InputKehadiran = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>No</TableHead>
-                      <TableHead>NIS</TableHead>
+                      <TableHead>NISN</TableHead>
                       <TableHead>Nama Siswa</TableHead>
                       <TableHead className="text-center">Status Kehadiran</TableHead>
                       <TableHead className="text-center">Keaktifan</TableHead>
@@ -740,7 +740,7 @@ const InputKehadiran = () => {
                     {students.map((student, index) => (
                       <TableRow key={student.id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell className="font-medium">{student.nis}</TableCell>
+                        <TableCell className="font-medium">{student.nisn}</TableCell>
                         <TableCell>{student.nama_siswa}</TableCell>
                         <TableCell className="text-center">
                           {getStatusBadge(attendance[student.id])}
