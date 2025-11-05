@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface Siswa {
   id: string;
-  nis: string;
+  nisn: string;
   nama_siswa: string;
   kelas_id: string;
   kelas?: {
@@ -41,7 +41,7 @@ const Siswa = () => {
 
   const columns = [
     { key: "no", label: "No", sortable: false },
-    { key: "nis", label: "NIS", sortable: true },
+    { key: "nisn", label: "NISN", sortable: true },
     { key: "nama_siswa", label: "Nama Siswa", sortable: true },
     { key: "kelas_nama", label: "Kelas", sortable: true },
     { key: "jenis_kelamin", label: "Jenis Kelamin", sortable: true },
@@ -50,7 +50,7 @@ const Siswa = () => {
   ];
 
   const formFields = [
-    { key: "nis", label: "NIS", type: "text" as const, placeholder: "Masukkan NIS", required: true },
+    { key: "nisn", label: "NISN", type: "text" as const, placeholder: "Masukkan NISN", required: true },
     { key: "nama_siswa", label: "Nama Siswa", type: "text" as const, placeholder: "Masukkan nama siswa", required: true },
     { key: "kelas_id", label: "Kelas", type: "select" as const, placeholder: "Pilih kelas", required: true, options: 
       filteredKelas.map(k => ({ value: k.id, label: k.nama_kelas }))
@@ -222,7 +222,7 @@ const Siswa = () => {
       }
 
       const result = await indexedDB.insert('siswa', {
-        nis: formData.nis,
+        nisn: formData.nisn,
         nama_siswa: formData.nama_siswa,
         kelas_id: kelasId,
         jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
@@ -256,7 +256,7 @@ const Siswa = () => {
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
       const result = await indexedDB.update('siswa', id, {
-        nis: formData.nis,
+        nisn: formData.nisn,
         nama_siswa: formData.nama_siswa,
         jenis_kelamin: formData.jenis_kelamin as 'Laki-laki' | 'Perempuan',
         tanggal_masuk: formData.tanggal_masuk || undefined,
@@ -324,15 +324,15 @@ const Siswa = () => {
       for (const row of data) {
         try {
           // Validasi data yang diperlukan
-          if (!row.nis || !row.nama_siswa) {
-            errors.push(`Baris dengan NIS "${row.nis || 'kosong'}" - NIS dan Nama Siswa harus diisi`);
+          if (!row.nisn || !row.nama_siswa) {
+            errors.push(`Baris dengan NISN "${row.nisn || 'kosong'}" - NISN dan Nama Siswa harus diisi`);
             errorCount++;
             continue;
           }
 
-          // Cek apakah NIS sudah ada - jika ada, update data
+          // Cek apakah NISN sudah ada - jika ada, update data
           const allSiswa = await indexedDB.select('siswa');
-          const existingSiswa = allSiswa.find(s => s.nis === row.nis);
+          const existingSiswa = allSiswa.find(s => s.nisn === row.nisn);
 
           // Tentukan kelas_id dari data import atau dari filter yang dipilih
           let kelasId = selectedKelas;
@@ -345,7 +345,7 @@ const Siswa = () => {
           }
 
           if (!kelasId) {
-            errors.push(`NIS "${row.nis}" - Kelas tidak ditemukan`);
+            errors.push(`NISN "${row.nisn}" - Kelas tidak ditemukan`);
             errorCount++;
             continue;
           }
@@ -368,7 +368,7 @@ const Siswa = () => {
             
             const result = await indexedDB.update('siswa', existingSiswa.id, updateData);
             if (result.error) {
-              errors.push(`NIS "${row.nis}" - ${result.error}`);
+              errors.push(`NISN "${row.nisn}" - ${result.error}`);
               errorCount++;
             } else {
               successCount++;
@@ -376,7 +376,7 @@ const Siswa = () => {
           } else {
             // Insert siswa baru
             const result = await indexedDB.insert('siswa', {
-              nis: row.nis,
+              nisn: row.nisn,
               nama_siswa: row.nama_siswa,
               kelas_id: kelasId,
               jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
@@ -391,14 +391,14 @@ const Siswa = () => {
             });
 
             if (result.error) {
-              errors.push(`NIS "${row.nis}" - ${result.error}`);
+              errors.push(`NISN "${row.nisn}" - ${result.error}`);
               errorCount++;
             } else {
               successCount++;
             }
           }
         } catch (error: any) {
-          errors.push(`NIS "${row.nis}" - ${error.message}`);
+          errors.push(`NISN "${row.nisn}" - ${error.message}`);
           errorCount++;
         }
       }
@@ -487,7 +487,7 @@ const Siswa = () => {
         <DataTable
           data={filteredSiswa}
           columns={columns}
-          searchPlaceholder="Cari nama siswa, NIS..."
+          searchPlaceholder="Cari nama siswa, NISN..."
           onAdd={selectedKelas ? handleAdd : undefined}
           onEdit={handleEdit}
           onDelete={handleDelete}
