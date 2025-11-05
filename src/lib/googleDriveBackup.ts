@@ -89,8 +89,9 @@ class GoogleDriveBackup {
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
+        redirect: 'follow',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify(testData),
       });
@@ -99,7 +100,8 @@ class GoogleDriveBackup {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const text = await response.text();
+      const result = JSON.parse(text);
       
       if (result.success) {
         return { success: true };
@@ -170,8 +172,9 @@ class GoogleDriveBackup {
       // Send to webhook
       const response = await fetch(settings.webhookUrl, {
         method: 'POST',
+        redirect: 'follow',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify({
           fileName,
@@ -183,7 +186,8 @@ class GoogleDriveBackup {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const text = await response.text();
+      const result = JSON.parse(text);
 
       if (result.success) {
         // Update last backup date

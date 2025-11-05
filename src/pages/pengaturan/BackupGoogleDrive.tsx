@@ -221,25 +221,13 @@ const BackupGoogleDrive = () => {
     
     return ContentService.createTextOutput(
       JSON.stringify({ success: true, fileName: fileName })
-    ).setMimeType(ContentService.MimeType.JSON)
-    .setHeader('Access-Control-Allow-Origin', '*')
-    .setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    ).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
     return ContentService.createTextOutput(
       JSON.stringify({ success: false, error: error.toString() })
-    ).setMimeType(ContentService.MimeType.JSON)
-    .setHeader('Access-Control-Allow-Origin', '*');
+    ).setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-function doOptions(e) {
-  return ContentService.createTextOutput('')
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeader('Access-Control-Allow-Origin', '*')
-    .setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }`}</pre>
                 </div>
               </div>
