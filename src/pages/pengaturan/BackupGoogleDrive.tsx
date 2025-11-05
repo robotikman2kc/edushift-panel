@@ -200,7 +200,11 @@ const BackupGoogleDrive = () => {
                 <p className="font-medium">Copy Script Berikut</p>
                 <div className="mt-2 p-4 bg-muted rounded-lg">
                   <pre className="text-xs overflow-x-auto">
-{`function doPost(e) {
+{`function doGet(e) {
+  return handleResponse({ success: true, message: 'Ready' });
+}
+
+function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var fileName = data.fileName || 'backup_' + new Date().toISOString().split('T')[0] + '.json';
@@ -219,15 +223,17 @@ const BackupGoogleDrive = () => {
       folder.createFile(fileName, fileContent, MimeType.PLAIN_TEXT);
     }
     
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: true, fileName: fileName })
-    ).setMimeType(ContentService.MimeType.JSON);
+    return handleResponse({ success: true, fileName: fileName });
     
   } catch (error) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: false, error: error.toString() })
-    ).setMimeType(ContentService.MimeType.JSON);
+    return handleResponse({ success: false, error: error.toString() });
   }
+}
+
+function handleResponse(data) {
+  var output = ContentService.createTextOutput(JSON.stringify(data));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }`}</pre>
                 </div>
               </div>
@@ -255,14 +261,18 @@ const BackupGoogleDrive = () => {
               <div className="flex-1">
                 <p className="font-medium">Deploy sebagai Web App</p>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Klik Deploy → <strong>New deployment</strong> (BUKAN Manage deployments!)
+                  Klik Deploy → <strong>New deployment</strong>
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Select type: Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy
-                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>Select type: <strong>Web app</strong></li>
+                  <li>Description: Beri nama (misal: "v1", "v2", dll)</li>
+                  <li>Execute as: <strong>Me</strong></li>
+                  <li>Who has access: <strong>Anyone</strong></li>
+                  <li>Klik <strong>Deploy</strong></li>
+                </ul>
                 <div className="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
                   <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                    ⚠️ Penting: Setiap kali update script, buat <strong>New deployment</strong> baru untuk mendapatkan URL terbaru!
+                    ⚠️ PENTING: Setiap update script, WAJIB buat <strong>New deployment</strong> baru (jangan update yang lama)!
                   </p>
                 </div>
               </div>
