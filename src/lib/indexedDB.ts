@@ -205,21 +205,7 @@ class IndexedDBManager {
       }
     }
 
-    // Add default jenis penilaian if empty
-    const jenisPenilaian = await this.select('jenis_penilaian');
-    if (jenisPenilaian.length === 0) {
-      const defaultPenilaian = [
-        { nama_kategori: 'PH1', bobot: 20, deskripsi: 'Penilaian Harian 1', status: 'Aktif' },
-        { nama_kategori: 'PH2', bobot: 20, deskripsi: 'Penilaian Harian 2', status: 'Aktif' },
-        { nama_kategori: 'KUIS', bobot: 15, deskripsi: 'Kuis', status: 'Aktif' },
-        { nama_kategori: 'UTS', bobot: 20, deskripsi: 'Ujian Tengah Semester', status: 'Aktif' },
-        { nama_kategori: 'UAS', bobot: 25, deskripsi: 'Ujian Akhir Semester', status: 'Aktif' }
-      ];
-
-      for (const penilaian of defaultPenilaian) {
-        await this.insert('jenis_penilaian', penilaian);
-      }
-    }
+    // Default jenis penilaian removed - user will create their own categories
   }
 
   // Select all records from table
