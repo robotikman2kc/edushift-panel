@@ -23,6 +23,7 @@ interface CalendarData {
   holidayName?: string;
   hasNotes: boolean;
   noteColor?: string;
+  noteText?: string;
 }
 
 export default function Kalender() {
@@ -232,6 +233,7 @@ export default function Kalender() {
         };
         existing.hasNotes = true;
         existing.noteColor = (note as any).warna || "bg-purple-500";
+        existing.noteText = note.catatan;
         dataMap.set(note.tanggal, existing);
       });
 

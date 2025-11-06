@@ -11,6 +11,7 @@ interface CalendarData {
   holidayName?: string;
   hasNotes: boolean;
   noteColor?: string;
+  noteText?: string;
 }
 
 interface CalendarGridProps {
@@ -70,6 +71,7 @@ export function CalendarGrid({ currentDate, calendarData, selectedDate, onDateCl
               holidayName={dayData.holidayName}
               hasNotes={dayData.hasNotes}
               noteColor={dayData.noteColor}
+              noteText={dayData.noteText}
               onClick={() => onDateClick(day)}
             />
           );

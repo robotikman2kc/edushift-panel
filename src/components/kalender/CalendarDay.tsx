@@ -14,6 +14,7 @@ interface CalendarDayProps {
   holidayName?: string;
   hasNotes?: boolean;
   noteColor?: string;
+  noteText?: string;
   onClick: () => void;
 }
 
@@ -30,6 +31,7 @@ export function CalendarDay({
   holidayName,
   hasNotes = false,
   noteColor,
+  noteText,
   onClick,
 }: CalendarDayProps) {
   const dayNumber = format(date, "d");
@@ -76,7 +78,7 @@ export function CalendarDay({
         
         {hasNotes && (
           <div className="text-[10px] text-white font-medium mb-1 line-clamp-2 drop-shadow">
-            {isHoliday ? holidayName : "Ada Catatan"}
+            {noteText || "Ada Catatan"}
           </div>
         )}
         
