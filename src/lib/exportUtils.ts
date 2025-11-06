@@ -140,24 +140,24 @@ export const generatePDFBlob = (
         currentY += 8;
       }
 
-      // Add teacher info if available
+      // Add teacher/employee info if available
       if (template.teacherInfo) {
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(0, 0, 0);
-        const teacherY = currentY;
+        const infoY = currentY;
         
         if (title.includes('Jurnal')) {
-          // Journal reports: Show employee info left-aligned
-          doc.text(`Nama: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
-          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 5);
-          doc.text(`Jabatan: ${template.teacherInfo.jabatan || '-'}`, template.layout.margins.left, teacherY + 10);
-          doc.text(`Satuan Kerja: ${template.teacherInfo.satuan_kerja || '-'}`, template.layout.margins.left, teacherY + 15);
+          // Journal reports: Show employee info left-aligned above table
+          doc.text(`Nama: ${template.teacherInfo.name}`, template.layout.margins.left, infoY);
+          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, infoY + 5);
+          doc.text(`Jabatan: ${template.teacherInfo.jabatan || '-'}`, template.layout.margins.left, infoY + 10);
+          doc.text(`Satuan Kerja: ${template.teacherInfo.satuan_kerja || '-'}`, template.layout.margins.left, infoY + 15);
           currentY += 22;
         } else if (title.includes('Nilai')) {
           // Grade reports: Show subject info
-          doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
-          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 4);
-          doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
+          doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, infoY);
+          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, infoY + 4);
+          doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, infoY + 8);
           currentY += 16;
         }
       }
@@ -270,30 +270,29 @@ export const generatePDFBlob = (
         const leftColumnX = template.layout.margins.left;
         const rightColumnX = pageWidth - 80;
         
-        // Left side: Pejabat Penilai (Principal)
+        // Left side: Pejabat Penilai (Principal) - NO DATE
         const principalName = template.teacherInfo?.kepala_sekolah_nama || 'Kepala Sekolah';
         const principalNIP = template.teacherInfo?.kepala_sekolah_nip;
         const schoolName = template.header?.schoolName || 'Sekolah';
         
-        doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, leftColumnX, signatureStartY);
-        doc.text('Pejabat Penilai,', leftColumnX, signatureStartY + 5);
-        doc.text(`Kepala ${schoolName}`, leftColumnX, signatureStartY + 10);
-        doc.text('', leftColumnX, signatureStartY + 25); // Space for signature
-        doc.text(`(${principalName})`, leftColumnX, signatureStartY + 30);
+        doc.text('Pejabat Penilai,', leftColumnX, signatureStartY);
+        doc.text(`Kepala ${schoolName}`, leftColumnX, signatureStartY + 5);
+        doc.text('', leftColumnX, signatureStartY + 20); // Space for signature
+        doc.text(`(${principalName})`, leftColumnX, signatureStartY + 25);
         if (principalNIP) {
-          doc.text(`NIP: ${principalNIP}`, leftColumnX, signatureStartY + 35);
+          doc.text(`NIP: ${principalNIP}`, leftColumnX, signatureStartY + 30);
         }
         
-        // Right side: Pegawai Yang Dinilai (Teacher)
+        // Right side: Pegawai Yang Dinilai (Teacher) - WITH DATE
         const teacherName = template.teacherInfo?.name || 'Guru';
         const teacherNIP = template.teacherInfo?.nip;
         
         doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
         doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
-        doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
-        doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 30);
+        doc.text('', rightColumnX, signatureStartY + 20); // Space for signature
+        doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 25);
         if (teacherNIP) {
-          doc.text(`NIP: ${teacherNIP}`, rightColumnX, signatureStartY + 35);
+          doc.text(`NIP: ${teacherNIP}`, rightColumnX, signatureStartY + 30);
         }
       } else {
         // Attendance and Grade reports: Single signature on the right
