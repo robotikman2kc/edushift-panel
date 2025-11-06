@@ -209,6 +209,10 @@ export const generatePDFBlob = (
 
     // Generate table
     let tableEndY = currentY;
+    
+    // Get row height from template settings
+    const rowHeight = (template as any).tableSettings?.rowHeight || 8;
+    
     autoTable(doc, {
       head: [tableHeaders],
       body: tableData,
@@ -217,11 +221,13 @@ export const generatePDFBlob = (
         fontSize: template.styling.fontSize.body,
         cellPadding: 2,
         font: template.styling.fontFamily,
+        minCellHeight: rowHeight,
       },
       headStyles: {
         fillColor: template.styling.primaryColor,
         textColor: 255,
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        minCellHeight: rowHeight,
       },
       alternateRowStyles: {
         fillColor: template.styling.secondaryColor

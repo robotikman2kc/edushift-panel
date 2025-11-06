@@ -29,6 +29,9 @@ interface PDFFormatSettings {
     kepala_sekolah_nama: string;
     kepala_sekolah_nip: string;
   };
+  tableSettings: {
+    rowHeight: number;
+  };
   attendanceFormat: {
     showLogo: boolean;
     showDate: boolean;
@@ -79,6 +82,9 @@ const FormatPDF: React.FC = () => {
             kepala_sekolah_nama: parsedSettings.defaultTeacher?.kepala_sekolah_nama || '',
             kepala_sekolah_nip: parsedSettings.defaultTeacher?.kepala_sekolah_nip || '',
           },
+          tableSettings: parsedSettings.tableSettings || {
+            rowHeight: 8,
+          },
           attendanceFormat: parsedSettings.attendanceFormat || {
             showLogo: true,
             showDate: true,
@@ -122,6 +128,9 @@ const FormatPDF: React.FC = () => {
         jabatan: '',
         kepala_sekolah_nama: '',
         kepala_sekolah_nip: '',
+      },
+      tableSettings: {
+        rowHeight: 8,
       },
     attendanceFormat: {
       showLogo: true,
@@ -302,9 +311,10 @@ const FormatPDF: React.FC = () => {
       <PageHeader title="Format PDF" />
       
       <Tabs defaultValue="school" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="school">Info Sekolah</TabsTrigger>
           <TabsTrigger value="teacher">Data Guru</TabsTrigger>
+          <TabsTrigger value="table">Tabel</TabsTrigger>
           <TabsTrigger value="attendance">Kehadiran</TabsTrigger>
           <TabsTrigger value="grades">Penilaian</TabsTrigger>
           <TabsTrigger value="journal">Jurnal</TabsTrigger>
@@ -567,6 +577,70 @@ const FormatPDF: React.FC = () => {
                     Ditandatangani oleh: <strong>Kepala Sekolah</strong> 
                     (sesuai data kepala sekolah di atas)
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="table">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pengaturan Tabel</CardTitle>
+              <CardDescription>
+                Atur tampilan tabel pada semua laporan PDF
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="row-height">Tinggi Baris Tabel (dalam satuan)</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id="row-height"
+                      type="number"
+                      min="6"
+                      max="20"
+                      step="1"
+                      value={settings.tableSettings.rowHeight}
+                      onChange={(e) =>
+                        setSettings(prev => ({
+                          ...prev,
+                          tableSettings: { ...prev.tableSettings, rowHeight: Number(e.target.value) },
+                        }))
+                      }
+                      className="w-32"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      Nilai: {settings.tableSettings.rowHeight} (Default: 8)
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Semakin besar nilai, semakin tinggi baris tabel. Rentang: 6-20
+                  </p>
+                </div>
+
+                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                  <h4 className="font-medium text-sm">Panduan Tinggi Baris:</h4>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• <strong>6-7</strong>: Baris sangat rapat (untuk data banyak)</li>
+                    <li>• <strong>8-10</strong>: Baris standar (default, direkomendasikan)</li>
+                    <li>• <strong>11-15</strong>: Baris lebih longgar (lebih mudah dibaca)</li>
+                    <li>• <strong>16-20</strong>: Baris sangat longgar (untuk data sedikit)</li>
+                  </ul>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSettings(prev => ({
+                      ...prev,
+                      tableSettings: { rowHeight: 8 }
+                    }))}
+                  >
+                    Reset ke Default
+                  </Button>
                 </div>
               </div>
             </CardContent>
