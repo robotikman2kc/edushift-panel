@@ -122,22 +122,22 @@ export function DataTable({
   const getRowHeightClass = () => {
     switch (rowHeight) {
       case 'compact':
-        return 'h-10 text-sm';
+        return 'h-8 text-xs';
       case 'comfortable':
-        return 'h-16 text-base';
+        return 'h-14 text-base';
       default:
-        return 'h-12';
+        return 'h-10 text-sm';
     }
   };
 
   const getCellPaddingClass = () => {
     switch (rowHeight) {
       case 'compact':
-        return 'py-2';
+        return 'py-1';
       case 'comfortable':
-        return 'py-4';
-      default:
         return 'py-3';
+      default:
+        return 'py-2';
     }
   };
 
