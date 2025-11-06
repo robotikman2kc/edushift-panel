@@ -122,11 +122,22 @@ export function DataTable({
   const getRowHeightClass = () => {
     switch (rowHeight) {
       case 'compact':
-        return 'h-10';
+        return 'h-10 text-sm';
       case 'comfortable':
-        return 'h-14';
+        return 'h-16 text-base';
       default:
         return 'h-12';
+    }
+  };
+
+  const getCellPaddingClass = () => {
+    switch (rowHeight) {
+      case 'compact':
+        return 'py-2';
+      case 'comfortable':
+        return 'py-4';
+      default:
+        return 'py-3';
     }
   };
 
@@ -620,7 +631,7 @@ export function DataTable({
                   paginatedData.map((item, index) => (
                     <TableRow key={item.id || index} className={getRowHeightClass()}>
                       {enableCheckbox && (
-                        <TableCell>
+                        <TableCell className={getCellPaddingClass()}>
                           <Checkbox
                             checked={selectedIds.has(item.id)}
                             onCheckedChange={() => handleToggleItem(item.id)}
@@ -635,7 +646,7 @@ export function DataTable({
                           <TableCell 
                             key={column.key}
                             onDoubleClick={() => column.key !== 'no' && onEdit && handleCellEdit(item.id, column.key, item[column.key] || "")}
-                            className="cursor-pointer hover:bg-muted/30 transition-colors"
+                            className={`cursor-pointer hover:bg-muted/30 transition-colors ${getCellPaddingClass()}`}
                           >
                             {isEditing ? (
                               <div className="flex gap-1">
@@ -662,7 +673,7 @@ export function DataTable({
                           </TableCell>
                         );
                       })}
-                      <TableCell>
+                      <TableCell className={getCellPaddingClass()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
