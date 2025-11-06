@@ -116,13 +116,20 @@ export function AppSidebar() {
         try {
           const parsed = JSON.parse(savedProfile);
           
-          // Load avatar dari OPFS jika ada
+          console.log('AppSidebar loading profile:', parsed);
+          
+          // Selalu load avatar dari OPFS jika menggunakan opfs://
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
+            console.log('AppSidebar loading avatar from OPFS:', parsed.avatar_url);
             const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
             if (opfsUrl) {
+              console.log('AppSidebar avatar loaded:', opfsUrl);
               setUserProfile({ ...parsed, avatar_url: opfsUrl });
-              return;
+            } else {
+              console.error('AppSidebar failed to load avatar from OPFS');
+              setUserProfile({ ...parsed, avatar_url: '' });
             }
+            return;
           }
           
           setUserProfile(parsed);

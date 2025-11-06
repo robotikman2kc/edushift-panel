@@ -50,14 +50,20 @@ const Profil = () => {
       try {
         const parsed = JSON.parse(savedProfile);
         
-        // Load avatar dari OPFS jika ada
+        // Selalu load avatar dari OPFS jika menggunakan opfs://
         if (parsed.avatar_url) {
           if (parsed.avatar_url.startsWith('opfs://')) {
+            console.log('Loading avatar from OPFS:', parsed.avatar_url);
             const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
             if (opfsUrl) {
+              console.log('Avatar loaded successfully:', opfsUrl);
               setProfile({ ...parsed, avatar_url: opfsUrl });
-              return;
+            } else {
+              console.error('Failed to load avatar from OPFS');
+              // Set profile without avatar if OPFS fails
+              setProfile({ ...parsed, avatar_url: '' });
             }
+            return;
           } else if (parsed.avatar_url.startsWith('data:')) {
             // Migrate dari base64 ke OPFS
             const userId = 'default-user';
@@ -150,19 +156,23 @@ const Profil = () => {
         throw new Error('Failed to save avatar');
       }
       
-      // Update profile dengan OPFS path
-      const updatedProfile = { ...profile, avatar_url: avatarPath };
+      console.log('Avatar saved to OPFS:', avatarPath);
       
-      // Save ke localStorage dengan OPFS path
+      // PENTING: Simpan OPFS path (bukan blob URL) ke localStorage
+      const updatedProfile = { ...profile, avatar_url: avatarPath };
       localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
       
-      // Untuk preview, load dari OPFS
+      console.log('Profile saved to localStorage:', updatedProfile);
+      
+      // Untuk preview, load blob URL dari OPFS
       const previewUrl = avatarPath.startsWith('opfs://') 
         ? await opfsStorage.getFile(avatarPath)
         : avatarPath;
       
+      console.log('Preview URL generated:', previewUrl);
+      
       // Update state dengan preview URL untuk display
-      setProfile({ ...updatedProfile, avatar_url: previewUrl || avatarPath });
+      setProfile({ ...profile, avatar_url: previewUrl || '' });
       
       // Trigger custom event to update other components
       window.dispatchEvent(new Event('profileUpdated'));

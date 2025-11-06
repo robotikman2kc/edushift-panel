@@ -47,13 +47,20 @@ export function TopBar() {
         try {
           const parsed = JSON.parse(savedProfile);
           
-          // Load avatar dari OPFS jika ada
+          console.log('TopBar loading profile:', parsed);
+          
+          // Selalu load avatar dari OPFS jika menggunakan opfs://
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
+            console.log('TopBar loading avatar from OPFS:', parsed.avatar_url);
             const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
             if (opfsUrl) {
+              console.log('TopBar avatar loaded:', opfsUrl);
               setUserProfile({ ...parsed, avatar_url: opfsUrl });
-              return;
+            } else {
+              console.error('TopBar failed to load avatar from OPFS');
+              setUserProfile({ ...parsed, avatar_url: '' });
             }
+            return;
           }
           
           setUserProfile(parsed);
