@@ -485,15 +485,15 @@ export default function Kalender() {
         <div className="lg:col-span-2">
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <CalendarHeader
-                  currentDate={currentDate}
-                  onPreviousMonth={handlePreviousMonth}
-                  onNextMonth={handleNextMonth}
-                  onMonthChange={handleMonthChange}
-                  onYearChange={handleYearChange}
-                  onToday={handleToday}
-                />
+              <CalendarHeader
+                currentDate={currentDate}
+                onPreviousMonth={handlePreviousMonth}
+                onNextMonth={handleNextMonth}
+                onMonthChange={handleMonthChange}
+                onYearChange={handleYearChange}
+                onToday={handleToday}
+              />
+              <div className="flex justify-end mb-4 mt-2">
                 <Button onClick={handleAddNote} size="sm" disabled={!selectedDate}>
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah Catatan
