@@ -86,6 +86,7 @@ interface DataTableProps {
   title?: string;
   enableCheckbox?: boolean;
   tableId?: string; // ID unik untuk menyimpan preferences
+  additionalPDFInfo?: { kelas?: string; bulan?: string }; // For passing additional info to PDF
 }
 
 export function DataTable({
@@ -98,6 +99,7 @@ export function DataTable({
   onImport,
   loading = false,
   formFields = [],
+  additionalPDFInfo,
   searchPlaceholder = "Cari data...",
   title,
   enableCheckbox = false,
@@ -341,7 +343,8 @@ export function DataTable({
         exportColumns,
         title || 'Data Export',
         `${title || 'data'}_${new Date().toISOString().split('T')[0]}.pdf`,
-        template
+        template,
+        additionalPDFInfo
       );
       
       if (success) {

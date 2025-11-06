@@ -140,6 +140,16 @@ export const generatePDFBlob = (
         currentY += 8;
       }
 
+      // Add month info for journal reports (before teacher info)
+      if (title.includes('Jurnal') && additionalInfo?.bulan) {
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(0, 0, 0);
+        const bulanText = `Bulan: ${additionalInfo.bulan}`;
+        const bulanWidth = doc.getTextWidth(bulanText);
+        doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
+        currentY += 8;
+      }
+
       // Add teacher/employee info if available
       if (template.teacherInfo) {
         doc.setFontSize(template.styling.fontSize.header);
@@ -147,11 +157,23 @@ export const generatePDFBlob = (
         const infoY = currentY;
         
         if (title.includes('Jurnal')) {
-          // Journal reports: Show employee info left-aligned above table
-          doc.text(`Nama: ${template.teacherInfo.name}`, template.layout.margins.left, infoY);
-          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, infoY + 5);
-          doc.text(`Jabatan: ${template.teacherInfo.jabatan || '-'}`, template.layout.margins.left, infoY + 10);
-          doc.text(`Satuan Kerja: ${template.teacherInfo.satuan_kerja || '-'}`, template.layout.margins.left, infoY + 15);
+          // Journal reports: Show employee info left-aligned above table with aligned colons
+          const labelWidth = 25; // Fixed width for labels to align colons
+          doc.text('Nama', template.layout.margins.left, infoY);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY);
+          doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
+          
+          doc.text('NIP', template.layout.margins.left, infoY + 5);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
+          doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, infoY + 5);
+          
+          doc.text('Jabatan', template.layout.margins.left, infoY + 10);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
+          doc.text(template.teacherInfo.jabatan || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
+          
+          doc.text('Satuan Kerja', template.layout.margins.left, infoY + 15);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
+          doc.text(template.teacherInfo.satuan_kerja || '-', template.layout.margins.left + labelWidth + 3, infoY + 15);
           currentY += 22;
         } else if (title.includes('Nilai')) {
           // Grade reports: Show subject info
@@ -198,15 +220,18 @@ export const generatePDFBlob = (
       doc.setTextColor(0, 0, 0); // Reset text color
     }
 
-    // Prepare table data with numbering
-    const tableHeaders = ['No.', ...columns.map(col => col.label)];
-    const tableData = data.map((item, index) => [
-      String(index + 1), // Add row number
-      ...columns.map(col => {
+    // Prepare table data with numbering (unless 'no' column already exists)
+    const hasNoColumn = columns.some(col => col.key === 'no' || col.label === 'No' || col.label === 'No.');
+    const tableHeaders = hasNoColumn 
+      ? columns.map(col => col.label)
+      : ['No.', ...columns.map(col => col.label)];
+    const tableData = data.map((item, index) => {
+      const rowData = columns.map(col => {
         const value = item[col.key];
         return value !== null && value !== undefined ? String(value) : '-';
-      })
-    ]);
+      });
+      return hasNoColumn ? rowData : [String(index + 1), ...rowData];
+    });
 
     // Generate table
     let tableEndY = currentY;
