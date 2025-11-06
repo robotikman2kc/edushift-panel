@@ -31,7 +31,6 @@ interface PDFFormatSettings {
   };
   tableSettings: {
     rowHeight: number;
-    appRowHeight: 'compact' | 'normal' | 'comfortable';
   };
   attendanceFormat: {
     showLogo: boolean;
@@ -85,7 +84,6 @@ const FormatPDF: React.FC = () => {
           },
           tableSettings: parsedSettings.tableSettings || {
             rowHeight: 8,
-            appRowHeight: 'normal',
           },
           attendanceFormat: parsedSettings.attendanceFormat || {
             showLogo: true,
@@ -133,7 +131,6 @@ const FormatPDF: React.FC = () => {
       },
       tableSettings: {
         rowHeight: 8,
-        appRowHeight: 'normal',
       },
     attendanceFormat: {
       showLogo: true,
@@ -635,54 +632,10 @@ const FormatPDF: React.FC = () => {
                 </div>
               </div>
 
-              <div className="border-t pt-6 space-y-4">
-                <h3 className="font-semibold text-base">Tinggi Baris Tabel di Aplikasi</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="app-row-height">Ukuran Baris Tabel</Label>
-                  <Select
-                    value={settings.tableSettings.appRowHeight}
-                    onValueChange={(value: 'compact' | 'normal' | 'comfortable') =>
-                      setSettings(prev => ({
-                        ...prev,
-                        tableSettings: { ...prev.tableSettings, appRowHeight: value },
-                      }))
-                    }
-                  >
-                    <SelectTrigger id="app-row-height">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-border z-50">
-                      <SelectItem value="compact">Compact (Rapat)</SelectItem>
-                      <SelectItem value="normal">Normal (Default)</SelectItem>
-                      <SelectItem value="comfortable">Comfortable (Longgar)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Atur tinggi baris untuk semua tabel di aplikasi
-                  </p>
-                </div>
-
-                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                  <h4 className="font-medium text-sm">Deskripsi Ukuran:</h4>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>• <strong>Compact</strong>: Baris lebih rapat, cocok untuk layar kecil atau data banyak</li>
-                    <li>• <strong>Normal</strong>: Ukuran standar, seimbang untuk kebanyakan kasus</li>
-                    <li>• <strong>Comfortable</strong>: Baris lebih longgar, mudah dibaca dan nyaman</li>
-                  </ul>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setSettings(prev => ({
-                      ...prev,
-                      tableSettings: { rowHeight: 8, appRowHeight: 'normal' }
-                    }))}
-                  >
-                    Reset ke Default
-                  </Button>
-                </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Info:</strong> Tinggi baris tabel di aplikasi dapat diatur langsung pada setiap tabel menggunakan menu dropdown yang tersedia di bagian atas tabel.
+                </p>
               </div>
             </CardContent>
           </Card>

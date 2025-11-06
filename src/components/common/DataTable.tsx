@@ -47,7 +47,8 @@ import {
   Trash2,
   FileSpreadsheet,
   FileText,
-  FileDown
+  FileDown,
+  Settings2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -108,7 +109,7 @@ export function DataTable({
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [editingCell, setEditingCell] = useState<{ rowId: string; columnKey: string } | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [rowHeightClass, setRowHeightClass] = useState("h-12");
+  const [rowHeight, setRowHeight] = useState<'compact' | 'normal' | 'comfortable'>('normal');
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -118,46 +119,16 @@ export function DataTable({
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
 
-  // Load table settings from localStorage
-  useEffect(() => {
-    const loadTableSettings = () => {
-      const settings = localStorage.getItem('pdfFormatSettings');
-      if (settings) {
-        try {
-          const parsed = JSON.parse(settings);
-          const appRowHeight = parsed.tableSettings?.appRowHeight || 'normal';
-          
-          switch (appRowHeight) {
-            case 'compact':
-              setRowHeightClass('h-10');
-              break;
-            case 'comfortable':
-              setRowHeightClass('h-14');
-              break;
-            default:
-              setRowHeightClass('h-12');
-          }
-        } catch (error) {
-          console.error('Error loading table settings:', error);
-        }
-      }
-    };
-
-    loadTableSettings();
-
-    // Listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'pdfFormatSettings') {
-        loadTableSettings();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  const getRowHeightClass = () => {
+    switch (rowHeight) {
+      case 'compact':
+        return 'h-10';
+      case 'comfortable':
+        return 'h-14';
+      default:
+        return 'h-12';
+    }
+  };
 
   const filteredData = data.filter((item) =>
     Object.values(item).some((value) =>
@@ -586,6 +557,17 @@ export function DataTable({
                 className="pl-10"
               />
             </div>
+            <Select value={rowHeight} onValueChange={(value: any) => setRowHeight(value)}>
+              <SelectTrigger className="w-[140px]">
+                <Settings2 className="mr-2 h-4 w-4" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="compact">Compact</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="comfortable">Comfortable</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm">
               <Filter className="mr-2 h-4 w-4" />
               Filter
@@ -636,7 +618,7 @@ export function DataTable({
                   </TableRow>
                 ) : (
                   paginatedData.map((item, index) => (
-                    <TableRow key={item.id || index} className={rowHeightClass}>
+                    <TableRow key={item.id || index} className={getRowHeightClass()}>
                       {enableCheckbox && (
                         <TableCell>
                           <Checkbox
