@@ -123,7 +123,7 @@ export function DayDetailPanel({
             Status Kehadiran
           </h3>
           {attendanceCount > 0 ? (
-            <Badge variant="secondary">{attendanceCount} kelas tercatat</Badge>
+            <Badge variant="secondary">{attendanceCount} siswa tercatat</Badge>
           ) : (
             <p className="text-sm text-muted-foreground">Belum ada input kehadiran</p>
           )}
