@@ -125,8 +125,9 @@ export const generatePDFBlob = (
         currentY += 6;
       }
 
-      // Add separator line
-      doc.setDrawColor(...template.styling.primaryColor);
+      // Add separator line with primary color
+      const [r, g, b] = template.styling.primaryColor;
+      doc.setDrawColor(r, g, b);
       doc.setLineWidth(0.5);
       doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
       currentY += 8;

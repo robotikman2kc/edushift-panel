@@ -237,16 +237,32 @@ const FormatPDF: React.FC = () => {
           
           <div className="space-y-2">
             <Label>Warna Header</Label>
-            <Input
-              type="color"
-              value={format.headerColor}
-              onChange={(e) =>
-                setSettings(prev => ({
-                  ...prev,
-                  [formatType]: { ...prev[formatType], headerColor: e.target.value },
-                }))
-              }
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="color"
+                value={format.headerColor}
+                onChange={(e) =>
+                  setSettings(prev => ({
+                    ...prev,
+                    [formatType]: { ...prev[formatType], headerColor: e.target.value },
+                  }))
+                }
+                className="w-20 h-10 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <Input
+                type="text"
+                value={format.headerColor}
+                onChange={(e) =>
+                  setSettings(prev => ({
+                    ...prev,
+                    [formatType]: { ...prev[formatType], headerColor: e.target.value },
+                  }))
+                }
+                className="flex-1"
+                placeholder="#000000"
+              />
+            </div>
           </div>
         </div>
 
