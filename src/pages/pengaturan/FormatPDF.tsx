@@ -26,6 +26,7 @@ interface PDFFormatSettings {
     nip: string;
     subject: string;
     jabatan: string;
+    satuan_kerja: string;
     kepala_sekolah_nama: string;
     kepala_sekolah_nip: string;
   };
@@ -79,6 +80,7 @@ const FormatPDF: React.FC = () => {
             nip: parsedSettings.defaultTeacher?.nip || '',
             subject: parsedSettings.defaultTeacher?.subject || '',
             jabatan: parsedSettings.defaultTeacher?.jabatan || '',
+            satuan_kerja: parsedSettings.defaultTeacher?.satuan_kerja || '',
             kepala_sekolah_nama: parsedSettings.defaultTeacher?.kepala_sekolah_nama || '',
             kepala_sekolah_nip: parsedSettings.defaultTeacher?.kepala_sekolah_nip || '',
           },
@@ -126,6 +128,7 @@ const FormatPDF: React.FC = () => {
         nip: '',
         subject: '',
         jabatan: '',
+        satuan_kerja: '',
         kepala_sekolah_nama: '',
         kepala_sekolah_nip: '',
       },
@@ -523,6 +526,21 @@ const FormatPDF: React.FC = () => {
                     }
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-work-unit">Satuan Kerja</Label>
+                  <Input
+                    id="teacher-work-unit"
+                    placeholder="Misal: SD Negeri 1, SMP Negeri 2, dll"
+                    value={settings.defaultTeacher.satuan_kerja}
+                    onChange={(e) =>
+                      setSettings(prev => ({
+                        ...prev,
+                        defaultTeacher: { ...prev.defaultTeacher, satuan_kerja: e.target.value },
+                      }))
+                    }
+                  />
+                </div>
               </div>
 
               <div className="border-t pt-4">
@@ -590,8 +608,7 @@ const FormatPDF: React.FC = () => {
                 <div className="p-4 border rounded-lg">
                   <h5 className="font-medium text-sm mb-2">Laporan Jurnal</h5>
                   <p className="text-xs text-muted-foreground">
-                    Ditandatangani oleh: <strong>Kepala Sekolah</strong> 
-                    (sesuai data kepala sekolah di atas)
+                    Ditandatangani oleh: <strong>Pejabat Penilai (Kepala Sekolah)</strong> dan <strong>Pegawai Yang Dinilai (Guru)</strong>
                   </p>
                 </div>
               </div>

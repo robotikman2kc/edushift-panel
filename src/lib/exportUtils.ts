@@ -39,7 +39,7 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
       },
       reportTitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
                 : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
-                : 'JURNAL GURU',
+                : 'LAPORAN KINERJA BULANAN',
       footer: {
         text: '', // Remove footer text to eliminate school name/email in footer
         showPageNumbers: true,
@@ -140,15 +140,26 @@ export const generatePDFBlob = (
         currentY += 8;
       }
 
-      // Add teacher info if available (for grade and journal reports)
-      if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
+      // Add teacher info if available
+      if (template.teacherInfo) {
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(0, 0, 0);
         const teacherY = currentY;
-        doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
-        doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 4);
-        doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
-        currentY += 16;
+        
+        if (title.includes('Jurnal')) {
+          // Journal reports: Show employee info left-aligned
+          doc.text(`Nama: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
+          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 5);
+          doc.text(`Jabatan: ${template.teacherInfo.jabatan || '-'}`, template.layout.margins.left, teacherY + 10);
+          doc.text(`Satuan Kerja: ${template.teacherInfo.satuan_kerja || '-'}`, template.layout.margins.left, teacherY + 15);
+          currentY += 22;
+        } else if (title.includes('Nilai')) {
+          // Grade reports: Show subject info
+          doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, teacherY);
+          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, teacherY + 4);
+          doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
+          currentY += 16;
+        }
       }
 
       // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
@@ -252,35 +263,53 @@ export const generatePDFBlob = (
       // Position signature section right below the table with some spacing
       const signatureStartY = tableEndY + 15;
       const pageWidth = doc.internal.pageSize.getWidth();
-      
-      // Determine signer based on report type
-      let signerName, signerPosition, signerNIP;
+      const signatureLocation = template.signatureLocation || 'Jakarta';
       
       if (title.includes('Jurnal')) {
-        // Journal reports are signed by Principal
-        signerName = template.teacherInfo?.kepala_sekolah_nama || 'Kepala Sekolah';
-        signerPosition = 'Kepala Sekolah';
-        signerNIP = template.teacherInfo?.kepala_sekolah_nip;
+        // Journal reports: Two signatures side by side
+        const leftColumnX = template.layout.margins.left;
+        const rightColumnX = pageWidth - 80;
+        
+        // Left side: Pejabat Penilai (Principal)
+        const principalName = template.teacherInfo?.kepala_sekolah_nama || 'Kepala Sekolah';
+        const principalNIP = template.teacherInfo?.kepala_sekolah_nip;
+        const schoolName = template.header?.schoolName || 'Sekolah';
+        
+        doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, leftColumnX, signatureStartY);
+        doc.text('Pejabat Penilai,', leftColumnX, signatureStartY + 5);
+        doc.text(`Kepala ${schoolName}`, leftColumnX, signatureStartY + 10);
+        doc.text('', leftColumnX, signatureStartY + 25); // Space for signature
+        doc.text(`(${principalName})`, leftColumnX, signatureStartY + 30);
+        if (principalNIP) {
+          doc.text(`NIP: ${principalNIP}`, leftColumnX, signatureStartY + 35);
+        }
+        
+        // Right side: Pegawai Yang Dinilai (Teacher)
+        const teacherName = template.teacherInfo?.name || 'Guru';
+        const teacherNIP = template.teacherInfo?.nip;
+        
+        doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
+        doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
+        doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
+        doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 30);
+        if (teacherNIP) {
+          doc.text(`NIP: ${teacherNIP}`, rightColumnX, signatureStartY + 35);
+        }
       } else {
-        // Attendance and Grade reports are signed by Teacher
-        signerName = template.teacherInfo?.name || 'Guru';
-        signerPosition = template.teacherInfo?.jabatan || 'Guru';
-        signerNIP = template.teacherInfo?.nip;
-      }
-      
-      // Remove left side date - commented out
-      // doc.text(`Jakarta, ${new Date().toLocaleDateString('id-ID')}`, template.layout.margins.left, signatureStartY);
-      
-      // Right side: Signature section
-      const rightColumnX = pageWidth - 80;
-      const signatureLocation = template.signatureLocation || 'Jakarta';
-      doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
-      doc.text('Mengetahui,', rightColumnX, signatureStartY + 5);
-      doc.text(signerPosition, rightColumnX, signatureStartY + 10);
-      doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
-      doc.text(`(${signerName})`, rightColumnX, signatureStartY + 30);
-      if (signerNIP) {
-        doc.text(`NIP: ${signerNIP}`, rightColumnX, signatureStartY + 35);
+        // Attendance and Grade reports: Single signature on the right
+        const signerName = template.teacherInfo?.name || 'Guru';
+        const signerPosition = template.teacherInfo?.jabatan || 'Guru';
+        const signerNIP = template.teacherInfo?.nip;
+        
+        const rightColumnX = pageWidth - 80;
+        doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
+        doc.text('Mengetahui,', rightColumnX, signatureStartY + 5);
+        doc.text(signerPosition, rightColumnX, signatureStartY + 10);
+        doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
+        doc.text(`(${signerName})`, rightColumnX, signatureStartY + 30);
+        if (signerNIP) {
+          doc.text(`NIP: ${signerNIP}`, rightColumnX, signatureStartY + 35);
+        }
       }
     }
 
