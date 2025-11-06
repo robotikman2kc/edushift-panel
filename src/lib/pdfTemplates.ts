@@ -3,11 +3,10 @@ export interface PDFTemplate {
   name: string;
   header?: {
     logo?: string;
-    title: string;
-    subtitle?: string;
+    schoolName: string;
     address?: string;
-    showDate?: boolean;
   };
+  reportTitle?: string; // Judul laporan yang ditampilkan di bawah garis
   footer?: {
     text?: string;
     showPageNumbers?: boolean;
@@ -56,10 +55,10 @@ export const defaultTemplate: PDFTemplate = {
   id: 'default',
   name: 'Template Default',
   header: {
-    title: 'Sistem Informasi Sekolah',
-    subtitle: 'Laporan Data',
-    showDate: true,
+    schoolName: 'Sistem Informasi Sekolah',
+    address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
   },
+  reportTitle: 'LAPORAN DATA',
   footer: {
     showPageNumbers: true,
     signatureSection: false,
@@ -92,11 +91,10 @@ export const attendanceTemplate: PDFTemplate = {
   id: 'attendance',
   name: 'Template Rekap Kehadiran',
   header: {
-    title: 'REKAP KEHADIRAN SISWA',
-    subtitle: 'Sistem Informasi Akademik',
+    schoolName: 'Sistem Informasi Akademik',
     address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
-    showDate: true,
   },
+  reportTitle: 'REKAP KEHADIRAN SISWA',
   footer: {
     text: 'Dokumen ini digenerate secara otomatis oleh sistem',
     showPageNumbers: true,
@@ -113,11 +111,10 @@ export const gradeTemplate: PDFTemplate = {
   id: 'grade',
   name: 'Template Nilai',
   header: {
-    title: 'LAPORAN NILAI SISWA',
-    subtitle: 'Sistem Informasi Akademik',
+    schoolName: 'Sistem Informasi Akademik',
     address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
-    showDate: true,
   },
+  reportTitle: 'LAPORAN NILAI SISWA',
   footer: {
     text: 'Laporan ini telah disahkan oleh sistem',
     showPageNumbers: true,
@@ -134,11 +131,10 @@ export const studentDataTemplate: PDFTemplate = {
   id: 'student',
   name: 'Template Data Siswa',
   header: {
-    title: 'DATA SISWA',
-    subtitle: 'Sistem Informasi Akademik',
+    schoolName: 'Sistem Informasi Akademik',
     address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
-    showDate: true,
   },
+  reportTitle: 'DATA SISWA',
   styling: {
     ...defaultTemplate.styling,
     primaryColor: [239, 68, 68], // Red for student data
@@ -150,11 +146,10 @@ export const teacherDataTemplate: PDFTemplate = {
   id: 'teacher',
   name: 'Template Data Guru',
   header: {
-    title: 'DATA GURU',
-    subtitle: 'Sistem Informasi Akademik',
+    schoolName: 'Sistem Informasi Akademik',
     address: 'Jl. Pendidikan No. 123, Kota Pendidikan',
-    showDate: true,
   },
+  reportTitle: 'DATA GURU',
   styling: {
     ...defaultTemplate.styling,
     primaryColor: [245, 158, 11], // Orange for teacher data

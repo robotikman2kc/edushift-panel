@@ -33,14 +33,13 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
       id: `custom-${templateType}`,
       name: `Custom ${templateType} Template`,
       header: {
-        title: settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
-        subtitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
-                : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
-                : 'JURNAL GURU',
+        schoolName: settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
         address: settings.schoolInfo?.address || '',
-        showDate: format?.showDate ?? true,
         logo: settings.schoolInfo?.logo,
       },
+      reportTitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
+                : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
+                : 'JURNAL GURU',
       footer: {
         text: '', // Remove footer text to eliminate school name/email in footer
         showPageNumbers: true,
@@ -110,21 +109,12 @@ export const generatePDFBlob = (
         }
       }
       
-      // Main title - always centered
+      // School name - always centered
       doc.setFontSize(template.styling.fontSize.title);
       doc.setTextColor(0, 0, 0);
-      const titleWidth = doc.getTextWidth(template.header.title);
-      doc.text(template.header.title, (pageWidth - titleWidth) / 2, currentY);
-      currentY += 8;
-
-      // Subtitle - always centered
-      if (template.header.subtitle) {
-        doc.setFontSize(template.styling.fontSize.subtitle);
-        doc.setTextColor(0, 0, 0);
-        const subtitleWidth = doc.getTextWidth(template.header.subtitle);
-        doc.text(template.header.subtitle, (pageWidth - subtitleWidth) / 2, currentY);
-        currentY += 6;
-      }
+      const schoolNameWidth = doc.getTextWidth(template.header.schoolName);
+      doc.text(template.header.schoolName, (pageWidth - schoolNameWidth) / 2, currentY);
+      currentY += 6;
 
       // Address - always centered
       if (template.header.address) {
@@ -135,14 +125,20 @@ export const generatePDFBlob = (
         currentY += 6;
       }
 
-      // Remove date section - commented out
-      // if (template.header.showDate) {
-      //   doc.setFontSize(template.styling.fontSize.header);
-      //   doc.setTextColor(0, 0, 0);
-      //   const dateText = `Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
-      //   doc.text(dateText, template.layout.margins.left, currentY);
-      //   currentY += 6;
-      // }
+      // Add separator line
+      doc.setDrawColor(...template.styling.primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
+      currentY += 8;
+      
+      // Report title - below the separator line, centered
+      if (template.reportTitle) {
+        doc.setFontSize(template.styling.fontSize.subtitle);
+        doc.setTextColor(0, 0, 0);
+        const reportTitleWidth = doc.getTextWidth(template.reportTitle);
+        doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
+        currentY += 8;
+      }
 
       // Add teacher info if available (for grade and journal reports)
       if (template.teacherInfo && (title.includes('Nilai') || title.includes('Jurnal'))) {
@@ -154,12 +150,6 @@ export const generatePDFBlob = (
         doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, teacherY + 8);
         currentY += 16;
       }
-
-      // Add separator line
-      doc.setDrawColor(...template.styling.primaryColor);
-      doc.setLineWidth(0.5);
-      doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
-      currentY += 8;
 
       // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
       console.log('Additional info received:', additionalInfo); // Debug log
