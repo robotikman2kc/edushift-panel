@@ -440,7 +440,12 @@ export default function Kalender() {
       <PageHeader
         title="Kalender"
         description="Lihat jadwal mengajar, agenda, kehadiran, dan jurnal dalam satu tampilan"
-      />
+      >
+        <Button onClick={handleSyncHolidays} size="sm" variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Sinkron Libur
+        </Button>
+      </PageHeader>
 
       {/* Legend */}
       <Card>
@@ -489,16 +494,10 @@ export default function Kalender() {
                   onYearChange={handleYearChange}
                   onToday={handleToday}
                 />
-                <div className="flex gap-2">
-                  <Button onClick={handleSyncHolidays} size="sm" variant="outline">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sinkron Libur
-                  </Button>
-                  <Button onClick={handleAddNote} size="sm" disabled={!selectedDate}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Tambah Catatan
-                  </Button>
-                </div>
+                <Button onClick={handleAddNote} size="sm" disabled={!selectedDate}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Catatan
+                </Button>
               </div>
               <CalendarGrid
                 currentDate={currentDate}
