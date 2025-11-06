@@ -172,14 +172,37 @@ const Siswa = () => {
     }
   };
 
-  // Filter kelas berdasarkan tingkat yang dipilih
+  // Filter kelas berdasarkan tingkat yang dipilih dan sort nama kelas
   useEffect(() => {
     if (selectedTingkat) {
       const filtered = kelas.filter(k => k.tingkat === selectedTingkat);
-      setFilteredKelas(filtered);
+      
+      // Sort nama kelas berdasarkan angka di belakang (contoh: 10-1, 10-2, 11-1, dst)
+      const sorted = filtered.sort((a, b) => {
+        // Extract angka dari nama kelas (contoh: "10-1" -> ["10", "1"])
+        const matchA = a.nama_kelas.match(/(\d+)-(\d+)/);
+        const matchB = b.nama_kelas.match(/(\d+)-(\d+)/);
+        
+        if (matchA && matchB) {
+          const [, tingkatA, kelasA] = matchA;
+          const [, tingkatB, kelasB] = matchB;
+          
+          // Bandingkan tingkat dulu
+          const tingkatDiff = parseInt(tingkatA) - parseInt(tingkatB);
+          if (tingkatDiff !== 0) return tingkatDiff;
+          
+          // Jika tingkat sama, bandingkan nomor kelas
+          return parseInt(kelasA) - parseInt(kelasB);
+        }
+        
+        // Fallback ke string comparison
+        return a.nama_kelas.localeCompare(b.nama_kelas);
+      });
+      
+      setFilteredKelas(sorted);
       
       // Reset selected kelas jika tidak ada dalam tingkat yang dipilih
-      if (selectedKelas && !filtered.find(k => k.id === selectedKelas)) {
+      if (selectedKelas && !sorted.find(k => k.id === selectedKelas)) {
         setSelectedKelas("");
       }
     } else {
@@ -203,8 +226,41 @@ const Siswa = () => {
     }
   }, [selectedKelas, selectedTingkat, siswa, filteredKelas]);
 
-  // Get unique tingkat values
-  const tingkatOptions = [...new Set(kelas.map(k => k.tingkat))].map(tingkat => ({
+  // Get unique tingkat values dan sort dengan custom logic
+  const sortTingkat = (tingkatList: string[]) => {
+    return tingkatList.sort((a, b) => {
+      // Definisikan urutan prioritas untuk format Romawi
+      const romawiOrder: { [key: string]: number } = { 'X': 1, 'XI': 2, 'XII': 3 };
+      
+      // Cek apakah keduanya romawi
+      const aIsRomawi = romawiOrder[a] !== undefined;
+      const bIsRomawi = romawiOrder[b] !== undefined;
+      
+      // Jika keduanya romawi
+      if (aIsRomawi && bIsRomawi) {
+        return romawiOrder[a] - romawiOrder[b];
+      }
+      
+      // Jika a romawi, b angka -> a dulu
+      if (aIsRomawi && !bIsRomawi) return -1;
+      
+      // Jika b romawi, a angka -> b dulu
+      if (!aIsRomawi && bIsRomawi) return 1;
+      
+      // Keduanya angka, parse dan compare
+      const aNum = parseInt(a);
+      const bNum = parseInt(b);
+      
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      
+      // Default string comparison
+      return a.localeCompare(b);
+    });
+  };
+  
+  const tingkatOptions = sortTingkat([...new Set(kelas.map(k => k.tingkat))]).map(tingkat => ({
     value: tingkat,
     label: tingkat
   }));
