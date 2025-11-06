@@ -154,7 +154,8 @@ const User = () => {
         onDelete={handleDelete}
         loading={loading}
         formFields={formFields}
-        title="User"
+        title="Daftar User"
+        tableId="user"
       />
     </div>
   );

@@ -85,6 +85,7 @@ interface DataTableProps {
   searchPlaceholder?: string;
   title?: string;
   enableCheckbox?: boolean;
+  tableId?: string; // ID unik untuk menyimpan preferences
 }
 
 export function DataTable({
@@ -100,6 +101,7 @@ export function DataTable({
   searchPlaceholder = "Cari data...",
   title,
   enableCheckbox = false,
+  tableId = 'default', // Default ID jika tidak dispesifikkan
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<string>("");
@@ -118,6 +120,30 @@ export function DataTable({
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
+
+  // Load saved sorting preferences
+  useEffect(() => {
+    const savedSort = localStorage.getItem(`table_sort_${tableId}`);
+    if (savedSort) {
+      try {
+        const { column, direction } = JSON.parse(savedSort);
+        setSortColumn(column);
+        setSortDirection(direction);
+      } catch (error) {
+        console.error('Error loading sort preferences:', error);
+      }
+    }
+  }, [tableId]);
+
+  // Save sorting preferences
+  useEffect(() => {
+    if (sortColumn) {
+      localStorage.setItem(`table_sort_${tableId}`, JSON.stringify({
+        column: sortColumn,
+        direction: sortDirection
+      }));
+    }
+  }, [sortColumn, sortDirection, tableId]);
 
   const getRowHeightClass = () => {
     switch (rowHeight) {
@@ -174,7 +200,14 @@ export function DataTable({
   };
 
   const openAddDialog = () => {
-    setFormData({});
+    // Auto-fill tanggal dengan hari ini
+    const todayFields: Record<string, string> = {};
+    formFields.forEach(field => {
+      if (field.type === 'date') {
+        todayFields[field.key] = new Date().toISOString().split('T')[0];
+      }
+    });
+    setFormData(todayFields);
     setIsAddDialogOpen(true);
   };
 

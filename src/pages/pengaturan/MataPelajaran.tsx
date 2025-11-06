@@ -182,6 +182,7 @@ const MataPelajaran = () => {
         formFields={formFields}
         searchPlaceholder="Cari nama mata pelajaran atau kode..."
         title="Mata Pelajaran"
+        tableId="mata_pelajaran"
         enableCheckbox={true}
       />
     </div>

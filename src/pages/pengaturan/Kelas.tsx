@@ -193,7 +193,8 @@ const Kelas = () => {
         }}
         loading={loading}
         formFields={formFields}
-        title="Kelas"
+        title="Daftar Kelas"
+        tableId="kelas"
         enableCheckbox={true}
       />
     </div>

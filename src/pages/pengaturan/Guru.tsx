@@ -283,7 +283,8 @@ const Guru = () => {
         loading={loading}
         formFields={formFields}
         searchPlaceholder="Cari nama guru, NIP, atau mata pelajaran..."
-        title="Guru"
+        title="Daftar Guru"
+        tableId="guru"
         enableCheckbox={true}
       />
     </div>

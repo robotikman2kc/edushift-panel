@@ -555,7 +555,8 @@ const Siswa = () => {
           onImport={selectedKelas ? handleImport : undefined}
           loading={loading}
           formFields={formFields}
-          title="Siswa"
+          title="Daftar Siswa"
+          tableId="siswa"
           enableCheckbox={true}
         />
       )}
