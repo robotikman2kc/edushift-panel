@@ -31,6 +31,7 @@ interface PDFFormatSettings {
   };
   tableSettings: {
     rowHeight: number;
+    appRowHeight: 'compact' | 'normal' | 'comfortable';
   };
   attendanceFormat: {
     showLogo: boolean;
@@ -84,6 +85,7 @@ const FormatPDF: React.FC = () => {
           },
           tableSettings: parsedSettings.tableSettings || {
             rowHeight: 8,
+            appRowHeight: 'normal',
           },
           attendanceFormat: parsedSettings.attendanceFormat || {
             showLogo: true,
@@ -131,6 +133,7 @@ const FormatPDF: React.FC = () => {
       },
       tableSettings: {
         rowHeight: 8,
+        appRowHeight: 'normal',
       },
     attendanceFormat: {
       showLogo: true,
@@ -593,8 +596,9 @@ const FormatPDF: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
+                <h3 className="font-semibold text-base">Tinggi Baris PDF</h3>
                 <div className="space-y-2">
-                  <Label htmlFor="row-height">Tinggi Baris Tabel (dalam satuan)</Label>
+                  <Label htmlFor="row-height">Tinggi Baris untuk Cetak PDF</Label>
                   <div className="flex items-center gap-4">
                     <Input
                       id="row-height"
@@ -616,17 +620,54 @@ const FormatPDF: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Semakin besar nilai, semakin tinggi baris tabel. Rentang: 6-20
+                    Semakin besar nilai, semakin tinggi baris tabel pada PDF yang dicetak. Rentang: 6-20
                   </p>
                 </div>
 
                 <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                  <h4 className="font-medium text-sm">Panduan Tinggi Baris:</h4>
+                  <h4 className="font-medium text-sm">Panduan Tinggi Baris PDF:</h4>
                   <ul className="text-xs text-muted-foreground space-y-1">
                     <li>• <strong>6-7</strong>: Baris sangat rapat (untuk data banyak)</li>
                     <li>• <strong>8-10</strong>: Baris standar (default, direkomendasikan)</li>
                     <li>• <strong>11-15</strong>: Baris lebih longgar (lebih mudah dibaca)</li>
                     <li>• <strong>16-20</strong>: Baris sangat longgar (untuk data sedikit)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="border-t pt-6 space-y-4">
+                <h3 className="font-semibold text-base">Tinggi Baris Tabel di Aplikasi</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="app-row-height">Ukuran Baris Tabel</Label>
+                  <Select
+                    value={settings.tableSettings.appRowHeight}
+                    onValueChange={(value: 'compact' | 'normal' | 'comfortable') =>
+                      setSettings(prev => ({
+                        ...prev,
+                        tableSettings: { ...prev.tableSettings, appRowHeight: value },
+                      }))
+                    }
+                  >
+                    <SelectTrigger id="app-row-height">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border z-50">
+                      <SelectItem value="compact">Compact (Rapat)</SelectItem>
+                      <SelectItem value="normal">Normal (Default)</SelectItem>
+                      <SelectItem value="comfortable">Comfortable (Longgar)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Atur tinggi baris untuk semua tabel di aplikasi
+                  </p>
+                </div>
+
+                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                  <h4 className="font-medium text-sm">Deskripsi Ukuran:</h4>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• <strong>Compact</strong>: Baris lebih rapat, cocok untuk layar kecil atau data banyak</li>
+                    <li>• <strong>Normal</strong>: Ukuran standar, seimbang untuk kebanyakan kasus</li>
+                    <li>• <strong>Comfortable</strong>: Baris lebih longgar, mudah dibaca dan nyaman</li>
                   </ul>
                 </div>
 
@@ -636,7 +677,7 @@ const FormatPDF: React.FC = () => {
                     size="sm"
                     onClick={() => setSettings(prev => ({
                       ...prev,
-                      tableSettings: { rowHeight: 8 }
+                      tableSettings: { rowHeight: 8, appRowHeight: 'normal' }
                     }))}
                   >
                     Reset ke Default

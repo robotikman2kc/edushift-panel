@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -108,6 +108,7 @@ export function DataTable({
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [editingCell, setEditingCell] = useState<{ rowId: string; columnKey: string } | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [rowHeightClass, setRowHeightClass] = useState("h-12");
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -116,6 +117,47 @@ export function DataTable({
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
+
+  // Load table settings from localStorage
+  useEffect(() => {
+    const loadTableSettings = () => {
+      const settings = localStorage.getItem('pdfFormatSettings');
+      if (settings) {
+        try {
+          const parsed = JSON.parse(settings);
+          const appRowHeight = parsed.tableSettings?.appRowHeight || 'normal';
+          
+          switch (appRowHeight) {
+            case 'compact':
+              setRowHeightClass('h-10');
+              break;
+            case 'comfortable':
+              setRowHeightClass('h-14');
+              break;
+            default:
+              setRowHeightClass('h-12');
+          }
+        } catch (error) {
+          console.error('Error loading table settings:', error);
+        }
+      }
+    };
+
+    loadTableSettings();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'pdfFormatSettings') {
+        loadTableSettings();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const filteredData = data.filter((item) =>
     Object.values(item).some((value) =>
@@ -594,7 +636,7 @@ export function DataTable({
                   </TableRow>
                 ) : (
                   paginatedData.map((item, index) => (
-                    <TableRow key={item.id || index}>
+                    <TableRow key={item.id || index} className={rowHeightClass}>
                       {enableCheckbox && (
                         <TableCell>
                           <Checkbox
