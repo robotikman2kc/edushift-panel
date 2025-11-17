@@ -186,7 +186,7 @@ export const generatePDFBlob = (
 
       // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
       console.log('Additional info received:', additionalInfo); // Debug log
-      if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan)) {
+      if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan) && !title.includes('Jurnal')) {
         console.log('Adding class and month info to PDF'); // Debug log
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(0, 0, 0);
