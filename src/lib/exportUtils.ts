@@ -144,7 +144,7 @@ export const generatePDFBlob = (
       if (title.includes('Jurnal') && additionalInfo?.bulan) {
         doc.setFontSize(template.styling.fontSize.header);
         doc.setTextColor(0, 0, 0);
-        const bulanText = `Bulan: ${additionalInfo.bulan}`;
+        const bulanText = `Bulan ${additionalInfo.bulan}`;
         const bulanWidth = doc.getTextWidth(bulanText);
         doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
         currentY += 8;
