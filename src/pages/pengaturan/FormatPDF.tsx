@@ -34,6 +34,7 @@ interface PDFFormatSettings {
     rowHeight: number;
   };
   attendanceFormat: {
+    showHeader: boolean;
     showLogo: boolean;
     showDate: boolean;
     showSignature: boolean;
@@ -41,6 +42,7 @@ interface PDFFormatSettings {
     orientation: 'portrait' | 'landscape';
   };
   gradeFormat: {
+    showHeader: boolean;
     showLogo: boolean;
     showDate: boolean;
     showSignature: boolean;
@@ -48,6 +50,7 @@ interface PDFFormatSettings {
     orientation: 'portrait' | 'landscape';
   };
   journalFormat: {
+    showHeader: boolean;
     showLogo: boolean;
     showDate: boolean;
     showSignature: boolean;
@@ -88,6 +91,7 @@ const FormatPDF: React.FC = () => {
             rowHeight: 8,
           },
           attendanceFormat: parsedSettings.attendanceFormat || {
+            showHeader: true,
             showLogo: true,
             showDate: true,
             showSignature: true,
@@ -95,6 +99,7 @@ const FormatPDF: React.FC = () => {
             orientation: 'portrait',
           },
           gradeFormat: parsedSettings.gradeFormat || {
+            showHeader: true,
             showLogo: true,
             showDate: true,
             showSignature: true,
@@ -102,6 +107,7 @@ const FormatPDF: React.FC = () => {
             orientation: 'portrait',
           },
           journalFormat: parsedSettings.journalFormat || {
+            showHeader: true,
             showLogo: true,
             showDate: true,
             showSignature: true,
@@ -136,6 +142,7 @@ const FormatPDF: React.FC = () => {
         rowHeight: 8,
       },
     attendanceFormat: {
+      showHeader: true,
       showLogo: true,
       showDate: true,
       showSignature: true,
@@ -143,6 +150,7 @@ const FormatPDF: React.FC = () => {
       orientation: 'portrait',
     },
     gradeFormat: {
+      showHeader: true,
       showLogo: true,
       showDate: true,
       showSignature: true,
@@ -150,6 +158,7 @@ const FormatPDF: React.FC = () => {
       orientation: 'portrait',
     },
     journalFormat: {
+      showHeader: true,
       showLogo: true,
       showDate: true,
       showSignature: true,
@@ -270,6 +279,20 @@ const FormatPDF: React.FC = () => {
         </div>
 
         <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor={`${formatType}-header`}>Tampilkan Header</Label>
+            <Switch
+              id={`${formatType}-header`}
+              checked={format.showHeader}
+              onCheckedChange={(checked) =>
+                setSettings(prev => ({
+                  ...prev,
+                  [formatType]: { ...prev[formatType], showHeader: checked },
+                }))
+              }
+            />
+          </div>
+
           <div className="flex items-center justify-between">
             <Label htmlFor={`${formatType}-logo`}>Tampilkan Logo</Label>
             <Switch

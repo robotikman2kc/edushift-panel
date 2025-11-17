@@ -32,11 +32,11 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
       ...defaultTemplate,
       id: `custom-${templateType}`,
       name: `Custom ${templateType} Template`,
-      header: {
+      header: format?.showHeader !== false ? {
         schoolName: settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
         address: settings.schoolInfo?.address || '',
         logo: settings.schoolInfo?.logo,
-      },
+      } : undefined,
       reportTitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
                 : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
                 : 'LAPORAN KINERJA BULANAN',
@@ -130,81 +130,81 @@ export const generatePDFBlob = (
       doc.setLineWidth(0.5);
       doc.line(template.layout.margins.left, currentY, pageWidth - template.layout.margins.right, currentY);
       currentY += 8;
+    }
+    
+    // Report title - below the separator line (or at top if no header), centered
+    if (template.reportTitle) {
+      doc.setFontSize(template.styling.fontSize.subtitle);
+      doc.setTextColor(0, 0, 0);
+      const reportTitleWidth = doc.getTextWidth(template.reportTitle);
+      doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
+      currentY += 8;
+    }
+
+    // Add month info for journal reports (before teacher info)
+    if (title.includes('Jurnal') && additionalInfo?.bulan) {
+      doc.setFontSize(template.styling.fontSize.header);
+      doc.setTextColor(0, 0, 0);
+      const bulanText = `Bulan ${additionalInfo.bulan}`;
+      const bulanWidth = doc.getTextWidth(bulanText);
+      doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
+      currentY += 8;
+    }
+
+    // Add teacher/employee info if available
+    if (template.teacherInfo) {
+      doc.setFontSize(template.styling.fontSize.header);
+      doc.setTextColor(0, 0, 0);
+      const infoY = currentY;
       
-      // Report title - below the separator line, centered
-      if (template.reportTitle) {
-        doc.setFontSize(template.styling.fontSize.subtitle);
-        doc.setTextColor(0, 0, 0);
-        const reportTitleWidth = doc.getTextWidth(template.reportTitle);
-        doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
-        currentY += 8;
-      }
-
-      // Add month info for journal reports (before teacher info)
-      if (title.includes('Jurnal') && additionalInfo?.bulan) {
-        doc.setFontSize(template.styling.fontSize.header);
-        doc.setTextColor(0, 0, 0);
-        const bulanText = `Bulan ${additionalInfo.bulan}`;
-        const bulanWidth = doc.getTextWidth(bulanText);
-        doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
-        currentY += 8;
-      }
-
-      // Add teacher/employee info if available
-      if (template.teacherInfo) {
-        doc.setFontSize(template.styling.fontSize.header);
-        doc.setTextColor(0, 0, 0);
-        const infoY = currentY;
+      if (title.includes('Jurnal')) {
+        // Journal reports: Show employee info left-aligned above table with aligned colons
+        const labelWidth = 25; // Fixed width for labels to align colons
+        doc.text('Nama', template.layout.margins.left, infoY);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY);
+        doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
         
-        if (title.includes('Jurnal')) {
-          // Journal reports: Show employee info left-aligned above table with aligned colons
-          const labelWidth = 25; // Fixed width for labels to align colons
-          doc.text('Nama', template.layout.margins.left, infoY);
-          doc.text(':', template.layout.margins.left + labelWidth, infoY);
-          doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
-          
-          doc.text('NIP', template.layout.margins.left, infoY + 5);
-          doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
-          doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, infoY + 5);
-          
-          doc.text('Jabatan', template.layout.margins.left, infoY + 10);
-          doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
-          doc.text(template.teacherInfo.jabatan || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
-          
-          doc.text('Satuan Kerja', template.layout.margins.left, infoY + 15);
-          doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
-          doc.text(template.teacherInfo.satuan_kerja || '-', template.layout.margins.left + labelWidth + 3, infoY + 15);
-          currentY += 22;
-        } else if (title.includes('Nilai')) {
-          // Grade reports: Show subject info
-          doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, infoY);
-          doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, infoY + 4);
-          doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, infoY + 8);
-          currentY += 16;
-        }
+        doc.text('NIP', template.layout.margins.left, infoY + 5);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
+        doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, infoY + 5);
+        
+        doc.text('Jabatan', template.layout.margins.left, infoY + 10);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
+        doc.text(template.teacherInfo.jabatan || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
+        
+        doc.text('Satuan Kerja', template.layout.margins.left, infoY + 15);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
+        doc.text(template.teacherInfo.satuan_kerja || '-', template.layout.margins.left + labelWidth + 3, infoY + 15);
+        currentY += 22;
+      } else if (title.includes('Nilai')) {
+        // Grade reports: Show subject info
+        doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, infoY);
+        doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, infoY + 4);
+        doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, infoY + 8);
+        currentY += 16;
       }
+    }
 
-      // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
-      console.log('Additional info received:', additionalInfo); // Debug log
-      if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan) && !title.includes('Jurnal')) {
-        console.log('Adding class and month info to PDF'); // Debug log
-        doc.setFontSize(template.styling.fontSize.header);
-        doc.setTextColor(0, 0, 0);
-        const infoY = currentY;
-        if (additionalInfo.kelas) {
-          console.log('Adding Kelas:', additionalInfo.kelas); // Debug log
-          doc.text(`Kelas: ${additionalInfo.kelas}`, template.layout.margins.left, infoY);
-          currentY += 5;
-        }
-        if (additionalInfo.bulan) {
-          console.log('Adding Bulan:', additionalInfo.bulan); // Debug log
-          doc.text(`Bulan: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
-          currentY += 5;
-        }
-        currentY += 6;
-      } else {
-        console.log('No additional info to add'); // Debug log
+    // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
+    console.log('Additional info received:', additionalInfo); // Debug log
+    if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan) && !title.includes('Jurnal')) {
+      console.log('Adding class and month info to PDF'); // Debug log
+      doc.setFontSize(template.styling.fontSize.header);
+      doc.setTextColor(0, 0, 0);
+      const infoY = currentY;
+      if (additionalInfo.kelas) {
+        console.log('Adding Kelas:', additionalInfo.kelas); // Debug log
+        doc.text(`Kelas: ${additionalInfo.kelas}`, template.layout.margins.left, infoY);
+        currentY += 5;
       }
+      if (additionalInfo.bulan) {
+        console.log('Adding Bulan:', additionalInfo.bulan); // Debug log
+        doc.text(`Bulan: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
+        currentY += 5;
+      }
+      currentY += 6;
+    } else {
+      console.log('No additional info to add'); // Debug log
     }
 
     // Add watermark if specified
