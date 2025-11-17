@@ -304,12 +304,12 @@ export const generatePDFBlob = (
         const principalNIP = template.teacherInfo?.kepala_sekolah_nip;
         const schoolName = template.header?.schoolName || 'Sekolah';
         
-        doc.text('Pejabat Penilai,', leftColumnX, signatureStartY);
-        doc.text(`Kepala ${schoolName}`, leftColumnX, signatureStartY + 5);
-        doc.text('', leftColumnX, signatureStartY + 20); // Space for signature
-        doc.text(`(${principalName})`, leftColumnX, signatureStartY + 25);
+        doc.text('Pejabat Penilai,', leftColumnX, signatureStartY + 5);
+        doc.text(`Kepala ${schoolName}`, leftColumnX, signatureStartY + 10);
+        doc.text('', leftColumnX, signatureStartY + 25); // Space for signature
+        doc.text(`(${principalName})`, leftColumnX, signatureStartY + 30);
         if (principalNIP) {
-          doc.text(`NIP: ${principalNIP}`, leftColumnX, signatureStartY + 30);
+          doc.text(`NIP: ${principalNIP}`, leftColumnX, signatureStartY + 35);
         }
         
         // Right side: Pegawai Yang Dinilai (Teacher) - WITH DATE
