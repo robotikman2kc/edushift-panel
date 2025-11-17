@@ -158,25 +158,19 @@ const Dashboard = () => {
           const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
           const mataPelajaran = mataPelajaranData.find((m: any) => m.id === schedule.mata_pelajaran_id);
           
-          // Handle jam_ke which can be a single number or a range like "3-4"
+          // Calculate time based on jam_ke and jumlah_jp
           let waktu = "N/A";
-          const jamKeStr = String(schedule.jam_ke);
+          const startJam = schedule.jam_ke;
+          const jumlahJP = schedule.jumlah_jp || 1;
+          const endJam = startJam + jumlahJP - 1;
           
-          if (jamKeStr.includes('-')) {
-            // Range of jam_ke (e.g., "3-4")
-            const [startJam, endJam] = jamKeStr.split('-').map(j => parseInt(j.trim()));
-            const startTimeSlot = timeSlots.find((t: any) => t.jam_ke === startJam);
-            const endTimeSlot = timeSlots.find((t: any) => t.jam_ke === endJam);
-            
-            if (startTimeSlot && endTimeSlot) {
-              waktu = `${startTimeSlot.waktu_mulai} - ${endTimeSlot.waktu_selesai}`;
-            }
-          } else {
-            // Single jam_ke
-            const timeSlot = timeSlots.find((t: any) => t.jam_ke === parseInt(jamKeStr));
-            if (timeSlot) {
-              waktu = `${timeSlot.waktu_mulai} - ${timeSlot.waktu_selesai}`;
-            }
+          const startTimeSlot = timeSlots.find((t: any) => t.jam_ke === startJam);
+          const endTimeSlot = timeSlots.find((t: any) => t.jam_ke === endJam);
+          
+          if (startTimeSlot && endTimeSlot) {
+            waktu = `${startTimeSlot.waktu_mulai} - ${endTimeSlot.waktu_selesai}`;
+          } else if (startTimeSlot) {
+            waktu = `${startTimeSlot.waktu_mulai} - ${startTimeSlot.waktu_selesai}`;
           }
           
           // Check if agenda and attendance exist for today
