@@ -393,15 +393,39 @@ export function DataTable({
 
   const handleDownloadTemplate = () => {
     try {
-      // Create template data with column headers
-      const templateData = [{}];
+      // Create template data with column headers and instructions
+      const templateData: any[] = [];
+      
+      // Row 1: Headers
+      const headerRow: any = {};
       formFields.forEach(field => {
-        templateData[0][field.label] = '';
+        headerRow[field.label] = field.label;
       });
+      templateData.push(headerRow);
+      
+      // Row 2: Instructions/Format info
+      const instructionRow: any = {};
+      formFields.forEach(field => {
+        if (field.type === 'date') {
+          instructionRow[field.label] = 'Format: DD/MM/YYYY (contoh: 31/12/2025)';
+        } else if (field.key === 'jenis_kelamin') {
+          instructionRow[field.label] = 'Isi dengan: L (Laki-laki) atau P (Perempuan)';
+        } else {
+          instructionRow[field.label] = '';
+        }
+      });
+      templateData.push(instructionRow);
+      
+      // Row 3: Empty data row
+      const dataRow: any = {};
+      formFields.forEach(field => {
+        dataRow[field.label] = '';
+      });
+      templateData.push(dataRow);
 
       // Create workbook
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(templateData);
+      const ws = XLSX.utils.json_to_sheet(templateData, { skipHeader: true });
       
       // Add the worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, 'Template');
@@ -458,7 +482,15 @@ export function DataTable({
           }
 
           // Convert to the expected format (map field labels to field keys)
-          const parsedData: Record<string, string>[] = jsonData.map((row: any) => {
+          const parsedData: Record<string, string>[] = jsonData.map((row: any, index: number) => {
+            // Skip instruction row (row index 0 in the data)
+            if (index === 0) {
+              const firstValue = Object.values(row)[0] as string;
+              if (firstValue && firstValue.includes('Format:')) {
+                return null;
+              }
+            }
+            
             const mappedRow: Record<string, string> = {};
             formFields.forEach(field => {
               // Try to find the value using both label and key
@@ -466,7 +498,7 @@ export function DataTable({
               mappedRow[field.key] = String(value).trim();
             });
             return mappedRow;
-          });
+          }).filter(row => row !== null) as Record<string, string>[];
 
           onImport(parsedData);
           setIsImportDialogOpen(false);

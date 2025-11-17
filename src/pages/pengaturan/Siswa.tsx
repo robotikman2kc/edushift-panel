@@ -362,6 +362,32 @@ const Siswa = () => {
     }
   };
 
+  // Helper function to parse Indonesian date format (DD/MM/YYYY) to ISO format (YYYY-MM-DD)
+  const parseIndonesianDate = (dateStr: string): string | undefined => {
+    if (!dateStr || dateStr.trim() === '') return undefined;
+    
+    // Check if already in ISO format (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
+      return dateStr.trim();
+    }
+    
+    // Parse DD/MM/YYYY format
+    const parts = dateStr.trim().split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      
+      // Validate the date
+      const parsedDate = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsedDate.getTime())) {
+        return `${year}-${month}-${day}`;
+      }
+    }
+    
+    return undefined;
+  };
+
   // Helper function to normalize jenis kelamin from import
   const normalizeJenisKelamin = (value: string): 'Laki-laki' | 'Perempuan' => {
     const normalized = value?.toUpperCase().trim();
@@ -421,8 +447,8 @@ const Siswa = () => {
               nama_siswa: row.nama_siswa,
               kelas_id: kelasId,
               jenis_kelamin: normalizeJenisKelamin(row.jenis_kelamin),
-              tanggal_masuk: row.tanggal_masuk || existingSiswa.tanggal_masuk,
-              tanggal_lahir: row.tanggal_lahir || existingSiswa.tanggal_lahir,
+              tanggal_masuk: parseIndonesianDate(row.tanggal_masuk) || existingSiswa.tanggal_masuk,
+              tanggal_lahir: parseIndonesianDate(row.tanggal_lahir) || existingSiswa.tanggal_lahir,
               tempat_lahir: row.tempat_lahir || existingSiswa.tempat_lahir,
               alamat: row.alamat || existingSiswa.alamat,
               nama_orang_tua: row.nama_orang_tua || existingSiswa.nama_orang_tua,
@@ -445,8 +471,8 @@ const Siswa = () => {
               nama_siswa: row.nama_siswa,
               kelas_id: kelasId,
               jenis_kelamin: normalizeJenisKelamin(row.jenis_kelamin),
-              tanggal_masuk: row.tanggal_masuk || new Date().toISOString().split('T')[0],
-              tanggal_lahir: row.tanggal_lahir || undefined,
+              tanggal_masuk: parseIndonesianDate(row.tanggal_masuk) || new Date().toISOString().split('T')[0],
+              tanggal_lahir: parseIndonesianDate(row.tanggal_lahir) || undefined,
               tempat_lahir: row.tempat_lahir || undefined,
               alamat: row.alamat || undefined,
               nama_orang_tua: row.nama_orang_tua || undefined,
