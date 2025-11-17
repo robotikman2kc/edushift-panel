@@ -362,6 +362,15 @@ const Siswa = () => {
     }
   };
 
+  // Helper function to normalize jenis kelamin from import
+  const normalizeJenisKelamin = (value: string): 'Laki-laki' | 'Perempuan' => {
+    const normalized = value?.toUpperCase().trim();
+    if (normalized === 'P' || normalized === 'PEREMPUAN') {
+      return 'Perempuan';
+    }
+    return 'Laki-laki'; // Default to Laki-laki for 'L', 'LAKI-LAKI', or any other value
+  };
+
   const handleImport = async (data: Record<string, string>[]) => {
     if (!selectedKelas) {
       toast({
@@ -411,7 +420,7 @@ const Siswa = () => {
             const updateData = {
               nama_siswa: row.nama_siswa,
               kelas_id: kelasId,
-              jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
+              jenis_kelamin: normalizeJenisKelamin(row.jenis_kelamin),
               tanggal_masuk: row.tanggal_masuk || existingSiswa.tanggal_masuk,
               tanggal_lahir: row.tanggal_lahir || existingSiswa.tanggal_lahir,
               tempat_lahir: row.tempat_lahir || existingSiswa.tempat_lahir,
@@ -435,7 +444,7 @@ const Siswa = () => {
               nisn: row.nisn,
               nama_siswa: row.nama_siswa,
               kelas_id: kelasId,
-              jenis_kelamin: (row.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki') as 'Laki-laki' | 'Perempuan',
+              jenis_kelamin: normalizeJenisKelamin(row.jenis_kelamin),
               tanggal_masuk: row.tanggal_masuk || new Date().toISOString().split('T')[0],
               tanggal_lahir: row.tanggal_lahir || undefined,
               tempat_lahir: row.tempat_lahir || undefined,
