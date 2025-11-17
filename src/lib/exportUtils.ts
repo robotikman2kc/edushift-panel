@@ -318,10 +318,10 @@ export const generatePDFBlob = (
         
         doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
         doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
-        doc.text('', rightColumnX, signatureStartY + 20); // Space for signature
-        doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 25);
+        doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
+        doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 30);
         if (teacherNIP) {
-          doc.text(`NIP: ${teacherNIP}`, rightColumnX, signatureStartY + 30);
+          doc.text(`NIP: ${teacherNIP}`, rightColumnX, signatureStartY + 35);
         }
       } else {
         // Attendance and Grade reports: Single signature on the right
