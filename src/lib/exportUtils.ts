@@ -248,12 +248,16 @@ export const generatePDFBlob = (
         cellPadding: 2,
         font: template.styling.fontFamily,
         minCellHeight: rowHeight,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.1,
       },
       headStyles: {
         fillColor: template.styling.primaryColor,
         textColor: 255,
         fontStyle: 'bold',
         minCellHeight: rowHeight,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.1,
       },
       alternateRowStyles: {
         fillColor: template.styling.secondaryColor
