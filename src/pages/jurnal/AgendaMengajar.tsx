@@ -30,11 +30,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/common/PageHeader";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Download, FileText } from "lucide-react";
 import { indexedDB } from "@/lib/indexedDB";
 import * as XLSX from 'xlsx';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
 interface AgendaMengajar {
   id: string;
@@ -51,13 +53,15 @@ const AgendaMengajar = () => {
   const location = useLocation();
   const [agendaList, setAgendaList] = useState<AgendaMengajar[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [selectedStartMonth, setSelectedStartMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [selectedEndMonth, setSelectedEndMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [selectedKelasFilter, setSelectedKelasFilter] = useState<string>('all');
   const [kelasList, setKelasList] = useState<any[]>([]);
   const [mataPelajaranList, setMataPelajaranList] = useState<any[]>([]);
   const [filteredKelasList, setFilteredKelasList] = useState<any[]>([]);
   const [filteredMataPelajaranList, setFilteredMataPelajaranList] = useState<any[]>([]);
   const [jadwalPelajaranList, setJadwalPelajaranList] = useState<any[]>([]);
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -147,7 +151,7 @@ const AgendaMengajar = () => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedMonth, selectedKelasFilter]);
+  }, [selectedStartMonth, selectedEndMonth, selectedKelasFilter]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -160,12 +164,17 @@ const AgendaMengajar = () => {
         indexedDB.select('jadwal_pelajaran'),
       ]);
 
-      // Filter agenda by selected month and class
+      // Filter agenda by selected month range and class
       const filteredAgenda = (agenda as AgendaMengajar[]).filter((item) => {
-        const itemMonth = format(new Date(item.tanggal), 'yyyy-MM');
-        const matchesMonth = itemMonth === selectedMonth;
+        const itemDate = new Date(item.tanggal);
+        const startDate = new Date(selectedStartMonth + '-01');
+        const endDate = new Date(selectedEndMonth + '-01');
+        endDate.setMonth(endDate.getMonth() + 1); // Go to next month
+        endDate.setDate(0); // Go back to last day of selected end month
+        
+        const matchesDateRange = itemDate >= startDate && itemDate <= endDate;
         const matchesKelas = selectedKelasFilter === 'all' || item.kelas_id === selectedKelasFilter;
-        return matchesMonth && matchesKelas;
+        return matchesDateRange && matchesKelas;
       });
 
       setAgendaList(filteredAgenda);
@@ -414,13 +423,85 @@ const AgendaMengajar = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Agenda Mengajar");
 
-    const monthName = format(new Date(selectedMonth), 'MMMM yyyy', { locale: localeId });
-    XLSX.writeFile(workbook, `Agenda_Mengajar_${monthName}.xlsx`);
+    const startMonthName = format(new Date(selectedStartMonth + '-01'), 'MMM yyyy', { locale: localeId });
+    const endMonthName = format(new Date(selectedEndMonth + '-01'), 'MMM yyyy', { locale: localeId });
+    const periodName = selectedStartMonth === selectedEndMonth 
+      ? startMonthName 
+      : `${startMonthName}_${endMonthName}`;
+    
+    XLSX.writeFile(workbook, `Agenda_Mengajar_${periodName}.xlsx`);
 
     toast({
       title: "Berhasil",
       description: "Data berhasil diekspor ke Excel",
     });
+  };
+
+  const handleExportPDF = (signatureDate?: Date) => {
+    try {
+      const exportData = agendaList.map((agenda, index) => ({
+        'No': index + 1,
+        'Hari': getNamaHari(agenda.tanggal),
+        'Tanggal': format(new Date(agenda.tanggal), 'dd MMM yyyy', { locale: localeId }),
+        'Kelas': getKelasName(agenda.kelas_id),
+        'Mata Pelajaran': getMataPelajaranName(agenda.mata_pelajaran_id),
+        'Materi': agenda.materi,
+        'Keterangan': agenda.keterangan,
+      }));
+
+      const exportColumns = [
+        { key: 'No', label: 'No' },
+        { key: 'Hari', label: 'Hari' },
+        { key: 'Tanggal', label: 'Tanggal' },
+        { key: 'Kelas', label: 'Kelas' },
+        { key: 'Mata Pelajaran', label: 'Mata Pelajaran' },
+        { key: 'Materi', label: 'Materi' },
+        { key: 'Keterangan', label: 'Keterangan' },
+      ];
+
+      const startMonthName = format(new Date(selectedStartMonth + '-01'), 'MMMM yyyy', { locale: localeId });
+      const endMonthName = format(new Date(selectedEndMonth + '-01'), 'MMMM yyyy', { locale: localeId });
+      const periodName = selectedStartMonth === selectedEndMonth 
+        ? startMonthName 
+        : `${startMonthName} - ${endMonthName}`;
+
+      const kelasName = selectedKelasFilter === 'all' 
+        ? 'Semua Kelas' 
+        : getKelasName(selectedKelasFilter);
+
+      const title = `Agenda Mengajar - ${kelasName} - ${periodName}`;
+      
+      let customTemplate = getCustomPDFTemplate('journal');
+      if (signatureDate) {
+        customTemplate = {
+          ...customTemplate,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
+      }
+
+      const blob = generatePDFBlob(exportData, exportColumns, title, customTemplate);
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Agenda_Mengajar_${periodName.replace(/ /g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Berhasil",
+        description: "Data berhasil diekspor ke PDF",
+      });
+    } catch (error) {
+      console.error('Export PDF error:', error);
+      toast({
+        title: "Error",
+        description: "Gagal mengekspor data ke PDF",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCellEdit = (rowId: string, columnKey: string, currentValue: string) => {
@@ -572,40 +653,65 @@ const AgendaMengajar = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col gap-4">
             <CardTitle>Daftar Agenda Mengajar</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full sm:w-auto"
-              />
-              <Select
-                value={selectedKelasFilter}
-                onValueChange={setSelectedKelasFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Semua Kelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Kelas</SelectItem>
-                  {kelasList.map((kelas) => (
-                    <SelectItem key={kelas.id} value={kelas.id}>
-                      {kelas.nama_kelas}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleExportExcel}
-                variant="outline"
-                className="w-full sm:w-auto"
-                disabled={agendaList.length === 0}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export Excel
-              </Button>
+            <div className="flex flex-col lg:flex-row gap-2 w-full justify-between items-start lg:items-center">
+              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm whitespace-nowrap">Dari:</Label>
+                  <Input
+                    type="month"
+                    value={selectedStartMonth}
+                    onChange={(e) => setSelectedStartMonth(e.target.value)}
+                    className="w-full sm:w-auto"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm whitespace-nowrap">Sampai:</Label>
+                  <Input
+                    type="month"
+                    value={selectedEndMonth}
+                    onChange={(e) => setSelectedEndMonth(e.target.value)}
+                    className="w-full sm:w-auto"
+                  />
+                </div>
+                <Select
+                  value={selectedKelasFilter}
+                  onValueChange={setSelectedKelasFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Semua Kelas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Kelas</SelectItem>
+                    {kelasList.map((kelas) => (
+                      <SelectItem key={kelas.id} value={kelas.id}>
+                        {kelas.nama_kelas}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                <Button
+                  onClick={() => setIsExportDateDialogOpen(true)}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={agendaList.length === 0}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export PDF
+                </Button>
+                <Button
+                  onClick={handleExportExcel}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={agendaList.length === 0}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -910,6 +1016,14 @@ const AgendaMengajar = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleExportPDF}
+        title="Export Agenda Mengajar ke PDF"
+        description="Pilih tanggal untuk tanda tangan dokumen"
+      />
     </div>
   );
 };
