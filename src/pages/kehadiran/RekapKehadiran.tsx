@@ -51,6 +51,7 @@ interface KehadiranReport {
   kehadiran_per_tanggal: { [tanggal: string]: string };
   total_hadir: number;
   total_sakit: number;
+  total_dispen: number;
   total_izin: number;
   total_alpha: number;
   persentase_kehadiran: number;
@@ -240,6 +241,7 @@ const RekapKehadiran = () => {
         // Calculate totals
         const totalHadir = studentAttendance.filter(a => a.status_kehadiran === 'Hadir').length;
         const totalSakit = studentAttendance.filter(a => a.status_kehadiran === 'Sakit').length;
+        const totalDispen = studentAttendance.filter(a => a.status_kehadiran === 'Dispen').length;
         const totalIzin = studentAttendance.filter(a => a.status_kehadiran === 'Izin').length;
         const totalAlpha = studentAttendance.filter(a => a.status_kehadiran === 'Alpha').length;
         
@@ -255,6 +257,7 @@ const RekapKehadiran = () => {
           kehadiran_per_tanggal: kehadiranPerTanggal,
           total_hadir: totalHadir,
           total_sakit: totalSakit,
+          total_dispen: totalDispen,
           total_izin: totalIzin,
           total_alpha: totalAlpha,
           persentase_kehadiran: persentaseKehadiran,
@@ -318,6 +321,7 @@ const RekapKehadiran = () => {
           'Jenis Kelamin': student.jenis_kelamin,
           'Total Hadir': student.total_hadir,
           'Total Sakit': student.total_sakit,
+          'Total Dispen': student.total_dispen,
           'Total Izin': student.total_izin,
           'Total Alpha': student.total_alpha,
           'Persentase': `${student.persentase_kehadiran}%`,
@@ -338,6 +342,7 @@ const RekapKehadiran = () => {
         ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
         { key: 'Total Hadir', label: 'Hadir' },
         { key: 'Total Sakit', label: 'Sakit' },
+        { key: 'Total Dispen', label: 'Dispen' },
         { key: 'Total Izin', label: 'Izin' },
         { key: 'Total Alpha', label: 'Alpha' },
         { key: 'Persentase', label: 'Persentase' },
@@ -407,6 +412,7 @@ const RekapKehadiran = () => {
           'Jenis Kelamin': student.jenis_kelamin,
           'Total Hadir': student.total_hadir,
           'Total Sakit': student.total_sakit,
+          'Total Dispen': student.total_dispen,
           'Total Izin': student.total_izin,
           'Total Alpha': student.total_alpha,
           'Persentase': `${student.persentase_kehadiran}%`,
@@ -427,6 +433,7 @@ const RekapKehadiran = () => {
         ...uniqueDates.map(date => ({ key: formatDate(date), label: formatDate(date) })),
         { key: 'Total Hadir', label: 'Hadir' },
         { key: 'Total Sakit', label: 'Sakit' },
+        { key: 'Total Dispen', label: 'Dispen' },
         { key: 'Total Izin', label: 'Izin' },
         { key: 'Total Alpha', label: 'Alpha' },
         { key: 'Persentase', label: 'Persentase' },
@@ -462,10 +469,11 @@ const RekapKehadiran = () => {
       totalSiswa: acc.totalSiswa + 1,
       totalHadir: acc.totalHadir + curr.total_hadir,
       totalSakit: acc.totalSakit + curr.total_sakit,
+      totalDispen: acc.totalDispen + curr.total_dispen,
       totalIzin: acc.totalIzin + curr.total_izin,
       totalAlpha: acc.totalAlpha + curr.total_alpha,
     }),
-    { totalSiswa: 0, totalHadir: 0, totalSakit: 0, totalIzin: 0, totalAlpha: 0 }
+    { totalSiswa: 0, totalHadir: 0, totalSakit: 0, totalDispen: 0, totalIzin: 0, totalAlpha: 0 }
   );
 
   const avgPersentase = reportData.length > 0 
@@ -731,6 +739,10 @@ const RekapKehadiran = () => {
                         <div className="flex items-center gap-2">
                           <span className="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">S</span>
                           <span>Sakit</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">D</span>
+                          <span>Dispen</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">I</span>
