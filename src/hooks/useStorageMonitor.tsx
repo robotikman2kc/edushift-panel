@@ -150,16 +150,19 @@ export const useStorageMonitor = () => {
       console.error('Error calculating localStorage size:', error);
     }
 
-    // Calculate OPFS size (simplified)
+    // Calculate OPFS size
     let opfsSize = 0;
     let opfsSupported = false;
     
     try {
       if ('storage' in navigator && 'getDirectory' in navigator.storage) {
         opfsSupported = true;
+        // Import opfsStorage dynamically to calculate size
+        const { opfsStorage } = await import('@/lib/opfsStorage');
+        opfsSize = await opfsStorage.calculateTotalSize();
       }
     } catch (error) {
-      console.warn('OPFS not supported:', error);
+      console.warn('OPFS calculation error:', error);
     }
 
     // Get migration status
