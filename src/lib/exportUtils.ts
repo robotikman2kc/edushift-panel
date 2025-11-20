@@ -276,8 +276,8 @@ export const generatePDFBlob = (
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
           
-          // Page numbers only - remove footer text
-          if (template.footer.showPageNumbers) {
+          // Page numbers only for grade reports
+          if (template.footer.showPageNumbers && !title.includes('Jurnal') && !title.includes('Kehadiran')) {
             doc.setFontSize(template.styling.fontSize.header);
             doc.setTextColor(0, 0, 0);
             const pageText = `Halaman ${data.pageNumber}`;
