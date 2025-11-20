@@ -7,15 +7,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useStorageMonitor, formatBytes } from "@/hooks/useStorageMonitor";
 import { MigrationDialog } from "@/components/data/MigrationDialog";
-import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText, AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
+import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText, AlertTriangle, ArrowRight, Loader2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StorageMonitor() {
   const { storageData, loading, error, refresh } = useStorageMonitor();
   const [showMigrationDialog, setShowMigrationDialog] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [indexedDBOpen, setIndexedDBOpen] = useState(false);
+  const [localStorageOpen, setLocalStorageOpen] = useState(false);
 
   const handleRefresh = async () => {
     try {
@@ -168,7 +171,7 @@ export default function StorageMonitor() {
             <CardDescription>Database untuk data penilaian dan kalender</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-1 flex flex-col">
-            <div className="text-center py-4 border-b">
+            <div className="text-center py-4">
               <p className="text-3xl font-bold">{formatBytes(storageData.indexedDB.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {storageData.indexedDB.tables.length} tabel
@@ -176,23 +179,33 @@ export default function StorageMonitor() {
             </div>
 
             {storageData.indexedDB.tables.length > 0 ? (
-              <ScrollArea className="h-[300px] flex-1">
-                <div className="space-y-3">
-                  {storageData.indexedDB.tables.map((table) => (
-                    <div key={table.name} className="p-3 border rounded-lg space-y-1">
-                      <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{table.name}</p>
-                      </div>
-                      <div className="text-right ml-2">
-                        <p className="font-semibold text-sm">{formatBytes(table.size)}</p>
-                        <p className="text-xs text-muted-foreground">{table.count} records</p>
-                      </div>
-                      </div>
+              <Collapsible open={indexedDBOpen} onOpenChange={setIndexedDBOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${indexedDBOpen ? 'rotate-180' : ''}`} />
+                    {indexedDBOpen ? 'Sembunyikan' : 'Lihat'} Rincian Tabel
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4">
+                  <ScrollArea className="h-[300px]">
+                    <div className="space-y-3">
+                      {storageData.indexedDB.tables.map((table) => (
+                        <div key={table.name} className="p-3 border rounded-lg space-y-1">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{table.name}</p>
+                            </div>
+                            <div className="text-right ml-2">
+                              <p className="font-semibold text-sm">{formatBytes(table.size)}</p>
+                              <p className="text-xs text-muted-foreground">{table.count} records</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </ScrollArea>
+                </CollapsibleContent>
+              </Collapsible>
             ) : (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
@@ -214,32 +227,42 @@ export default function StorageMonitor() {
             <CardDescription>Storage utama untuk semua data aplikasi</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-1 flex flex-col">
-            <div className="text-center py-4 border-b">
+            <div className="text-center py-4">
               <p className="text-3xl font-bold">{formatBytes(storageData.localStorage.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {storageData.localStorage.items.length} items
               </p>
             </div>
 
-            <ScrollArea className="h-[300px] flex-1">
-              <div className="space-y-3">
-                {storageData.localStorage.items.map((item) => (
-                  <div key={item.key} className="p-3 border rounded-lg space-y-1">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{item.key}</p>
-                        {item.description && (
-                          <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-                        )}
+            <Collapsible open={localStorageOpen} onOpenChange={setLocalStorageOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full">
+                  <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${localStorageOpen ? 'rotate-180' : ''}`} />
+                  {localStorageOpen ? 'Sembunyikan' : 'Lihat'} Rincian Items
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4">
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-3">
+                    {storageData.localStorage.items.map((item) => (
+                      <div key={item.key} className="p-3 border rounded-lg space-y-1">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{item.key}</p>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                            )}
+                          </div>
+                          <div className="text-right ml-2">
+                            <p className="font-semibold text-sm">{formatBytes(item.size)}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right ml-2">
-                        <p className="font-semibold text-sm">{formatBytes(item.size)}</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
+                </ScrollArea>
+              </CollapsibleContent>
+            </Collapsible>
           </CardContent>
         </Card>
 
