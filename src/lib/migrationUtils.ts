@@ -7,11 +7,21 @@ export class DataMigration {
     return `localdb_${tableName}`;
   }
 
+  // All tables that need migration
+  private getAllTables(): TableName[] {
+    return [
+      'users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 
+      'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 
+      'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 
+      'pengaturan', 'activity_log', 'agenda_mengajar', 
+      'catatan_kalender', 'hari_libur'
+    ];
+  }
+
   // Check if migration is needed
   async isMigrationNeeded(): Promise<boolean> {
     try {
-      // Check if there's data in localStorage
-      const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+      const tables = this.getAllTables();
       
       for (const table of tables) {
         const localData = localStorage.getItem(this.getLocalStorageKey(table));
@@ -31,45 +41,122 @@ export class DataMigration {
     }
   }
 
-  // Migrate data from localStorage to IndexedDB
-  async migrateData(): Promise<{ success: boolean; error?: string }> {
+  // Get detailed migration status
+  async getMigrationStatus(): Promise<{
+    needsMigration: boolean;
+    pendingTables: { table: string; recordCount: number }[];
+    totalRecords: number;
+  }> {
+    const pendingTables: { table: string; recordCount: number }[] = [];
+    let totalRecords = 0;
+
+    try {
+      const tables = this.getAllTables();
+      
+      for (const table of tables) {
+        const localData = localStorage.getItem(this.getLocalStorageKey(table));
+        if (localData) {
+          try {
+            const records = JSON.parse(localData);
+            if (Array.isArray(records) && records.length > 0) {
+              const indexedData = await indexedDB.select(table);
+              if (indexedData.length === 0) {
+                pendingTables.push({ table, recordCount: records.length });
+                totalRecords += records.length;
+              }
+            }
+          } catch (parseError) {
+            console.warn(`Failed to parse localStorage data for ${table}:`, parseError);
+          }
+        }
+      }
+
+      return {
+        needsMigration: pendingTables.length > 0,
+        pendingTables,
+        totalRecords
+      };
+    } catch (error) {
+      console.error('Error getting migration status:', error);
+      return { needsMigration: false, pendingTables: [], totalRecords: 0 };
+    }
+  }
+
+  // Migrate data from localStorage to IndexedDB with progress tracking
+  async migrateData(onProgress?: (progress: number, message: string) => void): Promise<{ success: boolean; error?: string; report?: any }> {
     try {
       console.log('Starting data migration from localStorage to IndexedDB...');
+      onProgress?.(0, 'Memulai migrasi...');
       
-      const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+      const tables = this.getAllTables();
       const migrationData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
+      const migrationReport: Record<string, number> = {};
       
       // Collect data from localStorage
+      onProgress?.(10, 'Mengumpulkan data dari localStorage...');
       for (const table of tables) {
         const localData = localStorage.getItem(this.getLocalStorageKey(table));
         if (localData) {
           try {
             const records = JSON.parse(localData);
             migrationData[table] = Array.isArray(records) ? records : [];
+            migrationReport[table] = migrationData[table].length;
           } catch (parseError) {
             console.warn(`Failed to parse localStorage data for ${table}:`, parseError);
             migrationData[table] = [];
+            migrationReport[table] = 0;
           }
         } else {
           migrationData[table] = [];
+          migrationReport[table] = 0;
         }
       }
 
+      // Create backup before migration
+      onProgress?.(30, 'Membuat backup...');
+      this.createLocalStorageBackup(migrationData);
+
       // Import data to IndexedDB
+      onProgress?.(50, 'Memindahkan data ke IndexedDB...');
       const importResult = await indexedDB.importAll(migrationData);
       if (importResult.error) {
         return { success: false, error: importResult.error };
       }
 
-      // Create backup of localStorage data
-      this.createLocalStorageBackup(migrationData);
+      // Verify migration
+      onProgress?.(80, 'Memverifikasi data...');
+      const verificationResult = await this.verifyMigration(migrationData);
+      if (!verificationResult.success) {
+        return { success: false, error: verificationResult.error };
+      }
 
-      console.log('Data migration completed successfully');
-      return { success: true };
+      onProgress?.(100, 'Migrasi selesai!');
+      console.log('Data migration completed successfully', migrationReport);
+      return { success: true, report: migrationReport };
       
     } catch (error) {
       console.error('Migration failed:', error);
       return { success: false, error: `Migration failed: ${error}` };
+    }
+  }
+
+  // Verify migration integrity
+  private async verifyMigration(originalData: Record<TableName, any[]>): Promise<{ success: boolean; error?: string }> {
+    try {
+      for (const [table, records] of Object.entries(originalData)) {
+        if (records.length > 0) {
+          const indexedData = await indexedDB.select(table as TableName);
+          if (indexedData.length !== records.length) {
+            return { 
+              success: false, 
+              error: `Verification failed for ${table}: expected ${records.length} records, got ${indexedData.length}` 
+            };
+          }
+        }
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: `Verification error: ${error}` };
     }
   }
 
@@ -90,7 +177,7 @@ export class DataMigration {
   // Clear localStorage data after successful migration
   async clearLocalStorageData(): Promise<void> {
     try {
-      const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran'];
+      const tables = this.getAllTables();
       
       tables.forEach(table => {
         localStorage.removeItem(this.getLocalStorageKey(table));
