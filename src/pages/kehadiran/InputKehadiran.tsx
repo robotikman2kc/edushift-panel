@@ -486,6 +486,7 @@ const InputKehadiran = () => {
     return {
       hadir: statuses.filter(s => s === 'Hadir').length,
       sakit: statuses.filter(s => s === 'Sakit').length,
+      dispen: statuses.filter(s => s === 'Dispen').length,
       izin: statuses.filter(s => s === 'Izin').length,
       alpha: statuses.filter(s => s === 'Alpha').length,
       total: students.length,
@@ -500,6 +501,8 @@ const InputKehadiran = () => {
         return <Badge className="bg-green-100 text-green-800 border-green-200">Hadir</Badge>;
       case 'Sakit':
         return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Sakit</Badge>;
+      case 'Dispen':
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">D</Badge>;
       case 'Izin':
         return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Izin</Badge>;
       case 'Alpha':
@@ -634,6 +637,10 @@ const InputKehadiran = () => {
                     <div className="flex justify-between">
                       <span>Sakit:</span>
                       <span className="font-medium text-yellow-600">{stats.sakit}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Dispen:</span>
+                      <span className="font-medium text-purple-600">{stats.dispen}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Izin:</span>
@@ -784,6 +791,14 @@ const InputKehadiran = () => {
                               className="h-8 text-xs"
                             >
                               Sakit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={attendance[student.id] === 'Dispen' ? 'default' : 'outline'}
+                              onClick={() => handleAttendanceChange(student.id, 'Dispen')}
+                              className="h-8 text-xs"
+                            >
+                              Dispen
                             </Button>
                             <Button
                               size="sm"
