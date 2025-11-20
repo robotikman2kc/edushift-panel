@@ -234,7 +234,12 @@ const RekapKehadiran = () => {
           if (student.tanggal_masuk && date < student.tanggal_masuk) {
             kehadiranPerTanggal[date] = '-';
           } else {
-            kehadiranPerTanggal[date] = attendanceRecord ? attendanceRecord.status_kehadiran : '-';
+            const status = attendanceRecord ? attendanceRecord.status_kehadiran : '-';
+            // Debug logging for Dispen status
+            if (attendanceRecord && status === 'Dispen') {
+              console.log('Found Dispen status for student:', student.nama_siswa, 'Date:', date, 'Full record:', attendanceRecord);
+            }
+            kehadiranPerTanggal[date] = status;
           }
         });
 
@@ -283,6 +288,8 @@ const RekapKehadiran = () => {
         return <span className="inline-flex items-center justify-center w-8 h-8 bg-green-100 text-green-800 rounded-full text-sm font-bold">H</span>;
       case 'Sakit':
         return <span className="inline-flex items-center justify-center w-8 h-8 bg-yellow-100 text-yellow-800 rounded-full text-sm font-bold">S</span>;
+      case 'Dispen':
+        return <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-800 rounded-full text-sm font-bold">D</span>;
       case 'Izin':
         return <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">I</span>;
       case 'Alpha':
