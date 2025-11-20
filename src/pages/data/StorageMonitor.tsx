@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStorageMonitor, formatBytes } from "@/hooks/useStorageMonitor";
-import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StorageMonitor() {
@@ -124,61 +125,106 @@ export default function StorageMonitor() {
         </CardContent>
       </Card>
 
+      {/* Info Box */}
+      <Alert>
+        <Database className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Info Penyimpanan:</strong>
+          <ul className="mt-2 space-y-1 text-sm">
+            <li>• <strong>localStorage</strong>: Storage utama untuk semua data (guru, siswa, jurnal, kehadiran, dll)</li>
+            <li>• <strong>IndexedDB</strong>: Database untuk data nilai dan kalender</li>
+            <li>• <strong>OPFS</strong>: File system untuk foto profil dan dokumen</li>
+          </ul>
+        </AlertDescription>
+      </Alert>
+
       {/* Storage Breakdown */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-5">
         {/* IndexedDB */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
               IndexedDB
             </CardTitle>
-            <CardDescription>Database lokal utama</CardDescription>
+            <CardDescription>Database untuk data penilaian dan kalender</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-center py-4">
+            <div className="text-center py-4 border-b">
               <p className="text-3xl font-bold">{formatBytes(storageData.indexedDB.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {storageData.indexedDB.tables.length} tabel
               </p>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Top 5 Tabel Terbesar:</p>
-              {storageData.indexedDB.tables.slice(0, 5).map((table) => (
-                <div key={table.name} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground truncate pr-2">{table.name}</span>
-                  <span className="font-medium">
-                    {formatBytes(table.estimatedSize)} ({table.count})
-                  </span>
+            {storageData.indexedDB.tables.length > 0 ? (
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-3">
+                  {storageData.indexedDB.tables.map((table) => (
+                    <div key={table.name} className="p-3 border rounded-lg space-y-1">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{table.name}</p>
+                          {table.description && (
+                            <p className="text-xs text-muted-foreground mt-1">{table.description}</p>
+                          )}
+                        </div>
+                        <div className="text-right ml-2">
+                          <p className="font-semibold text-sm">{formatBytes(table.estimatedSize)}</p>
+                          <p className="text-xs text-muted-foreground">{table.count} records</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </ScrollArea>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  IndexedDB kosong atau belum diinisialisasi. Data utama disimpan di localStorage.
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
         {/* localStorage */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <HardDrive className="h-5 w-5" />
               localStorage
             </CardTitle>
-            <CardDescription>Storage sederhana key-value</CardDescription>
+            <CardDescription>Storage utama untuk semua data aplikasi</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-center py-4">
+            <div className="text-center py-4 border-b">
               <p className="text-3xl font-bold">{formatBytes(storageData.localStorage.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {storageData.localStorage.items} items
               </p>
             </div>
 
-            <Alert>
-              <AlertDescription className="text-xs">
-                Digunakan untuk settings dan data kecil lainnya
-              </AlertDescription>
-            </Alert>
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-3">
+                {storageData.localStorage.details.map((item) => (
+                  <div key={item.key} className="p-3 border rounded-lg space-y-1">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{item.key}</p>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                        )}
+                      </div>
+                      <div className="text-right ml-2">
+                        <p className="font-semibold text-sm">{formatBytes(item.size)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
 
@@ -186,7 +232,7 @@ export default function StorageMonitor() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
+              <FileText className="h-5 w-5" />
               OPFS
             </CardTitle>
             <CardDescription>Origin Private File System</CardDescription>
@@ -202,15 +248,15 @@ export default function StorageMonitor() {
                 <Alert>
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription className="text-xs">
-                    OPFS aktif untuk penyimpanan file seperti foto profil
+                    OPFS aktif untuk foto profil, logo sekolah, dan file lainnya
                   </AlertDescription>
                 </Alert>
               </>
             ) : (
               <Alert>
-                <XCircle className="h-4 w-4" />
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  OPFS tidak didukung di browser ini. File disimpan sebagai base64.
+                  OPFS tidak didukung. File disimpan sebagai base64 di localStorage (kurang efisien).
                 </AlertDescription>
               </Alert>
             )}

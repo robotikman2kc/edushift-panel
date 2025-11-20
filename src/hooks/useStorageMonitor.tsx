@@ -10,6 +10,13 @@ interface TableSize {
   name: string;
   count: number;
   estimatedSize: number;
+  description?: string;
+}
+
+interface LocalStorageItem {
+  key: string;
+  size: number;
+  description?: string;
 }
 
 interface StorageData {
@@ -21,6 +28,7 @@ interface StorageData {
   localStorage: {
     size: number;
     items: number;
+    details: LocalStorageItem[];
   };
   opfs: {
     size: number;
@@ -33,6 +41,35 @@ export const useStorageMonitor = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getTableDescription = (tableName: string): string => {
+    const descriptions: Record<string, string> = {
+      // IndexedDB tables
+      'nilai': 'Data nilai siswa per mata pelajaran',
+      'jenis_penilaian': 'Kategori penilaian (UH, UTS, UAS, dll)',
+      'bobot_penilaian': 'Bobot nilai per kelas dan kategori',
+      'catatan_kalender': 'Catatan & reminder di kalender',
+      'hari_libur': 'Data hari libur nasional',
+      // localStorage tables
+      'localdb_users': 'Data pengguna aplikasi',
+      'localdb_guru': 'Data guru/pengajar',
+      'localdb_mata_pelajaran': 'Data mata pelajaran',
+      'localdb_kelas': 'Data kelas',
+      'localdb_siswa': 'Data siswa',
+      'localdb_jenis_kegiatan': 'Jenis kegiatan jurnal guru',
+      'localdb_jurnal': 'Jurnal kegiatan harian guru',
+      'localdb_kehadiran': 'Data presensi/kehadiran siswa',
+      'localdb_jadwal_pelajaran': 'Jadwal pelajaran per kelas',
+      'localdb_jam_pelajaran': 'Waktu jam pelajaran',
+      'localdb_pengaturan': 'Pengaturan aplikasi',
+      'pdfTemplate': 'Template format PDF laporan',
+      'currentUser': 'Data user yang sedang login',
+      'notificationSettings': 'Pengaturan notifikasi',
+      'lastGoogleBackup': 'Info backup terakhir ke Google Drive',
+      'googleDriveSettings': 'Pengaturan Google Drive',
+    };
+    return descriptions[tableName] || '';
+  };
+
   const calculateStorageUsage = async (): Promise<StorageData> => {
     try {
       // Get total storage estimate
@@ -44,62 +81,78 @@ export const useStorageMonitor = () => {
       let indexedDBSize = 0;
       const tables: TableSize[] = [];
 
-      const dbRequest = indexedDB.open('sekolah-db', 1);
-      
-      await new Promise((resolve, reject) => {
-        dbRequest.onsuccess = async () => {
-          const db = dbRequest.result;
-          const tableNames = Array.from(db.objectStoreNames);
-          
-          for (const tableName of tableNames) {
-            try {
-              const transaction = db.transaction(tableName, 'readonly');
-              const store = transaction.objectStore(tableName);
-              const countRequest = store.count();
-              
-              const count = await new Promise<number>((res, rej) => {
-                countRequest.onsuccess = () => res(countRequest.result);
-                countRequest.onerror = () => rej(countRequest.error);
-              });
-
-              // Estimate size (rough calculation)
-              const getAllRequest = store.getAll();
-              const allData = await new Promise<any[]>((res, rej) => {
-                getAllRequest.onsuccess = () => res(getAllRequest.result);
-                getAllRequest.onerror = () => rej(getAllRequest.error);
-              });
-
-              const estimatedSize = new Blob([JSON.stringify(allData)]).size;
-              indexedDBSize += estimatedSize;
-
-              tables.push({
-                name: tableName,
-                count,
-                estimatedSize
-              });
-            } catch (err) {
-              console.error(`Error reading table ${tableName}:`, err);
-            }
-          }
-          
-          db.close();
-          resolve(undefined);
-        };
+      try {
+        const dbRequest = indexedDB.open('sekolah-db', 1);
         
-        dbRequest.onerror = () => reject(dbRequest.error);
-      });
+        await new Promise((resolve, reject) => {
+          dbRequest.onsuccess = async () => {
+            const db = dbRequest.result;
+            const tableNames = Array.from(db.objectStoreNames);
+            
+            for (const tableName of tableNames) {
+              try {
+                const transaction = db.transaction(tableName, 'readonly');
+                const store = transaction.objectStore(tableName);
+                const countRequest = store.count();
+                
+                const count = await new Promise<number>((res, rej) => {
+                  countRequest.onsuccess = () => res(countRequest.result);
+                  countRequest.onerror = () => rej(countRequest.error);
+                });
 
-      // Calculate localStorage size
+                // Estimate size (rough calculation)
+                const getAllRequest = store.getAll();
+                const allData = await new Promise<any[]>((res, rej) => {
+                  getAllRequest.onsuccess = () => res(getAllRequest.result);
+                  getAllRequest.onerror = () => rej(getAllRequest.error);
+                });
+
+                const estimatedSize = new Blob([JSON.stringify(allData)]).size;
+                indexedDBSize += estimatedSize;
+
+                tables.push({
+                  name: tableName,
+                  count,
+                  estimatedSize,
+                  description: getTableDescription(tableName)
+                });
+              } catch (err) {
+                console.error(`Error reading table ${tableName}:`, err);
+              }
+            }
+            
+            db.close();
+            resolve(undefined);
+          };
+          
+          dbRequest.onerror = () => {
+            console.warn('IndexedDB not available or empty');
+            resolve(undefined);
+          };
+        });
+      } catch (err) {
+        console.warn('IndexedDB error:', err);
+      }
+
+      // Calculate localStorage size with details
       let localStorageSize = 0;
       let localStorageItems = 0;
+      const localStorageDetails: LocalStorageItem[] = [];
       
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key) {
           const value = localStorage.getItem(key);
           if (value) {
-            localStorageSize += new Blob([key + value]).size;
+            const size = new Blob([key + value]).size;
+            localStorageSize += size;
             localStorageItems++;
+            
+            localStorageDetails.push({
+              key,
+              size,
+              description: getTableDescription(key)
+            });
           }
         }
       }
@@ -125,7 +178,8 @@ export const useStorageMonitor = () => {
         },
         localStorage: {
           size: localStorageSize,
-          items: localStorageItems
+          items: localStorageItems,
+          details: localStorageDetails.sort((a, b) => b.size - a.size)
         },
         opfs: {
           size: opfsSize,
