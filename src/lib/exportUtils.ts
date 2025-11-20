@@ -40,7 +40,7 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
       } : undefined,
       reportTitle: templateType === 'attendance' ? 'REKAP KEHADIRAN SISWA'
                 : templateType === 'grade' ? 'LAPORAN NILAI SISWA'
-                : 'LAPORAN KINERJA BULANAN',
+                : 'LAPORAN DAFTAR AGENDA MENGAJAR',
       footer: {
         text: '', // Remove footer text to eliminate school name/email in footer
         showPageNumbers: true,
