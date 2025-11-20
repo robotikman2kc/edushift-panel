@@ -8,6 +8,7 @@ export interface PDFTemplate {
     address?: string;
   };
   reportTitle?: string; // Judul laporan yang ditampilkan di bawah garis
+  signatureDate?: string;
   footer?: {
     text?: string;
     showPageNumbers?: boolean;

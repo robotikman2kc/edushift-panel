@@ -56,6 +56,7 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
       },
       teacherInfo: settings.defaultTeacher && settings.defaultTeacher.name ? settings.defaultTeacher : undefined,
       signatureLocation: settings.schoolInfo?.signatureLocation || 'Jakarta',
+      signatureDate: format?.signatureDate,
     };
     
     console.log('Generated custom template:', customTemplate); // Debug log
@@ -319,7 +320,12 @@ export const generatePDFBlob = (
         const teacherName = template.teacherInfo?.name || 'Guru';
         const teacherNIP = template.teacherInfo?.nip;
         
-        doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
+        // Use custom signature date if provided, otherwise use current date
+        const signatureDate = template.signatureDate 
+          ? new Date(template.signatureDate).toLocaleDateString('id-ID')
+          : new Date().toLocaleDateString('id-ID');
+        
+        doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
         doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
         doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
         doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 30);
@@ -332,8 +338,13 @@ export const generatePDFBlob = (
         const signerPosition = template.teacherInfo?.jabatan || 'Guru';
         const signerNIP = template.teacherInfo?.nip;
         
+        // Use custom signature date if provided, otherwise use current date
+        const signatureDate = template.signatureDate 
+          ? new Date(template.signatureDate).toLocaleDateString('id-ID')
+          : new Date().toLocaleDateString('id-ID');
+        
         const rightColumnX = pageWidth - 80;
-        doc.text(`${signatureLocation}, ${new Date().toLocaleDateString('id-ID')}`, rightColumnX, signatureStartY);
+        doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
         doc.text('Mengetahui,', rightColumnX, signatureStartY + 5);
         doc.text(signerPosition, rightColumnX, signatureStartY + 10);
         doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
