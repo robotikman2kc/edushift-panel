@@ -30,6 +30,7 @@ export function TopBar() {
   const [showBackupWarning, setShowBackupWarning] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState(0);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -38,6 +39,34 @@ export function TopBar() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast({
+        title: "Koneksi Tersambung",
+        description: "Anda kembali online",
+      });
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast({
+        variant: "destructive",
+        title: "Koneksi Terputus",
+        description: "Anda sedang offline. Beberapa fitur mungkin tidak tersedia.",
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [toast]);
 
   // Load profile from localStorage
   useEffect(() => {
@@ -173,9 +202,22 @@ export function TopBar() {
             <SidebarTrigger className="h-8 w-8" />
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                  Online
+                <Circle 
+                  className={`h-2 w-2 ${
+                    isOnline 
+                      ? 'fill-green-500 text-green-500' 
+                      : 'fill-red-500 text-red-500'
+                  }`} 
+                />
+                <Badge 
+                  variant="secondary" 
+                  className={
+                    isOnline
+                      ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800'
+                      : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
+                  }
+                >
+                  {isOnline ? 'Online' : 'Offline'}
                 </Badge>
               </div>
               <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
