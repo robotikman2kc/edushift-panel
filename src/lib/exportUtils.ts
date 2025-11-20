@@ -138,7 +138,7 @@ export const generatePDFBlob = (
       doc.setTextColor(0, 0, 0);
       const reportTitleWidth = doc.getTextWidth(template.reportTitle);
       doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
-      currentY += 8;
+      currentY += 5;
     }
 
     // Add month info for journal reports (before teacher info)
