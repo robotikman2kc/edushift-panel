@@ -214,19 +214,25 @@ class GoogleDriveBackup {
    */
   private async updateLastBackupDate(date: Date): Promise<void> {
     try {
+      const dateString = date.toISOString();
+      
+      // Update IndexedDB
       const allSettings = await indexedDB.select('pengaturan');
       const existing = allSettings.find((s: any) => s.key === this.LAST_BACKUP_KEY);
 
       if (existing) {
         await indexedDB.update('pengaturan', existing.id, {
-          value: date.toISOString(),
+          value: dateString,
         });
       } else {
         await indexedDB.insert('pengaturan', {
           key: this.LAST_BACKUP_KEY,
-          value: date.toISOString(),
+          value: dateString,
         });
       }
+      
+      // Also update localStorage so TopBar warning can detect it
+      localStorage.setItem('lastBackupDate', dateString);
     } catch (error) {
       console.error('Error updating last backup date:', error);
     }
