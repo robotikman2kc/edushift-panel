@@ -193,6 +193,38 @@ class OPFSManager {
   isOPFSSupported(): boolean {
     return this.isSupported;
   }
+
+  /**
+   * Hitung total ukuran file di OPFS
+   */
+  async calculateTotalSize(): Promise<number> {
+    if (!(await this.ensureInit())) {
+      return 0;
+    }
+
+    try {
+      let totalSize = 0;
+      
+      // Recursive function to traverse directories
+      const traverseDirectory = async (dirHandle: FileSystemDirectoryHandle): Promise<void> => {
+        // @ts-ignore - FileSystemDirectoryHandle has entries() method
+        for await (const [, entry] of dirHandle.entries()) {
+          if (entry.kind === 'file') {
+            const file = await entry.getFile();
+            totalSize += file.size;
+          } else if (entry.kind === 'directory') {
+            await traverseDirectory(entry);
+          }
+        }
+      };
+
+      await traverseDirectory(this.root!);
+      return totalSize;
+    } catch (error) {
+      console.error('Failed to calculate OPFS size:', error);
+      return 0;
+    }
+  }
 }
 
 // Export singleton instance
