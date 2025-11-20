@@ -55,6 +55,7 @@ import { toast } from "@/hooks/use-toast";
 import { exportToPDF, exportToExcel, getCustomPDFTemplate } from "@/lib/exportUtils";
 import * as XLSX from 'xlsx';
 import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { defaultTemplate, PDFTemplate } from "@/lib/pdfTemplates";
 
 interface Column {
@@ -120,6 +121,7 @@ export function DataTable({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
 
@@ -328,7 +330,7 @@ export function DataTable({
     setEditValue("");
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (signatureDate?: Date) => {
     try {
       const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
       
@@ -336,6 +338,14 @@ export function DataTable({
       let template = defaultTemplate;
       if (title?.toLowerCase().includes('jurnal')) {
         template = getCustomPDFTemplate('journal');
+      }
+      
+      // Add signature date to template
+      if (signatureDate) {
+        template = {
+          ...template,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
       }
       
       const success = exportToPDF(
@@ -605,7 +615,7 @@ export function DataTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={handleExportPDF}>
+                  <DropdownMenuItem onClick={() => setIsExportDateDialogOpen(true)}>
                     <FileText className="mr-2 h-4 w-4" />
                     Export PDF
                   </DropdownMenuItem>
@@ -982,6 +992,14 @@ export function DataTable({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleExportPDF}
+        title="Export PDF"
+        description="Pilih tanggal untuk tanda tangan pada laporan"
+      />
     </>
   );
 }

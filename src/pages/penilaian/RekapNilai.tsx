@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, Star } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa, Kehadiran } from "@/lib/indexedDB";
 import { exportToExcel, generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { getBobotForKelas } from "@/lib/bobotUtils";
 
 interface StudentGrade {
@@ -45,6 +46,7 @@ const RekapNilai = () => {
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [loading, setLoading] = useState(false);
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -220,7 +222,7 @@ const RekapNilai = () => {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (signatureDate?: Date) => {
     if (studentGrades.length === 0) {
       toast({
         title: "Tidak Ada Data",
@@ -259,7 +261,16 @@ const RekapNilai = () => {
       ];
 
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran}`;
-      const customTemplate = getCustomPDFTemplate('grade');
+      let customTemplate = getCustomPDFTemplate('grade');
+      
+      // Add signature date to template
+      if (signatureDate) {
+        customTemplate = {
+          ...customTemplate,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
+      }
+      
       const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}.pdf`;
       
       const blob = generatePDFBlob(
@@ -457,7 +468,7 @@ const RekapNilai = () => {
             {studentGrades.length > 0 && (
               <div className="flex gap-2">
                 <Button 
-                  onClick={handleExportPDF}
+                  onClick={() => setIsExportDateDialogOpen(true)}
                   variant="outline"
                   size="sm"
                 >
@@ -556,6 +567,14 @@ const RekapNilai = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleExportPDF}
+        title="Export Rekap Nilai"
+        description="Pilih tanggal untuk tanda tangan pada laporan nilai"
+      />
     </div>
   );
 };

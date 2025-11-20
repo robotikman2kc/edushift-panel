@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, Users, BookOpen, BarChart3 } from "lucide-react";
 import { exportToExcel, getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
 interface Kelas {
   id: string;
@@ -78,6 +79,7 @@ const RekapKehadiran = () => {
   const [reportData, setReportData] = useState<KehadiranReport[]>([]);
   const [uniqueDates, setUniqueDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -304,7 +306,7 @@ const RekapKehadiran = () => {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (signatureDate?: Date) => {
     try {
       console.log('Starting PDF export for attendance report'); // Debug log
       
@@ -344,8 +346,16 @@ const RekapKehadiran = () => {
       const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${selectedMonthLabel} ${selectedYear}`;
       
       // Use custom template from settings
-      const customTemplate = getCustomPDFTemplate('attendance');
+      let customTemplate = getCustomPDFTemplate('attendance');
       console.log('Using custom template for attendance:', customTemplate); // Debug log
+      
+      // Add signature date to template
+      if (signatureDate) {
+        customTemplate = {
+          ...customTemplate,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
+      }
       
       const filename = `rekap_kehadiran_${selectedYear}_${selectedMonth}.pdf`;
       
@@ -572,7 +582,7 @@ const RekapKehadiran = () => {
               <div className="pt-4 border-t space-y-2">
                 <h4 className="font-medium text-sm">Export Laporan</h4>
                 <div className="space-y-2">
-                  <Button size="sm" className="w-full" onClick={handleExportPDF} variant="outline">
+                  <Button size="sm" className="w-full" onClick={() => setIsExportDateDialogOpen(true)} variant="outline">
                     <FileText className="mr-2 h-4 w-4" />
                     Export PDF
                   </Button>
@@ -743,6 +753,14 @@ const RekapKehadiran = () => {
           </Card>
         </div>
       </div>
+      
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleExportPDF}
+        title="Export Rekap Kehadiran"
+        description="Pilih tanggal untuk tanda tangan pada laporan kehadiran"
+      />
     </div>
   );
 };
