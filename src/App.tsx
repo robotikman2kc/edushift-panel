@@ -33,6 +33,7 @@ import RekapKehadiran from "./pages/kehadiran/RekapKehadiran";
 import ManajemenData from "./pages/data/ManajemenData";
 import BackupRestore from "./pages/data/BackupRestore";
 import BackupGoogleDrive from "./pages/data/BackupGoogleDrive";
+import StorageMonitor from "./pages/data/StorageMonitor";
 
 // Jurnal Pages
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
@@ -126,6 +127,7 @@ const App = () => {
                   <Route path="/data/manajemen-data" element={<ManajemenData />} />
                   <Route path="/data/backup-restore" element={<BackupRestore />} />
                   <Route path="/data/backup-google-drive" element={<BackupGoogleDrive />} />
+                  <Route path="/data/storage-monitor" element={<StorageMonitor />} />
 
                   {/* Akun Routes */}
                   <Route path="/akun/profil" element={<Profil />} />
