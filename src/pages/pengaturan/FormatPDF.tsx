@@ -38,6 +38,7 @@ interface PDFFormatSettings {
     showLogo: boolean;
     showDate: boolean;
     showSignature: boolean;
+    signatureDate?: string;
     headerColor: string;
     orientation: 'portrait' | 'landscape';
   };
@@ -46,6 +47,7 @@ interface PDFFormatSettings {
     showLogo: boolean;
     showDate: boolean;
     showSignature: boolean;
+    signatureDate?: string;
     headerColor: string;
     orientation: 'portrait' | 'landscape';
   };
@@ -54,6 +56,7 @@ interface PDFFormatSettings {
     showLogo: boolean;
     showDate: boolean;
     showSignature: boolean;
+    signatureDate?: string;
     headerColor: string;
     orientation: 'portrait' | 'landscape';
   };
@@ -333,6 +336,24 @@ const FormatPDF: React.FC = () => {
                 }))
               }
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor={`${formatType}-signature-date`}>Tanggal Tanda Tangan</Label>
+            <Input
+              id={`${formatType}-signature-date`}
+              type="date"
+              value={format.signatureDate || ''}
+              onChange={(e) =>
+                setSettings(prev => ({
+                  ...prev,
+                  [formatType]: { ...prev[formatType], signatureDate: e.target.value },
+                }))
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              Kosongkan untuk menggunakan tanggal saat cetak laporan
+            </p>
           </div>
         </div>
       </CardContent>
