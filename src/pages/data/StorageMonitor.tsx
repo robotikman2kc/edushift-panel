@@ -157,9 +157,9 @@ export default function StorageMonitor() {
       </Alert>
 
       {/* Storage Breakdown */}
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* IndexedDB */}
-        <Card className="lg:col-span-2">
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
@@ -167,7 +167,7 @@ export default function StorageMonitor() {
             </CardTitle>
             <CardDescription>Database untuk data penilaian dan kalender</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex-1 flex flex-col">
             <div className="text-center py-4 border-b">
               <p className="text-3xl font-bold">{formatBytes(storageData.indexedDB.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -176,7 +176,7 @@ export default function StorageMonitor() {
             </div>
 
             {storageData.indexedDB.tables.length > 0 ? (
-              <ScrollArea className="h-[300px]">
+              <ScrollArea className="h-[300px] flex-1">
                 <div className="space-y-3">
                   {storageData.indexedDB.tables.map((table) => (
                     <div key={table.name} className="p-3 border rounded-lg space-y-1">
@@ -205,7 +205,7 @@ export default function StorageMonitor() {
         </Card>
 
         {/* localStorage */}
-        <Card className="lg:col-span-2">
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <HardDrive className="h-5 w-5" />
@@ -213,7 +213,7 @@ export default function StorageMonitor() {
             </CardTitle>
             <CardDescription>Storage utama untuk semua data aplikasi</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex-1 flex flex-col">
             <div className="text-center py-4 border-b">
               <p className="text-3xl font-bold">{formatBytes(storageData.localStorage.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -221,7 +221,7 @@ export default function StorageMonitor() {
               </p>
             </div>
 
-            <ScrollArea className="h-[300px]">
+            <ScrollArea className="h-[300px] flex-1">
               <div className="space-y-3">
                 {storageData.localStorage.items.map((item) => (
                   <div key={item.key} className="p-3 border rounded-lg space-y-1">
@@ -244,7 +244,7 @@ export default function StorageMonitor() {
         </Card>
 
         {/* OPFS */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -252,7 +252,7 @@ export default function StorageMonitor() {
             </CardTitle>
             <CardDescription>Origin Private File System</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex-1 flex flex-col">
             {storageData.opfs.supported ? (
               <>
                 <div className="text-center py-4">
