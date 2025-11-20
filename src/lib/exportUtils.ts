@@ -161,6 +161,8 @@ export const generatePDFBlob = (
       if (title.includes('Jurnal')) {
         // Journal reports: Show employee info left-aligned above table with aligned colons
         const labelWidth = 25; // Fixed width for labels to align colons
+        const schoolName = template.schoolName || template.header?.schoolName || 'Sekolah';
+        
         doc.text('Nama', template.layout.margins.left, infoY);
         doc.text(':', template.layout.margins.left + labelWidth, infoY);
         doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
@@ -175,7 +177,7 @@ export const generatePDFBlob = (
         
         doc.text('Satuan Kerja', template.layout.margins.left, infoY + 15);
         doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
-        doc.text(template.teacherInfo.satuan_kerja || '-', template.layout.margins.left + labelWidth + 3, infoY + 15);
+        doc.text(schoolName, template.layout.margins.left + labelWidth + 3, infoY + 15);
         currentY += 22;
       } else if (title.includes('Nilai')) {
         // Grade reports: Show subject info
