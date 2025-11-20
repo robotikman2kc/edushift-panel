@@ -148,7 +148,7 @@ export const generatePDFBlob = (
       const bulanText = `Bulan ${additionalInfo.bulan}`;
       const bulanWidth = doc.getTextWidth(bulanText);
       doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
-      currentY += 8;
+      currentY += 12;
     }
 
     // Add teacher/employee info if available
