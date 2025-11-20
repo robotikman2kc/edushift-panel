@@ -32,6 +32,7 @@ export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'jou
       ...defaultTemplate,
       id: `custom-${templateType}`,
       name: `Custom ${templateType} Template`,
+      schoolName: settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
       header: format?.showHeader !== false ? {
         schoolName: settings.schoolInfo?.name || 'Sistem Informasi Sekolah',
         address: settings.schoolInfo?.address || '',
@@ -302,7 +303,7 @@ export const generatePDFBlob = (
         // Left side: Pejabat Penilai (Principal) - NO DATE
         const principalName = template.teacherInfo?.kepala_sekolah_nama || 'Kepala Sekolah';
         const principalNIP = template.teacherInfo?.kepala_sekolah_nip;
-        const schoolName = template.header?.schoolName || 'Sekolah';
+        const schoolName = template.schoolName || template.header?.schoolName || 'Sekolah';
         
         doc.text('Pejabat Penilai,', leftColumnX, signatureStartY + 5);
         doc.text(`Kepala ${schoolName}`, leftColumnX, signatureStartY + 10);
