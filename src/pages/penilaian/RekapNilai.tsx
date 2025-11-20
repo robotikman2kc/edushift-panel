@@ -247,7 +247,7 @@ const RekapNilai = () => {
         });
 
         rowData['Rata-rata'] = student.rata_rata.toFixed(1);
-        rowData['Keaktifan'] = `${student.total_keaktifan} (${student.persentase_keaktifan.toFixed(0)}%)`;
+        rowData['Keaktifan'] = `${student.total_keaktifan}x`;
 
         return rowData;
       });
@@ -330,8 +330,7 @@ const RekapNilai = () => {
         });
 
         rowData['Rata-rata'] = student.rata_rata.toFixed(1);
-        rowData['Total Keaktifan'] = student.total_keaktifan;
-        rowData['Persentase Keaktifan'] = `${student.persentase_keaktifan.toFixed(1)}%`;
+        rowData['Keaktifan'] = `${student.total_keaktifan}x`;
 
         return rowData;
       });
@@ -342,8 +341,7 @@ const RekapNilai = () => {
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
         { key: 'Rata-rata', label: 'Rata-rata' },
-        { key: 'Total Keaktifan', label: 'Total Keaktifan' },
-        { key: 'Persentase Keaktifan', label: 'Persentase Keaktifan' }
+        { key: 'Keaktifan', label: 'Keaktifan' }
       ];
 
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran}`;
@@ -546,17 +544,13 @@ const RekapNilai = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <Badge 
-                              variant="outline"
-                              className={student.persentase_keaktifan >= 70 ? "bg-yellow-100 text-yellow-900 border-yellow-300" : ""}
-                            >
-                              {student.total_keaktifan}x
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {student.persentase_keaktifan.toFixed(0)}%
-                            </span>
-                          </div>
+                          <Badge 
+                            variant="outline"
+                            className="bg-yellow-100 text-yellow-900 border-yellow-300"
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            {student.total_keaktifan}x
+                          </Badge>
                         </TableCell>
                       </TableRow>
                     ))}
