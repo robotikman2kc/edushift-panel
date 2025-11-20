@@ -1,25 +1,36 @@
 import { useState, useEffect } from 'react';
+import { indexedDB } from '@/lib/indexedDB';
+import { dataMigration } from '@/lib/migrationUtils';
+import { isWhitelisted, getStorageDescription } from '@/lib/storageConfig';
 
-interface StorageInfo {
+export interface StorageInfo {
+  total: number;
   used: number;
-  quota: number;
+  available: number;
   percentage: number;
 }
 
-interface TableSize {
+export interface TableSize {
   name: string;
+  size: number;
   count: number;
-  estimatedSize: number;
-  description?: string;
 }
 
-interface LocalStorageItem {
+export interface LocalStorageItem {
   key: string;
   size: number;
+  value?: string;
   description?: string;
+  isWhitelisted?: boolean;
 }
 
-interface StorageData {
+export interface MigrationStatus {
+  needsMigration: boolean;
+  pendingTables: { table: string; recordCount: number }[];
+  totalRecords: number;
+}
+
+export interface StorageData {
   total: StorageInfo;
   indexedDB: {
     size: number;
@@ -27,13 +38,13 @@ interface StorageData {
   };
   localStorage: {
     size: number;
-    items: number;
-    details: LocalStorageItem[];
+    items: LocalStorageItem[];
   };
   opfs: {
     size: number;
     supported: boolean;
   };
+  migration?: MigrationStatus;
 }
 
 export const useStorageMonitor = () => {
@@ -70,126 +81,111 @@ export const useStorageMonitor = () => {
     return descriptions[tableName] || '';
   };
 
-  const calculateStorageUsage = async (): Promise<StorageData> => {
+  const getMigrationStatus = async (): Promise<MigrationStatus | undefined> => {
     try {
-      // Get total storage estimate
-      const estimate = await navigator.storage.estimate();
-      const used = estimate.usage || 0;
-      const quota = estimate.quota || 0;
-
-      // Calculate IndexedDB size
-      let indexedDBSize = 0;
-      const tables: TableSize[] = [];
-
-      try {
-        const dbRequest = indexedDB.open('sekolah-db', 1);
-        
-        await new Promise((resolve, reject) => {
-          dbRequest.onsuccess = async () => {
-            const db = dbRequest.result;
-            const tableNames = Array.from(db.objectStoreNames);
-            
-            for (const tableName of tableNames) {
-              try {
-                const transaction = db.transaction(tableName, 'readonly');
-                const store = transaction.objectStore(tableName);
-                const countRequest = store.count();
-                
-                const count = await new Promise<number>((res, rej) => {
-                  countRequest.onsuccess = () => res(countRequest.result);
-                  countRequest.onerror = () => rej(countRequest.error);
-                });
-
-                // Estimate size (rough calculation)
-                const getAllRequest = store.getAll();
-                const allData = await new Promise<any[]>((res, rej) => {
-                  getAllRequest.onsuccess = () => res(getAllRequest.result);
-                  getAllRequest.onerror = () => rej(getAllRequest.error);
-                });
-
-                const estimatedSize = new Blob([JSON.stringify(allData)]).size;
-                indexedDBSize += estimatedSize;
-
-                tables.push({
-                  name: tableName,
-                  count,
-                  estimatedSize,
-                  description: getTableDescription(tableName)
-                });
-              } catch (err) {
-                console.error(`Error reading table ${tableName}:`, err);
-              }
-            }
-            
-            db.close();
-            resolve(undefined);
-          };
-          
-          dbRequest.onerror = () => {
-            console.warn('IndexedDB not available or empty');
-            resolve(undefined);
-          };
-        });
-      } catch (err) {
-        console.warn('IndexedDB error:', err);
+      // Check if migration is already completed
+      const migrationCompleted = localStorage.getItem('migrationCompleted');
+      if (migrationCompleted) {
+        return undefined;
       }
 
-      // Calculate localStorage size with details
-      let localStorageSize = 0;
-      let localStorageItems = 0;
-      const localStorageDetails: LocalStorageItem[] = [];
+      // Check session storage first (from main.tsx)
+      const sessionData = sessionStorage.getItem('migrationData');
+      if (sessionData) {
+        return JSON.parse(sessionData);
+      }
+
+      // Otherwise check directly
+      return await dataMigration.getMigrationStatus();
+    } catch (error) {
+      console.error('Error getting migration status:', error);
+      return undefined;
+    }
+  };
+
+  const calculateStorageUsage = async (): Promise<StorageData> => {
+    const estimate = await navigator.storage.estimate();
+    const totalUsed = estimate.usage || 0;
+
+    // Calculate IndexedDB size
+    let indexedDBSize = 0;
+    const tableSizes: TableSize[] = [];
+    
+    try {
+      const tables = await indexedDB.exportAll();
       
+      for (const [tableName, records] of Object.entries(tables)) {
+        const size = new Blob([JSON.stringify(records)]).size;
+        indexedDBSize += size;
+        tableSizes.push({
+          name: tableName,
+          size,
+          count: Array.isArray(records) ? records.length : 0,
+        });
+      }
+    } catch (error) {
+      console.error('Error calculating IndexedDB size:', error);
+    }
+
+    // Calculate localStorage size
+    let localStorageSize = 0;
+    const items: LocalStorageItem[] = [];
+    
+    try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key) {
-          const value = localStorage.getItem(key);
-          if (value) {
-            const size = new Blob([key + value]).size;
-            localStorageSize += size;
-            localStorageItems++;
-            
-            localStorageDetails.push({
-              key,
-              size,
-              description: getTableDescription(key)
-            });
-          }
+          const value = localStorage.getItem(key) || '';
+          const size = new Blob([value]).size;
+          items.push({
+            key,
+            size,
+            description: getStorageDescription(key),
+            isWhitelisted: isWhitelisted(key),
+          });
+          localStorageSize += size;
         }
       }
-
-      // Check OPFS support and size (approximate)
-      const opfsSupported = 'storage' in navigator && 'getDirectory' in navigator.storage;
-      let opfsSize = 0;
-      
-      // Estimate OPFS size from remaining usage
-      if (opfsSupported) {
-        opfsSize = Math.max(0, used - indexedDBSize - localStorageSize);
-      }
-
-      return {
-        total: {
-          used,
-          quota,
-          percentage: quota > 0 ? (used / quota) * 100 : 0
-        },
-        indexedDB: {
-          size: indexedDBSize,
-          tables: tables.sort((a, b) => b.estimatedSize - a.estimatedSize)
-        },
-        localStorage: {
-          size: localStorageSize,
-          items: localStorageItems,
-          details: localStorageDetails.sort((a, b) => b.size - a.size)
-        },
-        opfs: {
-          size: opfsSize,
-          supported: opfsSupported
-        }
-      };
-    } catch (err) {
-      console.error('Error calculating storage usage:', err);
-      throw err;
+    } catch (error) {
+      console.error('Error calculating localStorage size:', error);
     }
+
+    // Calculate OPFS size (simplified)
+    let opfsSize = 0;
+    let opfsSupported = false;
+    
+    try {
+      if ('storage' in navigator && 'getDirectory' in navigator.storage) {
+        opfsSupported = true;
+      }
+    } catch (error) {
+      console.warn('OPFS not supported:', error);
+    }
+
+    // Get migration status
+    const migrationStatus = await getMigrationStatus();
+
+    return {
+      total: {
+        total: estimate.quota || 0,
+        used: totalUsed,
+        available: (estimate.quota || 0) - totalUsed,
+        percentage: estimate.quota ? (totalUsed / estimate.quota) * 100 : 0,
+      },
+      indexedDB: {
+        size: indexedDBSize,
+        tables: tableSizes,
+      },
+      localStorage: {
+        size: localStorageSize,
+        items,
+      },
+      opfs: {
+        size: opfsSize,
+        supported: opfsSupported,
+      },
+      migration: migrationStatus,
+    };
   };
 
   const refreshStorageData = async () => {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,17 +6,34 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { useStorageMonitor, formatBytes } from "@/hooks/useStorageMonitor";
-import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText } from "lucide-react";
+import { MigrationDialog } from "@/components/data/MigrationDialog";
+import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText, AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StorageMonitor() {
   const { storageData, loading, error, refresh } = useStorageMonitor();
+  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
-    toast.info("Memperbarui data storage...");
-    await refresh();
-    toast.success("Data storage berhasil diperbarui");
+    try {
+      setRefreshing(true);
+      await refresh();
+      toast.success('Data storage berhasil diperbarui');
+    } catch (error) {
+      toast.error('Gagal memperbarui data storage');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleMigrationComplete = () => {
+    setShowMigrationDialog(false);
+    sessionStorage.removeItem('needsMigration');
+    sessionStorage.removeItem('migrationData');
+    handleRefresh();
   };
 
   const getStorageStatus = (percentage: number) => {
@@ -105,7 +123,7 @@ export default function StorageMonitor() {
             <div className="flex justify-between text-sm mb-2">
               <span className="text-muted-foreground">Terpakai</span>
               <span className="font-medium">
-                {formatBytes(storageData.total.used)} / {formatBytes(storageData.total.quota)}
+                {formatBytes(storageData.total.used)} / {formatBytes(storageData.total.total)}
               </span>
             </div>
             <Progress value={storageData.total.percentage} className="h-3" />
@@ -163,16 +181,13 @@ export default function StorageMonitor() {
                   {storageData.indexedDB.tables.map((table) => (
                     <div key={table.name} className="p-3 border rounded-lg space-y-1">
                       <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{table.name}</p>
-                          {table.description && (
-                            <p className="text-xs text-muted-foreground mt-1">{table.description}</p>
-                          )}
-                        </div>
-                        <div className="text-right ml-2">
-                          <p className="font-semibold text-sm">{formatBytes(table.estimatedSize)}</p>
-                          <p className="text-xs text-muted-foreground">{table.count} records</p>
-                        </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{table.name}</p>
+                      </div>
+                      <div className="text-right ml-2">
+                        <p className="font-semibold text-sm">{formatBytes(table.size)}</p>
+                        <p className="text-xs text-muted-foreground">{table.count} records</p>
+                      </div>
                       </div>
                     </div>
                   ))}
@@ -202,13 +217,13 @@ export default function StorageMonitor() {
             <div className="text-center py-4 border-b">
               <p className="text-3xl font-bold">{formatBytes(storageData.localStorage.size)}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {storageData.localStorage.items} items
+                {storageData.localStorage.items.length} items
               </p>
             </div>
 
             <ScrollArea className="h-[300px]">
               <div className="space-y-3">
-                {storageData.localStorage.details.map((item) => (
+                {storageData.localStorage.items.map((item) => (
                   <div key={item.key} className="p-3 border rounded-lg space-y-1">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
