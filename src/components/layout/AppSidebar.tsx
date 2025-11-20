@@ -19,7 +19,8 @@ import {
   CalendarDays,
   LayoutDashboard,
   Bell,
-  Cloud
+  Cloud,
+  HardDrive
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -88,6 +89,7 @@ const menuItems = [
       { title: "Manajemen Data", url: "/data/manajemen-data", icon: Database },
       { title: "Backup dan Restore", url: "/data/backup-restore", icon: Download },
       { title: "Backup Google Drive", url: "/data/backup-google-drive", icon: Cloud },
+      { title: "Storage Monitor", url: "/data/storage-monitor", icon: HardDrive },
     ],
   },
   {
