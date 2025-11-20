@@ -105,7 +105,6 @@ export const useStorageMonitor = () => {
 
   const calculateStorageUsage = async (): Promise<StorageData> => {
     const estimate = await navigator.storage.estimate();
-    const totalUsed = estimate.usage || 0;
 
     // Calculate IndexedDB size
     let indexedDBSize = 0;
@@ -168,12 +167,15 @@ export const useStorageMonitor = () => {
     // Get migration status
     const migrationStatus = await getMigrationStatus();
 
+    // Calculate actual total from the three storage types
+    const calculatedTotal = indexedDBSize + localStorageSize + opfsSize;
+
     return {
       total: {
         total: estimate.quota || 0,
-        used: totalUsed,
-        available: (estimate.quota || 0) - totalUsed,
-        percentage: estimate.quota ? (totalUsed / estimate.quota) * 100 : 0,
+        used: calculatedTotal,
+        available: (estimate.quota || 0) - calculatedTotal,
+        percentage: estimate.quota ? (calculatedTotal / estimate.quota) * 100 : 0,
       },
       indexedDB: {
         size: indexedDBSize,
