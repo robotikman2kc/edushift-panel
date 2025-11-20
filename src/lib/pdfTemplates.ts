@@ -1,6 +1,7 @@
 export interface PDFTemplate {
   id: string;
   name: string;
+  schoolName?: string;
   header?: {
     logo?: string;
     schoolName: string;
