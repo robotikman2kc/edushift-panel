@@ -469,7 +469,7 @@ const AgendaMengajar = () => {
         ? 'Semua Kelas' 
         : getKelasName(selectedKelasFilter);
 
-      const title = `Agenda Mengajar - ${kelasName} - ${periodName}`;
+      const title = `Laporan Daftar Agenda Mengajar - ${kelasName} - ${periodName}`;
       
       let customTemplate = getCustomPDFTemplate('journal');
       if (signatureDate) {
