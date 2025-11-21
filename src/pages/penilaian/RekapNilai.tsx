@@ -12,6 +12,7 @@ import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa, Keh
 import { exportToExcel, generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { getBobotForKelas } from "@/lib/bobotUtils";
+import { SemesterSelector } from "@/components/common/SemesterSelector";
 
 interface StudentGrade {
   siswa_id: string;
@@ -40,6 +41,8 @@ const RekapNilai = () => {
   const [selectedTingkat, setSelectedTingkat] = useState(() => getSavedState('tingkat', ''));
   const [selectedKelas, setSelectedKelas] = useState(() => getSavedState('kelas', ''));
   const [selectedMataPelajaran, setSelectedMataPelajaran] = useState(() => getSavedState('mapel', ''));
+  const [selectedSemester, setSelectedSemester] = useState(() => getSavedState('semester', ''));
+  const [selectedTahunAjaran, setSelectedTahunAjaran] = useState(() => getSavedState('tahun_ajaran', ''));
   
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [filteredKelasList, setFilteredKelasList] = useState<Kelas[]>([]);
@@ -66,7 +69,27 @@ const RekapNilai = () => {
 
   useEffect(() => {
     loadMasterData();
+    loadActiveSemester();
   }, []);
+
+  const loadActiveSemester = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const semesterSetting = settings.find((s: any) => s.key === "semester_aktif");
+      const tahunSetting = settings.find((s: any) => s.key === "tahun_ajaran_aktif");
+      
+      if (semesterSetting && !selectedSemester) {
+        setSelectedSemester(semesterSetting.value);
+        saveState('semester', semesterSetting.value);
+      }
+      if (tahunSetting && !selectedTahunAjaran) {
+        setSelectedTahunAjaran(tahunSetting.value);
+        saveState('tahun_ajaran', tahunSetting.value);
+      }
+    } catch (error) {
+      console.error("Error loading active semester:", error);
+    }
+  };
 
   useEffect(() => {
     if (selectedTingkat && kelasList.length > 0) {
@@ -84,10 +107,10 @@ const RekapNilai = () => {
   }, [selectedKelas, kategoriList]);
 
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran && kategoriList.length > 0 && Object.keys(bobotMap).length > 0) {
+    if (selectedKelas && selectedMataPelajaran && kategoriList.length > 0 && Object.keys(bobotMap).length > 0 && selectedSemester && selectedTahunAjaran) {
       loadRekapNilai();
     }
-  }, [selectedKelas, selectedMataPelajaran, kategoriList, bobotMap]);
+  }, [selectedKelas, selectedMataPelajaran, kategoriList, bobotMap, selectedSemester, selectedTahunAjaran]);
 
   const loadMasterData = async () => {
     try {
@@ -155,9 +178,12 @@ const RekapNilai = () => {
       console.log("Filtered students:", sortedSiswa.length);
 
       const rekapData: StudentGrade[] = sortedSiswa.map((siswa: Siswa) => {
-        // Get all grades for this student and subject
+        // Get all grades for this student, subject, semester, and tahun ajaran
         const studentNilai = nilai.filter((n: NilaiSiswa) => 
-          n.siswa_id === siswa.id && n.mata_pelajaran_id === selectedMataPelajaran
+          n.siswa_id === siswa.id && 
+          n.mata_pelajaran_id === selectedMataPelajaran &&
+          n.semester === selectedSemester &&
+          n.tahun_ajaran === selectedTahunAjaran
         );
 
         console.log(`Student ${siswa.nama_siswa} (${siswa.id}) grades:`, studentNilai);
@@ -270,7 +296,7 @@ const RekapNilai = () => {
         { key: 'Keaktifan', label: 'Keaktifan' }
       ];
 
-      const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran}`;
+      const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${selectedSemester} - ${selectedTahunAjaran}`;
       let customTemplate = getCustomPDFTemplate('grade');
       
       // Add signature date to template
@@ -281,7 +307,7 @@ const RekapNilai = () => {
         };
       }
       
-      const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}.pdf`;
+      const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}_S${selectedSemester}_${selectedTahunAjaran.replace('/', '-')}.pdf`;
       
       const blob = generatePDFBlob(
         exportData, 
@@ -354,8 +380,8 @@ const RekapNilai = () => {
         { key: 'Keaktifan', label: 'Keaktifan' }
       ];
 
-      const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran}`;
-      const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}.xlsx`;
+      const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${selectedSemester} - ${selectedTahunAjaran}`;
+      const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}_S${selectedSemester}_${selectedTahunAjaran.replace('/', '-')}.xlsx`;
 
       const success = exportToExcel(exportData, exportColumns, title, filename);
 
@@ -451,6 +477,19 @@ const RekapNilai = () => {
             <CardTitle>Filter</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <SemesterSelector
+              semester={selectedSemester}
+              tahunAjaran={selectedTahunAjaran}
+              onSemesterChange={(value) => {
+                setSelectedSemester(value);
+                saveState('semester', value);
+              }}
+              onTahunAjaranChange={(value) => {
+                setSelectedTahunAjaran(value);
+                saveState('tahun_ajaran', value);
+              }}
+            />
+            
             <div className="space-y-2">
               <Label>Tingkat</Label>
               <Select 
