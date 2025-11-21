@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { indexedDB } from "@/lib/indexedDB";
 import { toast } from "@/hooks/use-toast";
+import { getAllTahunAjaran, getActiveTahunAjaran } from "@/lib/academicYearUtils";
 
 interface Kelas {
   id: string;
@@ -25,8 +29,11 @@ interface Guru {
 
 const Kelas = () => {
   const [kelas, setKelas] = useState<Kelas[]>([]);
+  const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
   const [guru, setGuru] = useState<Guru[]>([]);
   const [loading, setLoading] = useState(true);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("");
 
   const columns = [
     { key: "nama_kelas", label: "Nama Kelas", sortable: true },
@@ -94,7 +101,62 @@ const Kelas = () => {
   useEffect(() => {
     fetchGuru();
     fetchKelas();
+    loadAvailableYears();
+    loadLastSelectedYear();
   }, []);
+
+  const loadAvailableYears = async () => {
+    try {
+      const years = await getAllTahunAjaran();
+      setAvailableYears(years);
+    } catch (error) {
+      console.error("Error loading tahun ajaran:", error);
+    }
+  };
+
+  const loadLastSelectedYear = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const lastYear = settings.find((s: any) => s.key === "last_selected_year_kelas");
+      
+      if (lastYear) {
+        setSelectedYear(lastYear.value);
+      } else {
+        const activeYear = await getActiveTahunAjaran();
+        setSelectedYear(activeYear);
+      }
+    } catch (error) {
+      console.error("Error loading last selected year:", error);
+    }
+  };
+
+  const saveLastSelectedYear = async (year: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_year_kelas");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: year });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_year_kelas",
+          value: year,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving year:", error);
+    }
+  };
+
+  // Filter kelas berdasarkan tahun ajaran yang dipilih
+  useEffect(() => {
+    if (selectedYear && kelas.length > 0) {
+      const filtered = kelas.filter(k => k.tahun_ajaran === selectedYear);
+      setFilteredKelas(filtered);
+    } else {
+      setFilteredKelas(kelas);
+    }
+  }, [selectedYear, kelas]);
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
@@ -185,24 +247,49 @@ const Kelas = () => {
         description="Kelola data kelas dan wali kelas"
       />
       
-      <DataTable
-        data={kelas}
-        columns={columns}
-        searchPlaceholder="Cari nama kelas atau tingkat..."
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onDeleteBulk={async (ids) => {
-          for (const id of ids) {
-            await handleDelete(id);
-          }
-        }}
-        loading={loading}
-        formFields={formFields}
-        title="Daftar Kelas"
-        tableId="kelas"
-        enableCheckbox={true}
-      />
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 max-w-xs">
+              <Label htmlFor="tahun-ajaran">Filter Tahun Ajaran</Label>
+              <Select value={selectedYear} onValueChange={(value) => {
+                setSelectedYear(value);
+                saveLastSelectedYear(value);
+              }}>
+                <SelectTrigger id="tahun-ajaran">
+                  <SelectValue placeholder="Pilih tahun ajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DataTable
+            data={filteredKelas}
+            columns={columns}
+            searchPlaceholder="Cari nama kelas atau tingkat..."
+            onAdd={handleAdd}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onDeleteBulk={async (ids) => {
+              for (const id of ids) {
+                await handleDelete(id);
+              }
+            }}
+            loading={loading}
+            formFields={formFields}
+            title="Daftar Kelas"
+            tableId="kelas"
+            enableCheckbox={true}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };
