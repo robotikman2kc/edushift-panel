@@ -257,9 +257,10 @@ const LaporanPenilaian = () => {
   const handleDownloadPDF = async (signatureDate?: Date) => {
     const semester = currentExportSemester;
     try {
-      const [siswa, nilai] = await Promise.all([
+      const [siswa, nilai, kehadiran] = await Promise.all([
         indexedDB.select("siswa"),
-        indexedDB.select("nilai_siswa")
+        indexedDB.select("nilai_siswa"),
+        indexedDB.select("kehadiran")
       ]);
 
       const filteredSiswa = siswa.filter((s: Siswa) => 
@@ -276,6 +277,7 @@ const LaporanPenilaian = () => {
         nama_siswa: string;
         grades: { [kategori_id: string]: number };
         rata_rata: number;
+        total_keaktifan: number;
       }
 
       const rekapData: StudentGrade[] = sortedSiswa.map((siswaItem: Siswa) => {
@@ -308,12 +310,24 @@ const LaporanPenilaian = () => {
         });
         const rata_rata = totalBobot > 0 ? totalNilaiBerbobot / totalBobot : 0;
 
+        // Calculate keaktifan
+        const studentKehadiran = kehadiran.filter((k: any) => 
+          k.siswa_id === siswaItem.id && 
+          k.kelas_id === selectedKelas && 
+          k.mata_pelajaran_id === selectedMataPelajaran
+        );
+
+        const total_keaktifan = studentKehadiran.filter((k: any) => 
+          k.keaktifan === 'Aktif'
+        ).length;
+
         return {
           siswa_id: siswaItem.id,
           nisn: siswaItem.nisn,
           nama_siswa: siswaItem.nama_siswa,
           grades,
-          rata_rata
+          rata_rata,
+          total_keaktifan
         };
       });
 
@@ -340,6 +354,7 @@ const LaporanPenilaian = () => {
         });
 
         rowData['Rata-rata'] = student.rata_rata.toFixed(1);
+        rowData['Keaktifan'] = `${student.total_keaktifan}x`;
 
         return rowData;
       });
@@ -348,7 +363,8 @@ const LaporanPenilaian = () => {
         { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
-        { key: 'Rata-rata', label: 'Rata-rata' }
+        { key: 'Rata-rata', label: 'Rata-rata' },
+        { key: 'Keaktifan', label: 'Keaktifan' }
       ];
 
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${semester} - ${selectedTahunAjaran}`;
@@ -400,9 +416,10 @@ const LaporanPenilaian = () => {
 
   const handleDownloadExcel = async (semester: string) => {
     try {
-      const [siswa, nilai] = await Promise.all([
+      const [siswa, nilai, kehadiran] = await Promise.all([
         indexedDB.select("siswa"),
-        indexedDB.select("nilai_siswa")
+        indexedDB.select("nilai_siswa"),
+        indexedDB.select("kehadiran")
       ]);
 
       const filteredSiswa = siswa.filter((s: Siswa) => 
@@ -419,6 +436,7 @@ const LaporanPenilaian = () => {
         nama_siswa: string;
         grades: { [kategori_id: string]: number };
         rata_rata: number;
+        total_keaktifan: number;
       }
 
       const rekapData: StudentGrade[] = sortedSiswa.map((siswaItem: Siswa) => {
@@ -451,12 +469,24 @@ const LaporanPenilaian = () => {
         });
         const rata_rata = totalBobot > 0 ? totalNilaiBerbobot / totalBobot : 0;
 
+        // Calculate keaktifan
+        const studentKehadiran = kehadiran.filter((k: any) => 
+          k.siswa_id === siswaItem.id && 
+          k.kelas_id === selectedKelas && 
+          k.mata_pelajaran_id === selectedMataPelajaran
+        );
+
+        const total_keaktifan = studentKehadiran.filter((k: any) => 
+          k.keaktifan === 'Aktif'
+        ).length;
+
         return {
           siswa_id: siswaItem.id,
           nisn: siswaItem.nisn,
           nama_siswa: siswaItem.nama_siswa,
           grades,
-          rata_rata
+          rata_rata,
+          total_keaktifan
         };
       });
 
@@ -483,6 +513,7 @@ const LaporanPenilaian = () => {
         });
 
         rowData['Rata-rata'] = student.rata_rata.toFixed(1);
+        rowData['Keaktifan'] = `${student.total_keaktifan}x`;
 
         return rowData;
       });
@@ -491,7 +522,8 @@ const LaporanPenilaian = () => {
         { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
-        { key: 'Rata-rata', label: 'Rata-rata' }
+        { key: 'Rata-rata', label: 'Rata-rata' },
+        { key: 'Keaktifan', label: 'Keaktifan' }
       ];
 
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${semester} - ${selectedTahunAjaran}`;
