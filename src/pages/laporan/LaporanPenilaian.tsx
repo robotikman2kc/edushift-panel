@@ -393,11 +393,9 @@ const LaporanPenilaian = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tingkat</Label>
-              <Select value={selectedTingkat} onValueChange={async (value) => {
+              <Select value={selectedTingkat} onValueChange={(value) => {
                 setSelectedTingkat(value);
                 saveLastSelectedTingkat(value);
-                // Load saved filters after tingkat changes
-                await loadLastSelectedFilters();
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tingkat" />
@@ -416,11 +414,9 @@ const LaporanPenilaian = () => {
               <Label>Kelas</Label>
               <Select 
                 value={selectedKelas} 
-                onValueChange={async (value) => {
+                onValueChange={(value) => {
                   setSelectedKelas(value);
                   saveLastSelectedKelas(value);
-                  // Load saved filters after kelas changes
-                  await loadLastSelectedFilters();
                 }}
                 disabled={!selectedTingkat}
               >
@@ -441,11 +437,9 @@ const LaporanPenilaian = () => {
               <Label>Mata Pelajaran</Label>
               <Select 
                 value={selectedMataPelajaran} 
-                onValueChange={async (value) => {
+                onValueChange={(value) => {
                   setSelectedMataPelajaran(value);
                   saveLastSelectedMapel(value);
-                  // Load saved filters after mapel changes
-                  await loadLastSelectedFilters();
                 }}
                 disabled={!selectedKelas}
               >
