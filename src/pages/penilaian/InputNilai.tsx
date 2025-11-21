@@ -422,8 +422,20 @@ const InputNilai = () => {
             <SemesterSelector
               semester={selectedSemester}
               tahunAjaran={selectedTahunAjaran}
-              onSemesterChange={setSelectedSemester}
-              onTahunAjaranChange={setSelectedTahunAjaran}
+              onSemesterChange={(value) => {
+                setSelectedSemester(value);
+                toast({
+                  title: "Filter Tersimpan",
+                  description: "Pilihan semester tersimpan otomatis",
+                });
+              }}
+              onTahunAjaranChange={(value) => {
+                setSelectedTahunAjaran(value);
+                toast({
+                  title: "Filter Tersimpan",
+                  description: "Pilihan tahun ajaran tersimpan otomatis",
+                });
+              }}
             />
             
             <div className="space-y-2">
@@ -431,6 +443,10 @@ const InputNilai = () => {
               <Select value={selectedClass} onValueChange={(value) => {
                 setSelectedClass(value);
                 saveLastSelectedClass(value);
+                toast({
+                  title: "Filter Tersimpan",
+                  description: "Pilihan kelas tersimpan otomatis",
+                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kelas" />
@@ -450,6 +466,10 @@ const InputNilai = () => {
               <Select value={selectedSubject} onValueChange={(value) => {
                 setSelectedSubject(value);
                 saveLastSelectedSubject(value);
+                toast({
+                  title: "Filter Tersimpan",
+                  description: "Pilihan mata pelajaran tersimpan otomatis",
+                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih mata pelajaran" />
@@ -519,6 +539,10 @@ const InputNilai = () => {
               <Select value={selectedCategory} onValueChange={(value) => {
                 setSelectedCategory(value);
                 saveLastSelectedCategory(value);
+                toast({
+                  title: "Filter Tersimpan",
+                  description: "Pilihan kategori penilaian tersimpan otomatis",
+                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kategori" />
