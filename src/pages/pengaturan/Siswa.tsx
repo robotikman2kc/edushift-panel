@@ -471,7 +471,7 @@ const Siswa = () => {
               nama_siswa: row.nama_siswa,
               kelas_id: kelasId,
               jenis_kelamin: normalizeJenisKelamin(row.jenis_kelamin),
-              tanggal_masuk: parseIndonesianDate(row.tanggal_masuk) || new Date().toISOString().split('T')[0],
+              tanggal_masuk: parseIndonesianDate(row.tanggal_masuk) || undefined,
               tanggal_lahir: parseIndonesianDate(row.tanggal_lahir) || undefined,
               tempat_lahir: row.tempat_lahir || undefined,
               alamat: row.alamat || undefined,
