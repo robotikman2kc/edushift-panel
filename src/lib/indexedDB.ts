@@ -56,6 +56,7 @@ export interface Siswa extends BaseRecord {
   telepon_orang_tua?: string;
   email?: string;
   status: string;
+  tahun_ajaran: string;
 }
 
 export interface JenisKegiatan extends BaseRecord {
@@ -80,6 +81,7 @@ export interface Kehadiran extends BaseRecord {
   status_kehadiran: string;
   keterangan?: string;
   keaktifan?: string;
+  tahun_ajaran: string;
 }
 
 export interface JenisPenilaian extends BaseRecord {
@@ -111,6 +113,7 @@ export interface JadwalPelajaran extends BaseRecord {
   kelas_id: string;
   mata_pelajaran_id: string;
   jumlah_jp: number;
+  tahun_ajaran: string;
 }
 
 export interface Pengaturan extends BaseRecord {
@@ -131,6 +134,7 @@ export interface AgendaMengajar extends BaseRecord {
   mata_pelajaran_id: string;
   materi: string;
   keterangan: string;
+  tahun_ajaran: string;
 }
 
 export interface CatatanKalender extends BaseRecord {

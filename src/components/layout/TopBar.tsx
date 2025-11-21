@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AcademicYearSelector } from "@/components/common/AcademicYearSelector";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -234,7 +235,9 @@ export function TopBar() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:block">
+            <AcademicYearSelector />
+            
+            <span className="text-sm text-muted-foreground hidden md:block">
               Selamat datang, Administrator
             </span>
             

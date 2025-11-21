@@ -32,6 +32,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Download, FileText } from "lucide-react";
 import { indexedDB } from "@/lib/indexedDB";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 import * as XLSX from 'xlsx';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -62,6 +63,7 @@ const AgendaMengajar = () => {
   const [filteredMataPelajaranList, setFilteredMataPelajaranList] = useState<any[]>([]);
   const [jadwalPelajaranList, setJadwalPelajaranList] = useState<any[]>([]);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -150,7 +152,12 @@ const AgendaMengajar = () => {
   }, [location]);
 
   useEffect(() => {
-    fetchData();
+    const initData = async () => {
+      const year = await getActiveTahunAjaran();
+      setActiveTahunAjaran(year);
+      fetchData();
+    };
+    initData();
   }, [selectedStartMonth, selectedEndMonth, selectedKelasFilter]);
 
   const fetchData = async () => {
@@ -256,8 +263,12 @@ const AgendaMengajar = () => {
     }
 
     try {
-      // Insert agenda
-      await indexedDB.insert('agenda_mengajar', formData);
+      const year = activeTahunAjaran || await getActiveTahunAjaran();
+      // Insert agenda with tahun_ajaran
+      await indexedDB.insert('agenda_mengajar', {
+        ...formData,
+        tahun_ajaran: year
+      });
       
       // Auto-create jurnal guru
       await createAutoJurnal(formData.tanggal, formData.kelas_id, formData.mata_pelajaran_id);
