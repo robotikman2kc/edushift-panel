@@ -486,6 +486,7 @@ const InputNilai = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-16 text-center">No</TableHead>
                     <TableHead>NISN</TableHead>
                     <TableHead>Nama Siswa</TableHead>
                     <TableHead className="text-center">Nilai</TableHead>
@@ -495,15 +496,16 @@ const InputNilai = () => {
                 <TableBody>
                   {students.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                         {selectedClass ? "Tidak ada siswa aktif dalam kelas ini" : "Pilih kelas untuk menampilkan daftar siswa"}
                       </TableCell>
                     </TableRow>
                   ) : (
-                    students.map((student) => {
+                    students.map((student, index) => {
                       const grade = grades[student.id] || "";
                       return (
                         <TableRow key={student.id}>
+                          <TableCell className="text-center font-medium text-muted-foreground">{index + 1}</TableCell>
                           <TableCell className="font-medium">{student.nisn}</TableCell>
                           <TableCell>{student.nama_siswa}</TableCell>
                           <TableCell>
