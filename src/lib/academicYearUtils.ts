@@ -26,6 +26,20 @@ export async function setActiveTahunAjaran(tahunAjaran: string): Promise<void> {
   }
 }
 
+export async function setActiveSemester(semester: string): Promise<void> {
+  const settings = await indexedDB.select('pengaturan');
+  const existing = settings.find((s: any) => s.key === 'active_semester');
+  
+  if (existing) {
+    await indexedDB.update('pengaturan', existing.id, { value: semester });
+  } else {
+    await indexedDB.insert('pengaturan', {
+      key: 'active_semester',
+      value: semester
+    });
+  }
+}
+
 export async function getAllTahunAjaran(): Promise<string[]> {
   const allKelas = await indexedDB.select('kelas');
   const years = [...new Set(allKelas.map((k: any) => k.tahun_ajaran))].filter(Boolean);

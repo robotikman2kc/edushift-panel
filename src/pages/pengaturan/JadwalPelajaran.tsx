@@ -27,10 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
-import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
+import { getActiveTahunAjaran, getActiveSemester, setActiveSemester as setActiveAcademicSemester } from "@/lib/academicYearUtils";
 
 interface TimeSlot {
   id: string;
@@ -415,20 +415,43 @@ export default function JadwalPelajaran() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="mb-6 max-w-xs">
-            <Label>Semester</Label>
-            <Select value={activeSemester} onValueChange={async (value) => {
-              setActiveSemester(value);
-              await fetchData(activeTahunAjaran, value);
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih semester" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Semester 1</SelectItem>
-                <SelectItem value="2">Semester 2</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="mb-6 flex gap-4 items-end">
+            <div className="flex-1 max-w-xs">
+              <Label>Semester</Label>
+              <Select value={activeSemester} onValueChange={async (value) => {
+                setActiveSemester(value);
+                await fetchData(activeTahunAjaran, value);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih semester" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Semester 1</SelectItem>
+                  <SelectItem value="2">Semester 2</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await setActiveAcademicSemester(activeSemester);
+                  toast({
+                    title: "Berhasil",
+                    description: `Semester ${activeSemester} berhasil diaktifkan untuk kalender`,
+                  });
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "Gagal mengaktifkan semester",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Aktifkan Semester
+            </Button>
           </div>
 
           <div className="flex gap-2 mb-6">
