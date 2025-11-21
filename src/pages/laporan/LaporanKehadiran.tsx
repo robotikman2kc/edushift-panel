@@ -9,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { FileText, Download } from "lucide-react";
 import { getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
 import { PDFDocument } from "pdf-lib";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
+import { hariLiburNasional } from "@/lib/hariLiburData";
 
 interface Kelas {
   id: string;
@@ -56,6 +58,8 @@ const LaporanKehadiran = () => {
   const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
   const [mataPelajaran, setMataPelajaran] = useState<MataPelajaran[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [pendingExport, setPendingExport] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -156,7 +160,38 @@ const LaporanKehadiran = () => {
     }
   };
 
-  const generateMonthReport = async (month: number, year: number) => {
+  // Function to get last working day of month (Monday-Friday, not national holiday)
+  const getLastWorkingDay = (year: number, month: number): Date => {
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Start from last day and go backwards
+    let currentDate = new Date(lastDay);
+    
+    while (true) {
+      const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      // Check if it's a weekday (Monday-Friday)
+      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      
+      // Check if it's not a national holiday
+      const isHoliday = hariLiburNasional.some(h => h.tanggal === dateStr);
+      
+      if (isWeekday && !isHoliday) {
+        return currentDate;
+      }
+      
+      // Go to previous day
+      currentDate.setDate(currentDate.getDate() - 1);
+      
+      // Safety check: don't go back more than 10 days
+      if (lastDay.getDate() - currentDate.getDate() > 10) {
+        return lastDay; // Fallback to last day if no working day found
+      }
+    }
+  };
+
+  const generateMonthReport = async (month: number, year: number, signatureDate?: Date) => {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0);
     
@@ -258,10 +293,10 @@ const LaporanKehadiran = () => {
       { key: 'Persentase', label: 'Persentase' },
     ];
 
-    return { exportData, exportColumns, monthLabel: monthOptions[month].label };
+    return { exportData, exportColumns, monthLabel: monthOptions[month].label, signatureDate };
   };
 
-  const handleExportMultiMonth = async () => {
+  const handleExportClick = () => {
     if (!selectedKelas || !selectedMataPelajaran) {
       toast({
         title: "Validasi Gagal",
@@ -283,23 +318,49 @@ const LaporanKehadiran = () => {
       return;
     }
 
+    // Show dialog for last month's signature date
+    setPendingExport(true);
+    setIsExportDateDialogOpen(true);
+  };
+
+  const handleExportMultiMonth = async (lastMonthSignatureDate?: Date) => {
     try {
       setLoading(true);
+      setPendingExport(false);
 
       const selectedKelasData = allKelas.find(k => k.id === selectedKelas);
       const selectedMataPelajaranData = mataPelajaran.find(mp => mp.id === selectedMataPelajaran);
+
+      const start = parseInt(startMonth);
+      const end = parseInt(endMonth);
 
       // Create merged PDF document
       const mergedPdf = await PDFDocument.create();
 
       // Generate PDF for each month and merge
       for (let month = start; month <= end; month++) {
-        const { exportData, exportColumns, monthLabel } = await generateMonthReport(month, parseInt(selectedYear));
+        // For last month, use user-selected date; for others, use last working day
+        let signatureDate: Date | undefined;
+        if (month === end && lastMonthSignatureDate) {
+          signatureDate = lastMonthSignatureDate;
+        } else {
+          signatureDate = getLastWorkingDay(parseInt(selectedYear), month);
+        }
+
+        const { exportData, exportColumns, monthLabel } = await generateMonthReport(month, parseInt(selectedYear), signatureDate);
         
         const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${monthLabel} ${selectedYear}`;
         
-        // Use custom template from settings (same as Rekap Kehadiran)
-        const customTemplate = getCustomPDFTemplate('attendance');
+        // Use custom template from settings
+        let customTemplate = getCustomPDFTemplate('attendance');
+        
+        // Add signature date to template
+        if (signatureDate) {
+          customTemplate = {
+            ...customTemplate,
+            signatureDate: signatureDate.toISOString().split('T')[0],
+          };
+        }
         
         // Generate PDF blob for this month
         const blob = generatePDFBlob(
@@ -478,7 +539,7 @@ const LaporanKehadiran = () => {
 
             <div className="flex gap-2 justify-end">
               <Button 
-                onClick={handleExportMultiMonth}
+                onClick={handleExportClick}
                 disabled={!selectedKelas || !selectedMataPelajaran || loading}
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -514,6 +575,14 @@ const LaporanKehadiran = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleExportMultiMonth}
+        title="Pilih Tanggal Tanda Tangan"
+        description={`Pilih tanggal tanda tangan untuk bulan ${endMonth ? monthOptions[parseInt(endMonth)].label : ''} (bulan terakhir). Bulan lainnya akan menggunakan hari kerja terakhir di bulan tersebut.`}
+      />
     </div>
   );
 };
