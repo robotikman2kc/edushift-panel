@@ -362,20 +362,38 @@ const Siswa = () => {
     }
   };
 
-  // Helper function to parse Indonesian date format (DD/MM/YYYY) to ISO format (YYYY-MM-DD)
-  const parseIndonesianDate = (dateStr: string): string | undefined => {
-    if (!dateStr || dateStr.trim() === '') return undefined;
+  // Helper function to parse date from various formats to ISO format (YYYY-MM-DD)
+  const parseIndonesianDate = (dateStr: string | number): string | undefined => {
+    if (!dateStr || (typeof dateStr === 'string' && dateStr.trim() === '')) return undefined;
     
-    console.log('Parsing tanggal:', dateStr);
+    console.log('Parsing tanggal:', dateStr, 'Type:', typeof dateStr);
+    
+    // Handle Excel serial date number
+    if (typeof dateStr === 'number' || (!isNaN(Number(dateStr)) && Number(dateStr) > 1000)) {
+      const serialNumber = typeof dateStr === 'number' ? dateStr : Number(dateStr);
+      
+      // Excel epoch starts at December 30, 1899
+      const excelEpoch = new Date(1899, 11, 30);
+      const milliseconds = serialNumber * 86400000; // 24 * 60 * 60 * 1000
+      const jsDate = new Date(excelEpoch.getTime() + milliseconds);
+      
+      if (!isNaN(jsDate.getTime())) {
+        const isoFormat = jsDate.toISOString().split('T')[0];
+        console.log('Excel serial converted:', serialNumber, '->', isoFormat);
+        return isoFormat;
+      }
+    }
+    
+    const dateString = String(dateStr);
     
     // Check if already in ISO format (YYYY-MM-DD)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
-      console.log('Format ISO detected:', dateStr.trim());
-      return dateStr.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+      console.log('Format ISO detected:', dateString.trim());
+      return dateString.trim();
     }
     
     // Parse DD/MM/YYYY or D/M/YYYY format
-    const parts = dateStr.trim().split('/');
+    const parts = dateString.trim().split('/');
     if (parts.length === 3) {
       const day = parts[0].padStart(2, '0');
       const month = parts[1].padStart(2, '0');
