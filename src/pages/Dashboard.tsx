@@ -249,10 +249,19 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Dashboard" 
-        description="Selamat datang di Sistem Administrasi Sekolah"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader 
+          title="Dashboard" 
+          description="Selamat datang di Sistem Administrasi Sekolah"
+        />
+        <Button 
+          onClick={() => navigate('/jurnal/agenda-mengajar')}
+          className="flex items-center gap-2"
+        >
+          <BookMarked className="h-4 w-4" />
+          Isi Agenda Guru
+        </Button>
+      </div>
       
       {/* Stats Cards */}
       {loading ? (
