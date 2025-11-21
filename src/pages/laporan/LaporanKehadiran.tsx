@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
+import { PDFDocument } from "pdf-lib";
 
 interface Kelas {
   id: string;
@@ -254,61 +254,62 @@ const LaporanKehadiran = () => {
       const selectedKelasData = allKelas.find(k => k.id === selectedKelas);
       const selectedMataPelajaranData = mataPelajaran.find(mp => mp.id === selectedMataPelajaran);
 
-      const doc = new jsPDF('landscape', 'mm', 'a4');
-      let isFirstPage = true;
+      // Create merged PDF document
+      const mergedPdf = await PDFDocument.create();
 
-      // Generate report for each month
+      // Generate PDF for each month and merge
       for (let month = start; month <= end; month++) {
         const { exportData, exportColumns, monthLabel } = await generateMonthReport(month, parseInt(selectedYear));
         
-        if (!isFirstPage) {
-          doc.addPage();
-        }
-        isFirstPage = false;
-
-        // Add title
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas}`;
-        doc.text(title, 14, 15);
+        const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${monthLabel} ${selectedYear}`;
         
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${selectedMataPelajaranData?.nama_mata_pelajaran} - ${monthLabel} ${selectedYear}`, 14, 22);
-
-        // Prepare table data
-        const tableHeaders = exportColumns.map(col => col.label);
-        const tableData = exportData.map(row => 
-          exportColumns.map(col => String(row[col.key] || '-'))
+        // Use custom template from settings (same as Rekap Kehadiran)
+        const customTemplate = getCustomPDFTemplate('attendance');
+        
+        // Generate PDF blob for this month
+        const blob = generatePDFBlob(
+          exportData, 
+          exportColumns, 
+          title, 
+          customTemplate,
+          {
+            kelas: selectedKelasData?.nama_kelas,
+            bulan: `${monthLabel} ${selectedYear}`
+          }
         );
 
-        // Add table
-        autoTable(doc, {
-          head: [tableHeaders],
-          body: tableData,
-          startY: 28,
-          styles: {
-            fontSize: 8,
-            cellPadding: 2,
-          },
-          headStyles: {
-            fillColor: [66, 139, 202],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-          },
-          alternateRowStyles: {
-            fillColor: [245, 245, 245],
-          },
-          margin: { left: 14, right: 14 },
-        });
+        if (blob) {
+          // Convert blob to array buffer
+          const arrayBuffer = await blob.arrayBuffer();
+          
+          // Load the PDF
+          const pdf = await PDFDocument.load(arrayBuffer);
+          
+          // Copy all pages from this month's PDF to the merged PDF
+          const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+          copiedPages.forEach((page) => {
+            mergedPdf.addPage(page);
+          });
+        }
       }
 
-      // Download PDF
+      // Save the merged PDF
+      const pdfBytes = await mergedPdf.save();
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+
       const startMonthLabel = monthOptions[start].label;
       const endMonthLabel = monthOptions[end].label;
       const filename = `laporan_kehadiran_${startMonthLabel}-${endMonthLabel}_${selectedYear}.pdf`;
       
-      doc.save(filename);
+      // Download
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Export Berhasil",
