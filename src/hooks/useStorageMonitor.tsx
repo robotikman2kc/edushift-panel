@@ -44,6 +44,16 @@ export interface StorageData {
     size: number;
     supported: boolean;
   };
+  cache: {
+    size: number;
+    supported: boolean;
+    caches: { name: string; size: number }[];
+  };
+  memory: {
+    jsHeapSize: number;
+    jsHeapSizeLimit: number;
+    totalJSHeapSize: number;
+  };
   migration?: MigrationStatus;
 }
 
@@ -164,10 +174,62 @@ export const useStorageMonitor = () => {
       console.warn('OPFS calculation error:', error);
     }
 
+    // Calculate Cache Storage size
+    let cacheSize = 0;
+    let cacheSupported = false;
+    const cacheList: { name: string; size: number }[] = [];
+    
+    try {
+      if ('caches' in window) {
+        cacheSupported = true;
+        const cacheNames = await caches.keys();
+        
+        for (const cacheName of cacheNames) {
+          const cache = await caches.open(cacheName);
+          const requests = await cache.keys();
+          let cacheSizeForName = 0;
+          
+          for (const request of requests) {
+            const response = await cache.match(request);
+            if (response) {
+              const blob = await response.blob();
+              cacheSizeForName += blob.size;
+            }
+          }
+          
+          cacheSize += cacheSizeForName;
+          cacheList.push({ name: cacheName, size: cacheSizeForName });
+        }
+      }
+    } catch (error) {
+      console.warn('Cache calculation error:', error);
+    }
+
+    // Get memory information
+    let memoryInfo = {
+      jsHeapSize: 0,
+      jsHeapSizeLimit: 0,
+      totalJSHeapSize: 0,
+    };
+    
+    try {
+      // Check if performance.memory exists (non-standard, Chrome only)
+      const perf = performance as any;
+      if (perf.memory) {
+        memoryInfo = {
+          jsHeapSize: perf.memory.usedJSHeapSize || 0,
+          jsHeapSizeLimit: perf.memory.jsHeapSizeLimit || 0,
+          totalJSHeapSize: perf.memory.totalJSHeapSize || 0,
+        };
+      }
+    } catch (error) {
+      console.warn('Memory info error:', error);
+    }
+
     // Get migration status
     const migrationStatus = await getMigrationStatus();
 
-    // Calculate actual total from the three storage types
+    // Calculate actual total from storage types (excluding cache and memory)
     const calculatedTotal = indexedDBSize + localStorageSize + opfsSize;
 
     return {
@@ -189,6 +251,12 @@ export const useStorageMonitor = () => {
         size: opfsSize,
         supported: opfsSupported,
       },
+      cache: {
+        size: cacheSize,
+        supported: cacheSupported,
+        caches: cacheList,
+      },
+      memory: memoryInfo,
       migration: migrationStatus,
     };
   };
