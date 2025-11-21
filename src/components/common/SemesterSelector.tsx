@@ -36,11 +36,11 @@ export const SemesterSelector: React.FC<SemesterSelectorProps> = ({
     }
   };
 
-  // Generate tahun ajaran options (current year ± 2 years)
-  const currentYear = new Date().getFullYear();
+  // Generate tahun ajaran options starting from 2025/2026
   const tahunAjaranOptions = [];
-  for (let i = -2; i <= 2; i++) {
-    const year = currentYear + i;
+  const startYear = 2025;
+  for (let i = 0; i < 5; i++) {
+    const year = startYear + i;
     tahunAjaranOptions.push(`${year}/${year + 1}`);
   }
 
