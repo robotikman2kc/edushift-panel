@@ -255,12 +255,12 @@ const Dashboard = () => {
           description="Selamat datang di Sistem Administrasi Sekolah"
         />
         <Button 
-          onClick={() => navigate('/jurnal/agenda-mengajar')}
+          onClick={() => navigate('/jurnal/jurnal-guru')}
           variant="outline"
           className="flex items-center gap-2"
         >
           <BookMarked className="h-4 w-4" />
-          Isi Agenda Guru
+          Jurnal Guru
         </Button>
       </div>
       
