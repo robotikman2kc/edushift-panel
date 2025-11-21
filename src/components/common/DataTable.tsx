@@ -563,7 +563,7 @@ export function DataTable({
           }
         />
       )}
-      {field.required && !formData[field.key]?.trim() && (
+      {field.required && !formData[field.key] && (
         <p className="text-xs text-muted-foreground">Field ini wajib diisi</p>
       )}
     </div>
