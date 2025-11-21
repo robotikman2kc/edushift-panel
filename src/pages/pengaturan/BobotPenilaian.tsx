@@ -12,6 +12,7 @@ import type { Kelas, JenisPenilaian } from "@/lib/indexedDB";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { saveBobotForKelas } from "@/lib/bobotUtils";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 
 interface BobotKategori {
   kategori_id: string;
@@ -37,6 +38,7 @@ export default function BobotPenilaian() {
   const [bobotValues, setBobotValues] = useState<{ [key: string]: number }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [totalBobot, setTotalBobot] = useState(0);
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
 
   const tingkatOptions = [
     { value: "X", label: "Kelas X" },
@@ -45,7 +47,12 @@ export default function BobotPenilaian() {
   ];
 
   useEffect(() => {
-    loadData();
+    const initData = async () => {
+      const year = await getActiveTahunAjaran();
+      setActiveTahunAjaran(year);
+      loadData(year);
+    };
+    initData();
   }, []);
 
   useEffect(() => {
@@ -73,10 +80,12 @@ export default function BobotPenilaian() {
     setTotalBobot(total);
   }, [bobotValues]);
 
-  const loadData = async () => {
+  const loadData = async (year?: string) => {
     try {
+      const currentYear = year || activeTahunAjaran || await getActiveTahunAjaran();
+      
       const [kelasData, kategoriData] = await Promise.all([
-        indexedDB.select("kelas"),
+        indexedDB.select("kelas", (k: any) => k.tahun_ajaran === currentYear),
         indexedDB.select("jenis_penilaian"),
       ]);
 
@@ -199,7 +208,7 @@ export default function BobotPenilaian() {
     <div className="space-y-6">
       <PageHeader
         title="Bobot Penilaian"
-        description="Atur bobot penilaian untuk setiap kategori per kelas. Total bobot harus 100%"
+        description={`Atur bobot penilaian untuk setiap kategori per kelas - Tahun Ajaran ${activeTahunAjaran}`}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
