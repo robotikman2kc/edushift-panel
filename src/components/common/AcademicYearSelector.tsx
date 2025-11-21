@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getActiveTahunAjaran, setActiveTahunAjaran, getAllTahunAjaran } from "@/lib/academicYearUtils";
+import { getActiveTahunAjaran, setActiveTahunAjaran, getAllTahunAjaranWithUpcoming } from "@/lib/academicYearUtils";
 
 export function AcademicYearSelector() {
   const [activeTahunAjaran, setActiveTahunAjaranState] = useState("");
@@ -20,7 +20,7 @@ export function AcademicYearSelector() {
   };
 
   const loadAvailableYears = async () => {
-    const years = await getAllTahunAjaran();
+    const years = await getAllTahunAjaranWithUpcoming(3);
     setAvailableYears(years);
   };
 
