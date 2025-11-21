@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Download, FileSpreadsheet, Star } from "lucide-react";
+import { Download, FileSpreadsheet, Star, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa, Kehadiran } from "@/lib/indexedDB";
 import { exportToExcel, generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
@@ -22,6 +22,9 @@ interface StudentGrade {
   total_keaktifan: number;
   persentase_keaktifan: number;
 }
+
+type SortField = 'nisn' | 'nama_siswa' | 'rata_rata' | 'keaktifan' | string;
+type SortOrder = 'asc' | 'desc' | null;
 
 const RekapNilai = () => {
   // Load saved state from localStorage
@@ -47,6 +50,8 @@ const RekapNilai = () => {
   const [loading, setLoading] = useState(false);
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -370,6 +375,65 @@ const RekapNilai = () => {
     }
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null
+      if (sortOrder === 'asc') {
+        setSortOrder('desc');
+      } else if (sortOrder === 'desc') {
+        setSortOrder(null);
+        setSortField(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortedGrades = () => {
+    if (!sortField || !sortOrder) return studentGrades;
+
+    return [...studentGrades].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      if (sortField === 'nisn') {
+        aValue = a.nisn;
+        bValue = b.nisn;
+      } else if (sortField === 'nama_siswa') {
+        aValue = a.nama_siswa;
+        bValue = b.nama_siswa;
+      } else if (sortField === 'rata_rata') {
+        aValue = a.rata_rata;
+        bValue = b.rata_rata;
+      } else if (sortField === 'keaktifan') {
+        aValue = a.total_keaktifan;
+        bValue = b.total_keaktifan;
+      } else {
+        // Sort by kategori
+        aValue = a.grades[sortField] || 0;
+        bValue = b.grades[sortField] || 0;
+      }
+
+      if (typeof aValue === 'string') {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue, 'id')
+          : bValue.localeCompare(aValue, 'id');
+      } else {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+    });
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 inline opacity-50" />;
+    }
+    return sortOrder === 'asc' 
+      ? <ArrowUp className="h-3 w-3 ml-1 inline" />
+      : <ArrowDown className="h-3 w-3 ml-1 inline" />;
+  };
+
   const selectedKelasData = kelasList.find(k => k.id === selectedKelas);
   const selectedMapelData = mataPelajaranList.find(m => m.id === selectedMataPelajaran);
 
@@ -510,30 +574,57 @@ const RekapNilai = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">No</TableHead>
-                      <TableHead>NISN</TableHead>
-                      <TableHead>Nama Siswa</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort('nisn')}
+                      >
+                        NISN
+                        <SortIcon field="nisn" />
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort('nama_siswa')}
+                      >
+                        Nama Siswa
+                        <SortIcon field="nama_siswa" />
+                      </TableHead>
                       {kategoriList.map(kategori => {
                         const bobot = bobotMap[kategori.id] || 0;
                         return (
-                          <TableHead key={kategori.id} className="text-center">
+                          <TableHead 
+                            key={kategori.id} 
+                            className="text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => handleSort(kategori.id)}
+                          >
                             {kategori.nama_kategori}
                             <span className="text-xs text-muted-foreground ml-1">
                               ({bobot}%)
                             </span>
+                            <SortIcon field={kategori.id} />
                           </TableHead>
                         );
                       })}
-                      <TableHead className="text-center font-semibold">Rata-rata</TableHead>
-                      <TableHead className="text-center">
+                      <TableHead 
+                        className="text-center font-semibold cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort('rata_rata')}
+                      >
+                        Rata-rata
+                        <SortIcon field="rata_rata" />
+                      </TableHead>
+                      <TableHead 
+                        className="text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort('keaktifan')}
+                      >
                         <div className="flex items-center justify-center gap-1">
                           <Star className="h-3 w-3 text-yellow-500" />
                           Keaktifan
+                          <SortIcon field="keaktifan" />
                         </div>
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {studentGrades.map((student, index) => (
+                    {getSortedGrades().map((student, index) => (
                       <TableRow key={student.siswa_id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell>{student.nisn}</TableCell>
