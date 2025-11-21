@@ -81,6 +81,7 @@ const RekapKehadiran = () => {
   const [uniqueDates, setUniqueDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -107,17 +108,33 @@ const RekapKehadiran = () => {
     { value: "11", label: "Desember" },
   ];
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 5 }, (_, i) => ({
-    value: (currentYear - 2 + i).toString(),
-    label: (currentYear - 2 + i).toString(),
-  }));
-
   // Fetch initial data
   useEffect(() => {
     fetchKelas();
     fetchMataPelajaran();
+    loadAvailableYears();
   }, []);
+
+  const loadAvailableYears = async () => {
+    try {
+      // Get all unique years from kehadiran data
+      const allKehadiran = await indexedDB.select("kehadiran");
+      const years = [...new Set(allKehadiran.map((k: any) => new Date(k.tanggal).getFullYear()))];
+      
+      // Add current year and next 3 years if not already included
+      const currentYear = new Date().getFullYear();
+      for (let i = 0; i <= 3; i++) {
+        const year = currentYear + i;
+        if (!years.includes(year)) {
+          years.push(year);
+        }
+      }
+      
+      setAvailableYears(years.sort((a, b) => b - a));
+    } catch (error) {
+      console.error("Error loading available years:", error);
+    }
+  };
 
   // Filter kelas by tingkat (but don't clear selections if we have saved state)
   useEffect(() => {
@@ -587,9 +604,9 @@ const RekapKehadiran = () => {
                   <SelectValue placeholder="Pilih tahun" />
                 </SelectTrigger>
                 <SelectContent>
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year.value} value={year.value}>
-                      {year.label}
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
                     </SelectItem>
                   ))}
                 </SelectContent>
