@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { syncHolidaysForYears } from "@/lib/googleCalendar";
+import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
 
 interface CalendarData {
   date: string;
@@ -49,6 +50,8 @@ export default function Kalender() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
+  const [activeSemester, setActiveSemester] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -60,9 +63,17 @@ export default function Kalender() {
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
 
+      // Ambil tahun ajaran dan semester aktif
+      const tahunAjaran = await getActiveTahunAjaran();
+      const semester = await getActiveSemester();
+      setActiveTahunAjaran(tahunAjaran);
+      setActiveSemester(semester);
+
       // Fetch all data
       const [schedules, agendas, journals, attendance, jamPelajaran, kelasList, mataPelajaranList, notes, holidays] = await Promise.all([
-        indexedDB.select("jadwal_pelajaran"),
+        indexedDB.select("jadwal_pelajaran", (jadwal: any) => 
+          jadwal.tahun_ajaran === tahunAjaran && jadwal.semester === semester
+        ),
         indexedDB.select("agenda_mengajar"),
         indexedDB.select("jurnal"),
         indexedDB.select("kehadiran"),
@@ -441,7 +452,7 @@ export default function Kalender() {
     <div className="space-y-6">
       <PageHeader
         title="Kalender"
-        description="Lihat jadwal mengajar, agenda, kehadiran, dan jurnal dalam satu tampilan"
+        description={`Lihat jadwal mengajar, agenda, kehadiran, dan jurnal - Tahun Ajaran ${activeTahunAjaran} Semester ${activeSemester}`}
       >
         <Button onClick={handleSyncHolidays} size="sm" variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
