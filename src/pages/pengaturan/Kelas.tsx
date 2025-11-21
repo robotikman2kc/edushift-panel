@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { indexedDB } from "@/lib/indexedDB";
 import { toast } from "@/hooks/use-toast";
-import { getAllTahunAjaran, getActiveTahunAjaran } from "@/lib/academicYearUtils";
+import { getAllTahunAjaranWithUpcoming, getActiveTahunAjaran } from "@/lib/academicYearUtils";
 
 interface Kelas {
   id: string;
@@ -107,7 +107,7 @@ const Kelas = () => {
 
   const loadAvailableYears = async () => {
     try {
-      const years = await getAllTahunAjaran();
+      const years = await getAllTahunAjaranWithUpcoming(3);
       setAvailableYears(years);
     } catch (error) {
       console.error("Error loading tahun ajaran:", error);
