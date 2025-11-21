@@ -219,7 +219,9 @@ export function DataTable({
     setSelectedItem(item);
     const initialData: Record<string, string> = {};
     formFields.forEach((field) => {
-      initialData[field.key] = item[field.key] || "";
+      const value = item[field.key];
+      // Convert to string, handle various types
+      initialData[field.key] = value !== null && value !== undefined ? String(value) : "";
     });
     setFormData(initialData);
     setIsEditDialogOpen(true);
@@ -233,7 +235,14 @@ export function DataTable({
   const handleAddSubmit = async () => {
     // Validate required fields
     const missingFields = formFields
-      .filter(field => field.required && !formData[field.key]?.trim())
+      .filter(field => {
+        if (!field.required) return false;
+        const value = formData[field.key];
+        // Check if value exists and is not empty (handle both strings and other types)
+        if (value === null || value === undefined) return true;
+        if (typeof value === 'string' && value.trim() === '') return true;
+        return false;
+      })
       .map(field => field.label);
     
     if (missingFields.length > 0) {
@@ -255,7 +264,14 @@ export function DataTable({
   const handleEditSubmit = async () => {
     // Validate required fields
     const missingFields = formFields
-      .filter(field => field.required && !formData[field.key]?.trim())
+      .filter(field => {
+        if (!field.required) return false;
+        const value = formData[field.key];
+        // Check if value exists and is not empty (handle both strings and other types)
+        if (value === null || value === undefined) return true;
+        if (typeof value === 'string' && value.trim() === '') return true;
+        return false;
+      })
       .map(field => field.label);
     
     if (missingFields.length > 0) {

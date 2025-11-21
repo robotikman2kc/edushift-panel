@@ -98,12 +98,15 @@ const Kelas = () => {
 
   const handleAdd = async (formData: Record<string, string>) => {
     try {
+      // Parse kapasitas safely
+      const kapasitas = formData.kapasitas ? parseInt(formData.kapasitas) : 0;
+      
       const result = await indexedDB.insert('kelas', {
         nama_kelas: formData.nama_kelas,
         tingkat: formData.tingkat,
         wali_kelas_id: formData.wali_kelas_id || undefined,
         tahun_ajaran: formData.tahun_ajaran,
-        kapasitas: parseInt(formData.kapasitas),
+        kapasitas: isNaN(kapasitas) ? 0 : kapasitas,
         status: 'Aktif'
       });
 
@@ -126,12 +129,15 @@ const Kelas = () => {
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
     try {
+      // Parse kapasitas safely
+      const kapasitas = formData.kapasitas ? parseInt(formData.kapasitas) : 0;
+      
       const result = await indexedDB.update('kelas', id, {
         nama_kelas: formData.nama_kelas,
         tingkat: formData.tingkat,
         wali_kelas_id: formData.wali_kelas_id || undefined,
         tahun_ajaran: formData.tahun_ajaran,
-        kapasitas: parseInt(formData.kapasitas),
+        kapasitas: isNaN(kapasitas) ? 0 : kapasitas,
       });
 
       if (result.error) throw new Error(result.error);
