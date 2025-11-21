@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useStorageMonitor, formatBytes } from "@/hooks/useStorageMonitor";
 import { MigrationDialog } from "@/components/data/MigrationDialog";
-import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText, AlertTriangle, ArrowRight, Loader2, ChevronDown } from "lucide-react";
+import { Database, HardDrive, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText, AlertTriangle, ArrowRight, Loader2, ChevronDown, Cpu, Archive } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StorageMonitor() {
@@ -19,6 +19,7 @@ export default function StorageMonitor() {
   const [refreshing, setRefreshing] = useState(false);
   const [indexedDBOpen, setIndexedDBOpen] = useState(false);
   const [localStorageOpen, setLocalStorageOpen] = useState(false);
+  const [cacheOpen, setCacheOpen] = useState(false);
 
   const handleRefresh = async () => {
     try {
@@ -146,6 +147,29 @@ export default function StorageMonitor() {
         </CardContent>
       </Card>
 
+      {/* Database Storage Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Total Penggunaan Database
+          </CardTitle>
+          <CardDescription>
+            Ringkasan penggunaan IndexedDB, localStorage, dan OPFS
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">
+            <p className="text-4xl font-bold">
+              {formatBytes(storageData.indexedDB.size + storageData.localStorage.size + storageData.opfs.size)}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Total data aplikasi tersimpan
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Info Box */}
       <Alert>
         <Database className="h-4 w-4" />
@@ -155,6 +179,8 @@ export default function StorageMonitor() {
             <li>• <strong>localStorage</strong>: Storage utama untuk semua data (guru, siswa, jurnal, kehadiran, dll)</li>
             <li>• <strong>IndexedDB</strong>: Database untuk data nilai dan kalender</li>
             <li>• <strong>OPFS</strong>: File system untuk foto profil dan dokumen</li>
+            <li>• <strong>Cache</strong>: Data sementara untuk mempercepat loading aplikasi</li>
+            <li>• <strong>Memory</strong>: Penggunaan RAM oleh aplikasi saat ini</li>
           </ul>
         </AlertDescription>
       </Alert>
@@ -295,6 +321,134 @@ export default function StorageMonitor() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs">
                   OPFS tidak didukung. File disimpan sebagai base64 di localStorage (kurang efisien).
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Memory & Cache Storage */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Cache Storage */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Archive className="h-5 w-5" />
+              Cache Storage
+            </CardTitle>
+            <CardDescription>Data cache untuk mempercepat loading</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 flex-1 flex flex-col">
+            {storageData.cache.supported ? (
+              <>
+                <div className="text-center py-4">
+                  <p className="text-3xl font-bold">{formatBytes(storageData.cache.size)}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {storageData.cache.caches.length} cache{storageData.cache.caches.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+
+                {storageData.cache.caches.length > 0 ? (
+                  <Collapsible open={cacheOpen} onOpenChange={setCacheOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${cacheOpen ? 'rotate-180' : ''}`} />
+                        {cacheOpen ? 'Sembunyikan' : 'Lihat'} Rincian Cache
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4">
+                      <div className="space-y-3">
+                        {storageData.cache.caches.map((cache) => (
+                          <div key={cache.name} className="p-3 border rounded-lg space-y-1">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{cache.name}</p>
+                              </div>
+                              <div className="text-right ml-2">
+                                <p className="font-semibold text-sm">{formatBytes(cache.size)}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Tidak ada cache tersimpan saat ini
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  Cache Storage tidak didukung di browser ini
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Memory Usage */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5" />
+              Memory (RAM)
+            </CardTitle>
+            <CardDescription>Penggunaan memori JavaScript runtime</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 flex-1 flex flex-col">
+            {storageData.memory.jsHeapSizeLimit > 0 ? (
+              <>
+                <div className="text-center py-4">
+                  <p className="text-3xl font-bold">{formatBytes(storageData.memory.jsHeapSize)}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    dari {formatBytes(storageData.memory.jsHeapSizeLimit)} limit
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Heap Terpakai</span>
+                      <span className="font-medium">{formatBytes(storageData.memory.jsHeapSize)}</span>
+                    </div>
+                    <Progress 
+                      value={(storageData.memory.jsHeapSize / storageData.memory.jsHeapSizeLimit) * 100} 
+                      className="h-2" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+                    <div className="text-center p-2 bg-muted/50 rounded">
+                      <p className="text-xs text-muted-foreground">Total Heap</p>
+                      <p className="text-sm font-semibold">{formatBytes(storageData.memory.totalJSHeapSize)}</p>
+                    </div>
+                    <div className="text-center p-2 bg-muted/50 rounded">
+                      <p className="text-xs text-muted-foreground">Limit</p>
+                      <p className="text-sm font-semibold">{formatBytes(storageData.memory.jsHeapSizeLimit)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    Memory akan otomatis dibersihkan oleh garbage collector
+                  </AlertDescription>
+                </Alert>
+              </>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  Informasi memory tidak tersedia di browser ini (hanya Chrome/Edge)
                 </AlertDescription>
               </Alert>
             )}
