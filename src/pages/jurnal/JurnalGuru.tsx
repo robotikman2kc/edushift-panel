@@ -89,6 +89,7 @@ const JurnalGuru = () => {
   const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>(new Date().getMonth().toString());
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -123,7 +124,29 @@ const JurnalGuru = () => {
 
   useEffect(() => {
     fetchData();
+    loadAvailableYears();
   }, []);
+
+  const loadAvailableYears = async () => {
+    try {
+      // Get all unique years from jurnal entries
+      const allJurnal = await indexedDB.select("jurnal");
+      const years = [...new Set(allJurnal.map((j: any) => new Date(j.tanggal).getFullYear()))];
+      
+      // Add current year and next 3 years if not already included
+      const currentYear = new Date().getFullYear();
+      for (let i = 0; i <= 3; i++) {
+        const year = currentYear + i;
+        if (!years.includes(year)) {
+          years.push(year);
+        }
+      }
+      
+      setAvailableYears(years.sort((a, b) => b - a));
+    } catch (error) {
+      console.error("Error loading available years:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -351,14 +374,11 @@ const JurnalGuru = () => {
               <SelectValue placeholder="Tahun" />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 10 }, (_, i) => {
-                const year = new Date().getFullYear() - 5 + i;
-                return (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                );
-              })}
+              {availableYears.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={filterJenisKegiatan} onValueChange={setFilterJenisKegiatan}>
