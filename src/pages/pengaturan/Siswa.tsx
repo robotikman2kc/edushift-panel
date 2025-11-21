@@ -366,25 +366,35 @@ const Siswa = () => {
   const parseIndonesianDate = (dateStr: string): string | undefined => {
     if (!dateStr || dateStr.trim() === '') return undefined;
     
+    console.log('Parsing tanggal:', dateStr);
+    
     // Check if already in ISO format (YYYY-MM-DD)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
+      console.log('Format ISO detected:', dateStr.trim());
       return dateStr.trim();
     }
     
-    // Parse DD/MM/YYYY format
+    // Parse DD/MM/YYYY or D/M/YYYY format
     const parts = dateStr.trim().split('/');
     if (parts.length === 3) {
       const day = parts[0].padStart(2, '0');
       const month = parts[1].padStart(2, '0');
       const year = parts[2];
       
+      console.log('Parsed parts:', { day, month, year });
+      
       // Validate the date
-      const parsedDate = new Date(`${year}-${month}-${day}`);
+      const isoFormat = `${year}-${month}-${day}`;
+      const parsedDate = new Date(isoFormat);
+      
+      console.log('ISO format:', isoFormat, 'Valid:', !isNaN(parsedDate.getTime()));
+      
       if (!isNaN(parsedDate.getTime())) {
-        return `${year}-${month}-${day}`;
+        return isoFormat;
       }
     }
     
+    console.log('Parsing failed for:', dateStr);
     return undefined;
   };
 
