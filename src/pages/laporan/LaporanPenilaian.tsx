@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Download, FileText, FileSpreadsheet } from "lucide-react";
+import { FileText, FileSpreadsheet } from "lucide-react";
 import { useState, useEffect } from "react";
 import { indexedDB, Kelas, MataPelajaran, JenisPenilaian, NilaiSiswa, Siswa } from "@/lib/indexedDB";
 import { generatePDFBlob, getCustomPDFTemplate, exportToExcel } from "@/lib/exportUtils";
 import { EmptyState } from "@/components/common/EmptyState";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { getBobotForKelas } from "@/lib/bobotUtils";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
 interface SemesterData {
   semester: string;
@@ -32,6 +33,8 @@ const LaporanPenilaian = () => {
   const [semesterData, setSemesterData] = useState<SemesterData[]>([]);
   const [loading, setLoading] = useState(false);
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [currentExportSemester, setCurrentExportSemester] = useState("");
 
   const tingkatOptions = ["X", "XI", "XII"];
   
@@ -246,7 +249,13 @@ const LaporanPenilaian = () => {
     }
   };
 
-  const handleDownloadPDF = async (semester: string) => {
+  const handleDownloadPDFClick = (semester: string) => {
+    setCurrentExportSemester(semester);
+    setIsExportDateDialogOpen(true);
+  };
+
+  const handleDownloadPDF = async (signatureDate?: Date) => {
+    const semester = currentExportSemester;
     try {
       const [siswa, nilai] = await Promise.all([
         indexedDB.select("siswa"),
@@ -343,7 +352,16 @@ const LaporanPenilaian = () => {
       ];
 
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${semester} - ${selectedTahunAjaran}`;
-      const customTemplate = getCustomPDFTemplate('grade');
+      let customTemplate = getCustomPDFTemplate('grade');
+      
+      // Add signature date to template
+      if (signatureDate) {
+        customTemplate = {
+          ...customTemplate,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
+      }
+      
       const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}_S${semester}_${selectedTahunAjaran.replace('/', '-')}.pdf`;
       
       const blob = generatePDFBlob(
@@ -652,7 +670,7 @@ const LaporanPenilaian = () => {
                     {semData.hasData ? (
                       <div className="flex gap-2">
                         <Button 
-                          onClick={() => handleDownloadPDF(semData.semester)}
+                          onClick={() => handleDownloadPDFClick(semData.semester)}
                           size="sm"
                           className="flex-1"
                         >
@@ -680,6 +698,12 @@ const LaporanPenilaian = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleDownloadPDF}
+      />
     </div>
   );
 };
