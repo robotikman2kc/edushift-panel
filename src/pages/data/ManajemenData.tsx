@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
-import { Trash2, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, Database } from "lucide-react";
+import { Trash2, AlertTriangle, Users, BookOpen, GraduationCap, School, Calendar, FileText, Database, Trash } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageHeader } from "@/components/common/PageHeader";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DeleteYearDataDialog } from "@/components/data/DeleteYearDataDialog";
+import { getAllTahunAjaran } from "@/lib/academicYearUtils";
 
 interface DataStats {
   guru: number;
@@ -32,6 +34,9 @@ const ManajemenData = () => {
   });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteYearDialogOpen, setDeleteYearDialogOpen] = useState(false);
+  const [selectedYearStats, setSelectedYearStats] = useState<any>(null);
+  const [yearDataStats, setYearDataStats] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Fetch data statistics
@@ -65,7 +70,46 @@ const ManajemenData = () => {
 
   useEffect(() => {
     fetchStats();
+    loadYearDataStats();
   }, []);
+
+  const loadYearDataStats = async () => {
+    try {
+      const years = await getAllTahunAjaran();
+      const allKelas = await indexedDB.select("kelas");
+      const allSiswa = await indexedDB.select("siswa");
+      const allNilai = await indexedDB.select("nilai_siswa");
+      const allKehadiran = await indexedDB.select("kehadiran");
+      const allJadwal = await indexedDB.select("jadwal_pelajaran");
+      const allAgenda = await indexedDB.select("agenda_mengajar");
+      
+      const statsPerYear = years.map((year) => {
+        const kelasInYear = allKelas.filter((k: any) => k.tahun_ajaran === year);
+        const kelasIds = kelasInYear.map((k: any) => k.id);
+        const siswaInYear = allSiswa.filter((s: any) => kelasIds.includes(s.kelas_id));
+        const siswaIds = siswaInYear.map((s: any) => s.id);
+        
+        return {
+          tahunAjaran: year,
+          totalKelas: kelasInYear.length,
+          totalSiswa: siswaInYear.length,
+          totalNilai: allNilai.filter((n: any) => siswaIds.includes(n.siswa_id) && n.tahun_ajaran === year).length,
+          totalKehadiran: allKehadiran.filter((k: any) => kelasIds.includes(k.kelas_id)).length,
+          totalJadwal: allJadwal.filter((j: any) => j.tahun_ajaran === year).length,
+          totalAgenda: allAgenda.filter((a: any) => a.tahun_ajaran === year).length,
+        };
+      });
+      
+      setYearDataStats(statsPerYear.sort((a, b) => a.tahunAjaran.localeCompare(b.tahunAjaran)));
+    } catch (error) {
+      console.error("Error loading year data stats:", error);
+    }
+  };
+
+  const handleDeleteYearClick = (yearStats: any) => {
+    setSelectedYearStats(yearStats);
+    setDeleteYearDialogOpen(true);
+  };
 
   // Delete all data from a table
   const deleteAllData = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal' | 'users', displayName: string) => {
@@ -299,6 +343,66 @@ const ManajemenData = () => {
         })}
       </div>
 
+      {/* Year-based data management */}
+      <Card className="border-2 border-destructive/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <Trash className="h-6 w-6 text-destructive" />
+            Hapus Data Per Tahun Ajaran
+          </CardTitle>
+          <CardDescription>
+            Hapus semua data terkait tahun ajaran tertentu untuk efisiensi memori
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {yearDataStats.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Tidak ada data tahun ajaran
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {yearDataStats.map((yearStat) => {
+                const totalData = yearStat.totalKelas + yearStat.totalSiswa + yearStat.totalNilai + 
+                                yearStat.totalKehadiran + yearStat.totalJadwal + yearStat.totalAgenda;
+                
+                return (
+                  <div 
+                    key={yearStat.tahunAjaran}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-semibold">{yearStat.tahunAjaran}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {totalData} total data (Kelas: {yearStat.totalKelas}, Siswa: {yearStat.totalSiswa}, 
+                        Nilai: {yearStat.totalNilai}, Kehadiran: {yearStat.totalKehadiran})
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteYearClick(yearStat)}
+                      disabled={totalData === 0}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Hapus
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <DeleteYearDataDialog
+        open={deleteYearDialogOpen}
+        onOpenChange={setDeleteYearDialogOpen}
+        yearStats={selectedYearStats}
+        onDeleteSuccess={() => {
+          fetchStats();
+          loadYearDataStats();
+        }}
+      />
     </div>
   );
 };
