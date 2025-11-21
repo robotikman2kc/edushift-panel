@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import { useState, useEffect } from "react";
 import { indexedDB, Kelas, MataPelajaran, JenisPenilaian, NilaiSiswa, Siswa } from "@/lib/indexedDB";
-import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
+import { generatePDFBlob, getCustomPDFTemplate, exportToExcel } from "@/lib/exportUtils";
 import { EmptyState } from "@/components/common/EmptyState";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { getBobotForKelas } from "@/lib/bobotUtils";
@@ -240,7 +240,7 @@ const LaporanPenilaian = () => {
     }
   };
 
-  const handleDownload = async (semester: string) => {
+  const handleDownloadPDF = async (semester: string) => {
     try {
       const [siswa, nilai] = await Promise.all([
         indexedDB.select("siswa"),
@@ -369,6 +369,125 @@ const LaporanPenilaian = () => {
       toast({
         title: "Error",
         description: "Gagal membuat PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadExcel = async (semester: string) => {
+    try {
+      const [siswa, nilai] = await Promise.all([
+        indexedDB.select("siswa"),
+        indexedDB.select("nilai_siswa")
+      ]);
+
+      const filteredSiswa = siswa.filter((s: Siswa) => 
+        s.kelas_id === selectedKelas && s.status === "Aktif"
+      );
+
+      const sortedSiswa = filteredSiswa.sort((a, b) => 
+        a.nama_siswa.localeCompare(b.nama_siswa, 'id')
+      );
+
+      interface StudentGrade {
+        siswa_id: string;
+        nisn: string;
+        nama_siswa: string;
+        grades: { [kategori_id: string]: number };
+        rata_rata: number;
+      }
+
+      const rekapData: StudentGrade[] = sortedSiswa.map((siswaItem: Siswa) => {
+        const studentNilai = nilai.filter((n: NilaiSiswa) => 
+          n.siswa_id === siswaItem.id && 
+          n.mata_pelajaran_id === selectedMataPelajaran &&
+          n.semester === semester &&
+          n.tahun_ajaran === selectedTahunAjaran
+        );
+
+        const grades: { [kategori_id: string]: number } = {};
+        kategoriList.forEach(kategori => {
+          const nilaiKategori = studentNilai.filter((n: NilaiSiswa) => 
+            n.jenis_penilaian_id === kategori.id
+          );
+          if (nilaiKategori.length > 0) {
+            const totalNilai = nilaiKategori.reduce((sum: number, n: NilaiSiswa) => sum + n.nilai, 0);
+            grades[kategori.id] = totalNilai / nilaiKategori.length;
+          }
+        });
+
+        let totalBobot = 0;
+        let totalNilaiBerbobot = 0;
+        kategoriList.forEach(kategori => {
+          if (grades[kategori.id] !== undefined) {
+            const bobot = bobotMap[kategori.id] || 0;
+            totalBobot += bobot;
+            totalNilaiBerbobot += grades[kategori.id] * bobot;
+          }
+        });
+        const rata_rata = totalBobot > 0 ? totalNilaiBerbobot / totalBobot : 0;
+
+        return {
+          siswa_id: siswaItem.id,
+          nisn: siswaItem.nisn,
+          nama_siswa: siswaItem.nama_siswa,
+          grades,
+          rata_rata
+        };
+      });
+
+      if (rekapData.length === 0) {
+        toast({
+          title: "Tidak Ada Data",
+          description: "Tidak ada data untuk diekspor",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const selectedKelasData = kelasList.find(k => k.id === selectedKelas);
+      const selectedMapelData = mataPelajaranList.find(m => m.id === selectedMataPelajaran);
+
+      const exportData = rekapData.map((student) => {
+        const rowData: any = {
+          'NISN': student.nisn,
+          'Nama Siswa': student.nama_siswa
+        };
+
+        kategoriList.forEach(kategori => {
+          rowData[kategori.nama_kategori] = student.grades[kategori.id]?.toFixed(1) || '-';
+        });
+
+        rowData['Rata-rata'] = student.rata_rata.toFixed(1);
+
+        return rowData;
+      });
+
+      const exportColumns = [
+        { key: 'NISN', label: 'NISN' },
+        { key: 'Nama Siswa', label: 'Nama Siswa' },
+        ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
+        { key: 'Rata-rata', label: 'Rata-rata' }
+      ];
+
+      const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${semester} - ${selectedTahunAjaran}`;
+      const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}_S${semester}_${selectedTahunAjaran.replace('/', '-')}.xlsx`;
+      
+      const success = exportToExcel(exportData, exportColumns, title, filename);
+
+      if (success) {
+        toast({
+          title: "Export Berhasil",
+          description: "Laporan nilai berhasil diekspor ke Excel",
+        });
+      } else {
+        throw new Error("Failed to generate Excel");
+      }
+    } catch (error) {
+      console.error("Error generating Excel:", error);
+      toast({
+        title: "Error",
+        description: "Gagal membuat Excel",
         variant: "destructive"
       });
     }
@@ -525,14 +644,25 @@ const LaporanPenilaian = () => {
                     </div>
                     
                     {semData.hasData ? (
-                      <Button 
-                        onClick={() => handleDownload(semData.semester)}
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download PDF
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleDownloadPDF(semData.semester)}
+                          size="sm"
+                          className="flex-1"
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          PDF
+                        </Button>
+                        <Button 
+                          onClick={() => handleDownloadExcel(semData.semester)}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          <FileSpreadsheet className="h-4 w-4 mr-2" />
+                          Excel
+                        </Button>
+                      </div>
                     ) : (
                       <div className="h-9 flex items-center justify-center text-xs text-muted-foreground border border-dashed rounded-md">
                         Tidak ada laporan
