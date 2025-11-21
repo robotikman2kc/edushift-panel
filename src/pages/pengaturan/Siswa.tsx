@@ -372,15 +372,18 @@ const Siswa = () => {
     if (typeof dateStr === 'number' || (!isNaN(Number(dateStr)) && Number(dateStr) > 1000)) {
       const serialNumber = typeof dateStr === 'number' ? dateStr : Number(dateStr);
       
-      // Excel epoch starts at December 30, 1899
-      // Convert to JavaScript date using UTC to avoid timezone issues
-      const daysSince1900 = serialNumber - 1; // Excel serial starts at 1, not 0
-      const millisecondsPerDay = 86400000;
-      const excelEpoch = Date.UTC(1899, 11, 30); // December 30, 1899 in UTC
-      const jsDate = new Date(excelEpoch + (daysSince1900 * millisecondsPerDay));
+      // Excel dates: 1 = January 1, 1900 (with Excel's leap year bug)
+      // JavaScript dates: 0 = January 1, 1970
+      // Difference: 25569 days between 1900-01-01 and 1970-01-01
+      const EXCEL_EPOCH_OFFSET = 25569;
+      const MILLISECONDS_PER_DAY = 86400000;
+      
+      // Convert Excel serial to Unix timestamp
+      const unixTimestamp = (serialNumber - EXCEL_EPOCH_OFFSET) * MILLISECONDS_PER_DAY;
+      const jsDate = new Date(unixTimestamp);
       
       if (!isNaN(jsDate.getTime())) {
-        // Get the date components in UTC to avoid timezone shift
+        // Use UTC methods to avoid timezone issues
         const year = jsDate.getUTCFullYear();
         const month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
         const day = String(jsDate.getUTCDate()).padStart(2, '0');
