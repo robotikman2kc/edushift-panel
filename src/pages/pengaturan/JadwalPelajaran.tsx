@@ -30,7 +30,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
-import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
+import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
+import { SemesterSelector } from "@/components/common/SemesterSelector";
 
 interface TimeSlot {
   id: string;
@@ -72,6 +73,7 @@ export default function JadwalPelajaran() {
   const [mataPelajaranList, setMataPelajaranList] = useState<MataPelajaran[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
+  const [activeSemester, setActiveSemester] = useState("");
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
@@ -93,21 +95,24 @@ export default function JadwalPelajaran() {
   useEffect(() => {
     const initData = async () => {
       const year = await getActiveTahunAjaran();
+      const semester = await getActiveSemester();
       setActiveTahunAjaran(year);
-      fetchData();
+      setActiveSemester(semester);
+      fetchData(year, semester);
     };
     initData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (year?: string, semester?: string) => {
     try {
       setLoading(true);
       
-      const year = activeTahunAjaran || await getActiveTahunAjaran();
+      const currentYear = year || activeTahunAjaran || await getActiveTahunAjaran();
+      const currentSemester = semester || activeSemester || await getActiveSemester();
       
-      // Fetch schedules - filter by tahun_ajaran
+      // Fetch schedules - filter by tahun_ajaran AND semester
       const schedulesData = await indexedDB.select("jadwal_pelajaran", (jadwal: any) => 
-        jadwal.tahun_ajaran === year
+        jadwal.tahun_ajaran === currentYear && jadwal.semester === currentSemester
       );
       
       // Fetch time slots or create default ones
@@ -133,7 +138,7 @@ export default function JadwalPelajaran() {
       
       // Fetch kelas - filter by tahun_ajaran
       const kelasData = await indexedDB.select("kelas", (kelas: any) => 
-        kelas.tahun_ajaran === year
+        kelas.tahun_ajaran === currentYear
       );
       
       // Fetch mata pelajaran
@@ -269,12 +274,14 @@ export default function JadwalPelajaran() {
 
     try {
       const year = activeTahunAjaran || await getActiveTahunAjaran();
+      const semester = activeSemester || await getActiveSemester();
       const newSchedule = {
         hari: selectedDay,
         jam_ke: Number(selectedJamKe),
         kelas_id: selectedKelas,
         mata_pelajaran_id: selectedMataPelajaran,
         jumlah_jp: jumlahJP,
+        semester: semester,
         tahun_ajaran: year,
       };
 
@@ -287,7 +294,7 @@ export default function JadwalPelajaran() {
       
       setShowAddDialog(false);
       resetForm();
-      fetchData();
+      fetchData(year, semester);
     } catch (error) {
       console.error("Error adding schedule:", error);
       toast({
@@ -404,23 +411,43 @@ export default function JadwalPelajaran() {
     <div className="space-y-6">
       <PageHeader
         title="Jadwal Pelajaran"
-        description="Kelola jadwal mengajar per kelas"
+        description="Kelola jadwal mengajar per kelas dan semester"
       />
 
-      <div className="flex gap-2">
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Jadwal
-        </Button>
-        <Button variant="outline" onClick={() => setShowTimeSettingsDialog(true)}>
-          <SettingsIcon className="mr-2 h-4 w-4" />
-          Pengaturan Waktu ({minutesPerJP} menit/JP)
-        </Button>
-        <Button variant="outline" onClick={() => setShowBreakSettingsDialog(true)}>
-          <SettingsIcon className="mr-2 h-4 w-4" />
-          Jam Istirahat
-        </Button>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <Label>Filter Semester</Label>
+            <SemesterSelector
+              semester={activeSemester}
+              tahunAjaran={activeTahunAjaran}
+              onSemesterChange={async (value) => {
+                setActiveSemester(value);
+                await fetchData(activeTahunAjaran, value);
+              }}
+              onTahunAjaranChange={async (value) => {
+                setActiveTahunAjaran(value);
+                await fetchData(value, activeSemester);
+              }}
+            />
+          </div>
+
+          <div className="flex gap-2 mb-6">
+            <Button onClick={() => setShowAddDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Jadwal
+            </Button>
+            <Button variant="outline" onClick={() => setShowTimeSettingsDialog(true)}>
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              Pengaturan Waktu ({minutesPerJP} menit/JP)
+            </Button>
+            <Button variant="outline" onClick={() => setShowBreakSettingsDialog(true)}>
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              Jam Istirahat
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
