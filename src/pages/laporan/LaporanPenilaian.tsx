@@ -223,8 +223,14 @@ const LaporanPenilaian = () => {
         );
         
         const uniqueStudents = new Set(semesterNilai.map((n: NilaiSiswa) => n.siswa_id));
-        sem.hasData = uniqueStudents.size > 0;
-        sem.studentCount = uniqueStudents.size;
+        
+        // Filter to only count students from the selected class
+        const studentsInClass = filteredSiswa.filter((s: Siswa) => 
+          uniqueStudents.has(s.id)
+        );
+        
+        sem.hasData = studentsInClass.length > 0;
+        sem.studentCount = studentsInClass.length;
       });
 
       setSemesterData(semesters);
