@@ -94,24 +94,32 @@ const LaporanKehadiran = () => {
     fetchMataPelajaran();
   }, []);
 
-  // Filter kelas by tingkat (but don't clear selections if we have saved state)
+  // Filter kelas by tingkat and auto-select first kelas
   useEffect(() => {
     if (selectedTingkat && allKelas.length > 0) {
       const filtered = allKelas.filter(kelas => kelas.tingkat === selectedTingkat);
       setFilteredKelas(filtered);
       
-      // Only clear selections if no saved state exists
-      const savedKelas = getSavedState('kelas', '');
-      if (!savedKelas) {
-        setSelectedKelas("");
+      // Auto-select first kelas if available
+      if (filtered.length > 0) {
+        const firstKelasId = filtered[0].id;
+        setSelectedKelas(firstKelasId);
+        saveState('kelas', firstKelasId);
       }
     } else if (allKelas.length > 0) {
       setFilteredKelas([]);
-      if (!getSavedState('kelas', '')) {
-        setSelectedKelas("");
-      }
+      setSelectedKelas("");
     }
   }, [selectedTingkat, allKelas]);
+
+  // Auto-select first mata pelajaran when available
+  useEffect(() => {
+    if (mataPelajaran.length > 0 && !selectedMataPelajaran) {
+      const firstMapelId = mataPelajaran[0].id;
+      setSelectedMataPelajaran(firstMapelId);
+      saveState('mata_pelajaran', firstMapelId);
+    }
+  }, [mataPelajaran]);
 
   const fetchKelas = async () => {
     try {
