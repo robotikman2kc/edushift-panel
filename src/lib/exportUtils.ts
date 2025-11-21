@@ -276,13 +276,13 @@ export const generatePDFBlob = (
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
           
-          // Page numbers only for grade reports
+          // Page numbers only for grade reports - positioned lower to avoid overlap
           if (template.footer.showPageNumbers && !title.includes('Jurnal') && !title.includes('Kehadiran')) {
             doc.setFontSize(template.styling.fontSize.header);
             doc.setTextColor(0, 0, 0);
             const pageText = `Halaman ${data.pageNumber}`;
             const pageTextWidth = doc.getTextWidth(pageText);
-            doc.text(pageText, pageWidth - template.layout.margins.right - pageTextWidth, pageHeight - 25);
+            doc.text(pageText, pageWidth - template.layout.margins.right - pageTextWidth, pageHeight - 10);
           }
         }
       },
