@@ -24,6 +24,7 @@ const InputNilai = () => {
   const [existingGrades, setExistingGrades] = useState<NilaiSiswa[]>([]);
   const [grades, setGrades] = useState<{[key: string]: string}>({});
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
+  const [bulkGrade, setBulkGrade] = useState("");
   
   // Dialog states for adding new category
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -199,6 +200,48 @@ const InputNilai = () => {
       ...prev,
       [studentId]: value
     }));
+  };
+
+  const handleApplyBulkGrade = () => {
+    if (!bulkGrade || bulkGrade.trim() === "") {
+      toast({
+        title: "Peringatan",
+        description: "Silakan masukkan nilai terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const nilai = parseInt(bulkGrade);
+    if (nilai < 0 || nilai > 100) {
+      toast({
+        title: "Peringatan",
+        description: "Nilai harus antara 0-100",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedClass) {
+      toast({
+        title: "Peringatan",
+        description: "Silakan pilih kelas terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Apply the bulk grade to all students
+    const newGrades: {[key: string]: string} = {};
+    students.forEach((student) => {
+      newGrades[student.id] = bulkGrade;
+    });
+    setGrades(newGrades);
+    
+    toast({
+      title: "Berhasil",
+      description: `Nilai ${bulkGrade} telah diisi untuk semua siswa`,
+    });
   };
 
   const handleSave = async () => {
@@ -464,6 +507,32 @@ const InputNilai = () => {
                   })}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 pt-4 border-t">
+              <Label htmlFor="bulk-grade">Input Nilai Sekaligus</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="bulk-grade"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="0-100"
+                  value={bulkGrade}
+                  onChange={(e) => setBulkGrade(e.target.value)}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={handleApplyBulkGrade}
+                  variant="outline"
+                  disabled={!selectedClass}
+                >
+                  Terapkan
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Isi nilai yang sama untuk semua siswa
+              </p>
             </div>
 
             <Button 
