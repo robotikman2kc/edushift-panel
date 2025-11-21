@@ -276,8 +276,8 @@ export const generatePDFBlob = (
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
           
-          // Page numbers for grade and attendance reports - positioned lower to avoid overlap
-          if (template.footer.showPageNumbers && !title.includes('Jurnal')) {
+          // Page numbers for all reports - positioned lower to avoid overlap
+          if (template.footer.showPageNumbers) {
             doc.setFontSize(template.styling.fontSize.header);
             doc.setTextColor(0, 0, 0);
             const pageText = `Halaman ${data.pageNumber}`;
