@@ -45,7 +45,97 @@ const LaporanPenilaian = () => {
 
   useEffect(() => {
     loadMasterData();
+    loadLastSelectedFilters();
   }, []);
+
+  const loadLastSelectedFilters = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const lastTingkat = settings.find((s: any) => s.key === "last_selected_tingkat_laporan_nilai");
+      const lastKelas = settings.find((s: any) => s.key === "last_selected_kelas_laporan_nilai");
+      const lastMapel = settings.find((s: any) => s.key === "last_selected_mapel_laporan_nilai");
+      const lastTahunAjaran = settings.find((s: any) => s.key === "last_selected_tahun_ajaran_laporan_nilai");
+      
+      if (lastTingkat) setSelectedTingkat(lastTingkat.value);
+      if (lastKelas) setSelectedKelas(lastKelas.value);
+      if (lastMapel) setSelectedMataPelajaran(lastMapel.value);
+      if (lastTahunAjaran) setSelectedTahunAjaran(lastTahunAjaran.value);
+    } catch (error) {
+      console.error("Error loading last selected filters:", error);
+    }
+  };
+
+  const saveLastSelectedTingkat = async (tingkat: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_tingkat_laporan_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: tingkat });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_tingkat_laporan_nilai",
+          value: tingkat,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving tingkat:", error);
+    }
+  };
+
+  const saveLastSelectedKelas = async (kelasId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_kelas_laporan_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: kelasId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_kelas_laporan_nilai",
+          value: kelasId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving kelas:", error);
+    }
+  };
+
+  const saveLastSelectedMapel = async (mapelId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_mapel_laporan_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: mapelId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_mapel_laporan_nilai",
+          value: mapelId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving mapel:", error);
+    }
+  };
+
+  const saveLastSelectedTahunAjaran = async (tahunAjaran: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_tahun_ajaran_laporan_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: tahunAjaran });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_tahun_ajaran_laporan_nilai",
+          value: tahunAjaran,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving tahun ajaran:", error);
+    }
+  };
 
   useEffect(() => {
     if (selectedTingkat && kelasList.length > 0) {
@@ -303,7 +393,10 @@ const LaporanPenilaian = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tingkat</Label>
-              <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+              <Select value={selectedTingkat} onValueChange={(value) => {
+                setSelectedTingkat(value);
+                saveLastSelectedTingkat(value);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tingkat" />
                 </SelectTrigger>
@@ -321,7 +414,10 @@ const LaporanPenilaian = () => {
               <Label>Kelas</Label>
               <Select 
                 value={selectedKelas} 
-                onValueChange={setSelectedKelas}
+                onValueChange={(value) => {
+                  setSelectedKelas(value);
+                  saveLastSelectedKelas(value);
+                }}
                 disabled={!selectedTingkat}
               >
                 <SelectTrigger>
@@ -341,7 +437,10 @@ const LaporanPenilaian = () => {
               <Label>Mata Pelajaran</Label>
               <Select 
                 value={selectedMataPelajaran} 
-                onValueChange={setSelectedMataPelajaran}
+                onValueChange={(value) => {
+                  setSelectedMataPelajaran(value);
+                  saveLastSelectedMapel(value);
+                }}
                 disabled={!selectedKelas}
               >
                 <SelectTrigger>
@@ -361,7 +460,10 @@ const LaporanPenilaian = () => {
               <Label>Tahun Ajaran</Label>
               <Select 
                 value={selectedTahunAjaran} 
-                onValueChange={setSelectedTahunAjaran}
+                onValueChange={(value) => {
+                  setSelectedTahunAjaran(value);
+                  saveLastSelectedTahunAjaran(value);
+                }}
                 disabled={!selectedMataPelajaran}
               >
                 <SelectTrigger>
