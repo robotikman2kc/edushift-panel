@@ -48,6 +48,11 @@ import Bantuan from "./pages/akun/Bantuan";
 import FormatPDF from "./pages/pengaturan/FormatPDF";
 import Notifikasi from "./pages/pengaturan/Notifikasi";
 
+// Laporan Pages
+import LaporanKehadiran from "./pages/laporan/LaporanKehadiran";
+import LaporanPenilaian from "./pages/laporan/LaporanPenilaian";
+import LaporanJurnalGuru from "./pages/laporan/LaporanJurnalGuru";
+
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
 
@@ -128,6 +133,11 @@ const App = () => {
                   <Route path="/data/backup-restore" element={<BackupRestore />} />
                   <Route path="/data/backup-google-drive" element={<BackupGoogleDrive />} />
                   <Route path="/data/storage-monitor" element={<StorageMonitor />} />
+
+                  {/* Laporan Routes */}
+                  <Route path="/laporan/kehadiran" element={<LaporanKehadiran />} />
+                  <Route path="/laporan/penilaian" element={<LaporanPenilaian />} />
+                  <Route path="/laporan/jurnal-guru" element={<LaporanJurnalGuru />} />
 
                   {/* Akun Routes */}
                   <Route path="/akun/profil" element={<Profil />} />
