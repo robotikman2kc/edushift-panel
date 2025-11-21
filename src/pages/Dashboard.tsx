@@ -256,6 +256,7 @@ const Dashboard = () => {
         />
         <Button 
           onClick={() => navigate('/jurnal/agenda-mengajar')}
+          variant="outline"
           className="flex items-center gap-2"
         >
           <BookMarked className="h-4 w-4" />
