@@ -130,7 +130,7 @@ const RekapKehadiran = () => {
         }
       }
       
-      setAvailableYears(years.sort((a, b) => b - a));
+      setAvailableYears(years.sort((a, b) => a - b));
     } catch (error) {
       console.error("Error loading available years:", error);
     }

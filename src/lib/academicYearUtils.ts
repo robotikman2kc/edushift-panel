@@ -59,7 +59,7 @@ export async function getAllTahunAjaranWithUpcoming(upcomingCount: number = 3): 
   const latestYear = existingYears[0];
   const upcomingYears = generateUpcomingYears(latestYear, upcomingCount);
   
-  // Combine existing and upcoming years, remove duplicates
+  // Combine existing and upcoming years, remove duplicates, sort ascending
   const allYears = [...existingYears, ...upcomingYears];
-  return [...new Set(allYears)];
+  return [...new Set(allYears)].sort();
 }
