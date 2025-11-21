@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { getBobotForKelas } from "@/lib/bobotUtils";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 
 interface SemesterData {
   semester: string;
@@ -25,6 +26,7 @@ const LaporanPenilaian = () => {
   const [selectedKelas, setSelectedKelas] = useState("");
   const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("");
   const [selectedTahunAjaran, setSelectedTahunAjaran] = useState("");
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [filteredKelasList, setFilteredKelasList] = useState<Kelas[]>([]);
@@ -37,18 +39,16 @@ const LaporanPenilaian = () => {
   const [currentExportSemester, setCurrentExportSemester] = useState("");
 
   const tingkatOptions = ["X", "XI", "XII"];
-  
-  // Generate tahun ajaran options starting from 2025/2026
-  const tahunAjaranOptions = [];
-  const startYear = 2025;
-  for (let i = 0; i < 5; i++) {
-    const year = startYear + i;
-    tahunAjaranOptions.push(`${year}/${year + 1}`);
-  }
 
   useEffect(() => {
-    loadMasterData();
-    loadLastSelectedFilters();
+    const initData = async () => {
+      const year = await getActiveTahunAjaran();
+      setActiveTahunAjaran(year);
+      setSelectedTahunAjaran(year);
+      loadMasterData(year);
+      loadLastSelectedFilters();
+    };
+    initData();
   }, []);
 
   const loadLastSelectedFilters = async () => {
@@ -161,10 +161,12 @@ const LaporanPenilaian = () => {
     }
   }, [selectedKelas, selectedMataPelajaran, selectedTahunAjaran, kategoriList]);
 
-  const loadMasterData = async () => {
+  const loadMasterData = async (year?: string) => {
     try {
+      const currentYear = year || activeTahunAjaran || await getActiveTahunAjaran();
+      
       const [kelas, mapel, kategori] = await Promise.all([
-        indexedDB.select("kelas"),
+        indexedDB.select("kelas", (k: any) => k.tahun_ajaran === currentYear),
         indexedDB.select("mata_pelajaran"),
         indexedDB.select("jenis_penilaian")
       ]);
@@ -633,25 +635,10 @@ const LaporanPenilaian = () => {
 
             <div className="space-y-2">
               <Label>Tahun Ajaran</Label>
-              <Select 
-                value={selectedTahunAjaran} 
-                onValueChange={(value) => {
-                  setSelectedTahunAjaran(value);
-                  saveLastSelectedTahunAjaran(value);
-                }}
-                disabled={!selectedMataPelajaran}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih tahun ajaran" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tahunAjaranOptions.map(year => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="px-3 py-2 border rounded-md bg-muted">
+                <span className="text-sm font-medium">{activeTahunAjaran}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Tahun ajaran mengikuti workspace aktif</p>
             </div>
           </CardContent>
         </Card>
