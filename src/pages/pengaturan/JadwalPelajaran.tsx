@@ -31,7 +31,6 @@ import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
-import { SemesterSelector } from "@/components/common/SemesterSelector";
 
 interface TimeSlot {
   id: string;
@@ -411,25 +410,25 @@ export default function JadwalPelajaran() {
     <div className="space-y-6">
       <PageHeader
         title="Jadwal Pelajaran"
-        description="Kelola jadwal mengajar per kelas dan semester"
+        description={`Kelola jadwal mengajar per semester - Tahun Ajaran ${activeTahunAjaran}`}
       />
 
       <Card>
         <CardContent className="pt-6">
-          <div className="mb-6">
-            <Label>Filter Semester</Label>
-            <SemesterSelector
-              semester={activeSemester}
-              tahunAjaran={activeTahunAjaran}
-              onSemesterChange={async (value) => {
-                setActiveSemester(value);
-                await fetchData(activeTahunAjaran, value);
-              }}
-              onTahunAjaranChange={async (value) => {
-                setActiveTahunAjaran(value);
-                await fetchData(value, activeSemester);
-              }}
-            />
+          <div className="mb-6 max-w-xs">
+            <Label>Semester</Label>
+            <Select value={activeSemester} onValueChange={async (value) => {
+              setActiveSemester(value);
+              await fetchData(activeTahunAjaran, value);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih semester" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Semester 1</SelectItem>
+                <SelectItem value="2">Semester 2</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-2 mb-6">
