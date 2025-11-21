@@ -399,6 +399,9 @@ const LaporanPenilaian = () => {
                 setSelectedMataPelajaran("");
                 setSelectedTahunAjaran("");
                 saveLastSelectedTingkat(value);
+                saveLastSelectedKelas("");
+                saveLastSelectedMapel("");
+                saveLastSelectedTahunAjaran("");
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tingkat" />
@@ -422,6 +425,8 @@ const LaporanPenilaian = () => {
                   setSelectedMataPelajaran("");
                   setSelectedTahunAjaran("");
                   saveLastSelectedKelas(value);
+                  saveLastSelectedMapel("");
+                  saveLastSelectedTahunAjaran("");
                 }}
                 disabled={!selectedTingkat}
               >
@@ -446,6 +451,7 @@ const LaporanPenilaian = () => {
                   setSelectedMataPelajaran(value);
                   setSelectedTahunAjaran("");
                   saveLastSelectedMapel(value);
+                  saveLastSelectedTahunAjaran("");
                 }}
                 disabled={!selectedKelas}
               >
