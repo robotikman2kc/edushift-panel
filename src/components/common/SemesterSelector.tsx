@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { indexedDB } from "@/lib/indexedDB";
+import { getAllTahunAjaranWithUpcoming } from "@/lib/academicYearUtils";
 
 interface SemesterSelectorProps {
   semester: string;
@@ -18,9 +19,11 @@ export const SemesterSelector: React.FC<SemesterSelectorProps> = ({
 }) => {
   const [activeSemester, setActiveSemester] = useState<string>("");
   const [activeTahunAjaran, setActiveTahunAjaran] = useState<string>("");
+  const [tahunAjaranOptions, setTahunAjaranOptions] = useState<string[]>([]);
 
   useEffect(() => {
     loadActiveSemester();
+    loadTahunAjaranOptions();
   }, []);
 
   const loadActiveSemester = async () => {
@@ -36,13 +39,14 @@ export const SemesterSelector: React.FC<SemesterSelectorProps> = ({
     }
   };
 
-  // Generate tahun ajaran options starting from 2025/2026
-  const tahunAjaranOptions = [];
-  const startYear = 2025;
-  for (let i = 0; i < 5; i++) {
-    const year = startYear + i;
-    tahunAjaranOptions.push(`${year}/${year + 1}`);
-  }
+  const loadTahunAjaranOptions = async () => {
+    try {
+      const years = await getAllTahunAjaranWithUpcoming(3);
+      setTahunAjaranOptions(years);
+    } catch (error) {
+      console.error("Error loading tahun ajaran options:", error);
+    }
+  };
 
   return (
     <div className="grid grid-cols-2 gap-4">
