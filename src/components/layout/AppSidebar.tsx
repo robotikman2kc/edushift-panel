@@ -22,7 +22,8 @@ import {
   Cloud,
   HardDrive,
   FileBarChart,
-  BookText
+  BookText,
+  CalendarClock
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -56,6 +57,7 @@ const menuItems = [
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
       { title: "Jadwal Pelajaran", url: "/pengaturan/jadwal-pelajaran", icon: CalendarDays },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
+      { title: "Tahun Ajaran", url: "/pengaturan/tahun-ajaran", icon: CalendarClock },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
       { title: "Notifikasi", url: "/pengaturan/notifikasi", icon: Bell },
     ],

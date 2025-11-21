@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { indexedDB } from "@/lib/indexedDB";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,6 +95,7 @@ const InputKehadiran = () => {
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: Kehadiran}>({});
   const [loading, setLoading] = useState(false);
   const [todaySchedules, setTodaySchedules] = useState<ScheduleQuickButton[]>([]);
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -137,8 +139,11 @@ const InputKehadiran = () => {
 
   // Fetch all kelas and mata pelajaran
   useEffect(() => {
-    // Clean up IPA class on mount if it exists
-    const cleanupIPAClass = async () => {
+    const initData = async () => {
+      const year = await getActiveTahunAjaran();
+      setActiveTahunAjaran(year);
+      
+      // Clean up IPA class on mount if it exists
       try {
         const ipaClass = await indexedDB.select("kelas", kelas => 
           kelas.id === "7399ed54-79fc-4ebc-8a48-3fc19cc1ad81"
@@ -150,12 +155,12 @@ const InputKehadiran = () => {
       } catch (error) {
         console.error("Error deleting IPA class:", error);
       }
-    };
-    
-    cleanupIPAClass().then(() => {
+      
       fetchKelas();
       fetchMataPelajaran();
-    });
+    };
+    
+    initData();
   }, []);
 
   // Fetch today's schedule when date changes
@@ -209,8 +214,11 @@ const InputKehadiran = () => {
 
   const fetchKelas = async () => {
     try {
-      const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif");
-      console.log("Fetched kelas data:", data); // Debug log
+      const year = activeTahunAjaran || await getActiveTahunAjaran();
+      const data = await indexedDB.select("kelas", kelas => 
+        kelas.status === "Aktif" && kelas.tahun_ajaran === year
+      );
+      console.log("Fetched kelas data:", data);
       const sortedData = data.sort((a, b) => {
         if (a.tingkat !== b.tingkat) {
           return a.tingkat.localeCompare(b.tingkat);
@@ -448,6 +456,7 @@ const InputKehadiran = () => {
           status_kehadiran: record.status_kehadiran,
           keaktifan: record.keaktifan,
           keterangan: record.keterangan,
+          tahun_ajaran: activeTahunAjaran || await getActiveTahunAjaran(),
         });
         if (result.error) throw new Error(result.error);
       }

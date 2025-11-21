@@ -9,6 +9,10 @@ import { indexedDB } from './lib/indexedDB'
 indexedDB.initDB().then(async () => {
   indexedDB.initializeDefaultData();
   
+  // Run academic year migration
+  const { migrateToAcademicYear } = await import('./lib/academicYearMigration');
+  await migrateToAcademicYear();
+  
   // Check if migration is needed (only check, don't auto-migrate)
   const { dataMigration } = await import('./lib/migrationUtils');
   const migrationStatus = await dataMigration.getMigrationStatus();

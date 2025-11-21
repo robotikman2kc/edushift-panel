@@ -20,6 +20,7 @@ import Siswa from "./pages/pengaturan/Siswa";
 import MataPelajaran from "./pages/pengaturan/MataPelajaran";
 import JadwalPelajaran from "./pages/pengaturan/JadwalPelajaran";
 import BobotPenilaian from "./pages/pengaturan/BobotPenilaian";
+import TahunAjaran from "./pages/pengaturan/TahunAjaran";
 
 // Penilaian Pages
 import InputNilai from "./pages/penilaian/InputNilai";
@@ -102,6 +103,7 @@ const App = () => {
                   <Route path="/pengaturan/mata-pelajaran" element={<MataPelajaran />} />
                   <Route path="/pengaturan/jadwal-pelajaran" element={<JadwalPelajaran />} />
                   <Route path="/pengaturan/bobot-penilaian" element={<BobotPenilaian />} />
+                  <Route path="/pengaturan/tahun-ajaran" element={<TahunAjaran />} />
                   <Route path="/pengaturan/format-pdf" element={<FormatPDF />} />
                   <Route path="/pengaturan/notifikasi" element={<Notifikasi />} />
 

@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 
 interface TimeSlot {
   id: string;
@@ -70,6 +71,7 @@ export default function JadwalPelajaran() {
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [mataPelajaranList, setMataPelajaranList] = useState<MataPelajaran[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
@@ -89,15 +91,24 @@ export default function JadwalPelajaran() {
   const [jumlahJP, setJumlahJP] = useState(1);
 
   useEffect(() => {
-    fetchData();
+    const initData = async () => {
+      const year = await getActiveTahunAjaran();
+      setActiveTahunAjaran(year);
+      fetchData();
+    };
+    initData();
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      // Fetch schedules
-      const schedulesData = await indexedDB.select("jadwal_pelajaran");
+      const year = activeTahunAjaran || await getActiveTahunAjaran();
+      
+      // Fetch schedules - filter by tahun_ajaran
+      const schedulesData = await indexedDB.select("jadwal_pelajaran", (jadwal: any) => 
+        jadwal.tahun_ajaran === year
+      );
       
       // Fetch time slots or create default ones
       let timeSlotsData = await indexedDB.select("jam_pelajaran");
@@ -120,8 +131,10 @@ export default function JadwalPelajaran() {
         }
       }
       
-      // Fetch kelas
-      const kelasData = await indexedDB.select("kelas");
+      // Fetch kelas - filter by tahun_ajaran
+      const kelasData = await indexedDB.select("kelas", (kelas: any) => 
+        kelas.tahun_ajaran === year
+      );
       
       // Fetch mata pelajaran
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
@@ -255,12 +268,14 @@ export default function JadwalPelajaran() {
     }
 
     try {
+      const year = activeTahunAjaran || await getActiveTahunAjaran();
       const newSchedule = {
         hari: selectedDay,
         jam_ke: Number(selectedJamKe),
         kelas_id: selectedKelas,
         mata_pelajaran_id: selectedMataPelajaran,
         jumlah_jp: jumlahJP,
+        tahun_ajaran: year,
       };
 
       await indexedDB.insert("jadwal_pelajaran", newSchedule);
