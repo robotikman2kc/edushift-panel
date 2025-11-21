@@ -177,9 +177,9 @@ const LaporanJurnalGuru = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
               {[...Array(12)].map((_, i) => (
-                <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+                <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
               ))}
             </div>
           ) : monthsData.every(m => !m.hasData) ? (
@@ -190,38 +190,36 @@ const LaporanJurnalGuru = () => {
               variant="minimal"
             />
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
               {monthsData.map((monthData) => (
-                <Card key={monthData.month} className="overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{monthData.monthName}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {monthData.hasData 
-                            ? `${monthData.jurnalCount} kegiatan`
-                            : "Tidak ada data"
-                          }
-                        </p>
-                      </div>
-                      <FileText className={monthData.hasData ? "text-primary" : "text-muted-foreground"} />
+                <div 
+                  key={monthData.month} 
+                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <FileText className={monthData.hasData ? "text-primary" : "text-muted-foreground"} />
+                    <div>
+                      <h3 className="font-medium">{monthData.monthName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {monthData.hasData 
+                          ? `${monthData.jurnalCount} kegiatan tercatat`
+                          : "Tidak ada data"
+                        }
+                      </p>
                     </div>
-                    {monthData.hasData ? (
-                      <Button 
-                        onClick={() => handleDownload(monthData.month, monthData.monthName)}
-                        className="w-full"
-                        size="sm"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download PDF
-                      </Button>
-                    ) : (
-                      <div className="h-9 flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded-md">
-                        Tidak ada laporan
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                  {monthData.hasData ? (
+                    <Button 
+                      onClick={() => handleDownload(monthData.month, monthData.monthName)}
+                      size="sm"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download PDF
+                    </Button>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                  )}
+                </div>
               ))}
             </div>
           )}
