@@ -114,6 +114,9 @@ const RekapNilai = () => {
 
   const loadMasterData = async () => {
     try {
+      const { getActiveTahunAjaran } = await import('@/lib/academicYearUtils');
+      const activeTahunAjaran = await getActiveTahunAjaran();
+      
       const [kelas, mapel, kategori] = await Promise.all([
         indexedDB.select("kelas"),
         indexedDB.select("mata_pelajaran"),
@@ -125,7 +128,7 @@ const RekapNilai = () => {
       const filteredKategori = kategori.filter((k: JenisPenilaian) => k.status === "Aktif");
       console.log("Filtered kategori (Aktif only):", filteredKategori);
       
-      setKelasList(kelas.filter((k: Kelas) => k.status === "Aktif"));
+      setKelasList(kelas.filter((k: Kelas) => k.status === "Aktif" && k.tahun_ajaran === activeTahunAjaran));
       setMataPelajaranList(mapel.filter((m: MataPelajaran) => m.status === "Aktif"));
       setKategoriList(filteredKategori);
     } catch (error) {
