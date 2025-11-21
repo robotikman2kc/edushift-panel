@@ -601,7 +601,7 @@ const RekapKehadiran = () => {
                     <FileText className="mr-2 h-4 w-4" />
                     Export PDF
                   </Button>
-                  <Button size="sm" className="w-full" onClick={handleExportExcel} variant="outline">
+                  <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleExportExcel}>
                     <Download className="mr-2 h-4 w-4" />
                     Export Excel
                   </Button>

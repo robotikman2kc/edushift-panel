@@ -711,8 +711,7 @@ const AgendaMengajar = () => {
                 </Button>
                 <Button
                   onClick={handleExportExcel}
-                  variant="outline"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
                   disabled={agendaList.length === 0}
                 >
                   <Download className="mr-2 h-4 w-4" />

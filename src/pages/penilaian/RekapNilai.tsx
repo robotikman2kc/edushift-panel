@@ -583,7 +583,7 @@ const RekapNilai = () => {
                 </Button>
                 <Button 
                   onClick={handleExportExcel}
-                  variant="outline"
+                  className="bg-green-600 hover:bg-green-700 text-white"
                   size="sm"
                 >
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
