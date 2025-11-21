@@ -393,15 +393,11 @@ const LaporanPenilaian = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tingkat</Label>
-              <Select value={selectedTingkat} onValueChange={(value) => {
+              <Select value={selectedTingkat} onValueChange={async (value) => {
                 setSelectedTingkat(value);
-                setSelectedKelas("");
-                setSelectedMataPelajaran("");
-                setSelectedTahunAjaran("");
                 saveLastSelectedTingkat(value);
-                saveLastSelectedKelas("");
-                saveLastSelectedMapel("");
-                saveLastSelectedTahunAjaran("");
+                // Load saved filters after tingkat changes
+                await loadLastSelectedFilters();
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tingkat" />
@@ -420,13 +416,11 @@ const LaporanPenilaian = () => {
               <Label>Kelas</Label>
               <Select 
                 value={selectedKelas} 
-                onValueChange={(value) => {
+                onValueChange={async (value) => {
                   setSelectedKelas(value);
-                  setSelectedMataPelajaran("");
-                  setSelectedTahunAjaran("");
                   saveLastSelectedKelas(value);
-                  saveLastSelectedMapel("");
-                  saveLastSelectedTahunAjaran("");
+                  // Load saved filters after kelas changes
+                  await loadLastSelectedFilters();
                 }}
                 disabled={!selectedTingkat}
               >
@@ -447,11 +441,11 @@ const LaporanPenilaian = () => {
               <Label>Mata Pelajaran</Label>
               <Select 
                 value={selectedMataPelajaran} 
-                onValueChange={(value) => {
+                onValueChange={async (value) => {
                   setSelectedMataPelajaran(value);
-                  setSelectedTahunAjaran("");
                   saveLastSelectedMapel(value);
-                  saveLastSelectedTahunAjaran("");
+                  // Load saved filters after mapel changes
+                  await loadLastSelectedFilters();
                 }}
                 disabled={!selectedKelas}
               >
