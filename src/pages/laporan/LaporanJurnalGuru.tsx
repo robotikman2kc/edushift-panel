@@ -6,8 +6,9 @@ import { Download, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { indexedDB } from "@/lib/indexedDB";
 import { useToast } from "@/hooks/use-toast";
-import { exportToPDF, getCustomPDFTemplate } from "@/lib/exportUtils";
+import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { EmptyState } from "@/components/common/EmptyState";
+import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
 interface MonthData {
   month: number;
@@ -20,6 +21,8 @@ const LaporanJurnalGuru = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [monthsData, setMonthsData] = useState<MonthData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [currentExportMonth, setCurrentExportMonth] = useState<{ month: number; monthName: string } | null>(null);
   const { toast } = useToast();
 
   const monthNames = [
@@ -65,7 +68,15 @@ const LaporanJurnalGuru = () => {
     }
   };
 
-  const handleDownload = async (month: number, monthName: string) => {
+  const handleDownloadClick = (month: number, monthName: string) => {
+    setCurrentExportMonth({ month, monthName });
+    setIsExportDateDialogOpen(true);
+  };
+
+  const handleDownload = async (signatureDate?: Date) => {
+    if (!currentExportMonth) return;
+    
+    const { month, monthName } = currentExportMonth;
     try {
       // Fetch all jurnal for the selected month and year
       const allJurnal = await indexedDB.select("jurnal");
@@ -119,18 +130,39 @@ const LaporanJurnalGuru = () => {
         { key: "satuan_hasil", label: "Satuan Hasil" },
       ];
 
-      const template = getCustomPDFTemplate('journal');
+      let template = getCustomPDFTemplate('journal');
       
-      await exportToPDF(
+      // Add signature date to template
+      if (signatureDate) {
+        template = {
+          ...template,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
+      }
+      
+      const blob = generatePDFBlob(
         exportData,
         columns,
         `Laporan Jurnal Guru - ${monthName} ${selectedYear}`,
-        `Laporan_Jurnal_${monthName}_${selectedYear}.pdf`,
         template,
         {
           bulan: `${monthName} ${selectedYear}`,
         }
       );
+
+      if (!blob) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      // Download PDF
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Laporan_Jurnal_${monthName}_${selectedYear}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Berhasil",
@@ -210,7 +242,7 @@ const LaporanJurnalGuru = () => {
                   </div>
                   {monthData.hasData ? (
                     <Button 
-                      onClick={() => handleDownload(monthData.month, monthData.monthName)}
+                      onClick={() => handleDownloadClick(monthData.month, monthData.monthName)}
                       size="sm"
                       className="w-full"
                     >
@@ -228,6 +260,12 @@ const LaporanJurnalGuru = () => {
           )}
         </CardContent>
       </Card>
+
+      <ExportDateDialog
+        open={isExportDateDialogOpen}
+        onOpenChange={setIsExportDateDialogOpen}
+        onExport={handleDownload}
+      />
     </div>
   );
 };
