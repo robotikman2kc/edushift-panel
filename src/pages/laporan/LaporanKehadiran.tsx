@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Download } from "lucide-react";
-import { getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Kelas {
   id: string;
@@ -254,63 +254,61 @@ const LaporanKehadiran = () => {
       const selectedKelasData = allKelas.find(k => k.id === selectedKelas);
       const selectedMataPelajaranData = mataPelajaran.find(mp => mp.id === selectedMataPelajaran);
 
-      // Generate individual month PDFs and combine them
-      const mergedPDF = new jsPDF('landscape', 'mm', 'a4');
+      const doc = new jsPDF('landscape', 'mm', 'a4');
       let isFirstPage = true;
 
+      // Generate report for each month
       for (let month = start; month <= end; month++) {
         const { exportData, exportColumns, monthLabel } = await generateMonthReport(month, parseInt(selectedYear));
         
-        const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas} - ${selectedMataPelajaranData?.nama_mata_pelajaran} - ${monthLabel} ${selectedYear}`;
+        if (!isFirstPage) {
+          doc.addPage();
+        }
+        isFirstPage = false;
+
+        // Add title
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        const title = `Rekap Kehadiran - ${selectedKelasData?.nama_kelas}`;
+        doc.text(title, 14, 15);
         
-        const customTemplate = getCustomPDFTemplate('attendance');
-        
-        const blob = generatePDFBlob(
-          exportData, 
-          exportColumns, 
-          title, 
-          customTemplate,
-          {
-            kelas: selectedKelasData?.nama_kelas,
-            bulan: `${monthLabel} ${selectedYear}`
-          }
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${selectedMataPelajaranData?.nama_mata_pelajaran} - ${monthLabel} ${selectedYear}`, 14, 22);
+
+        // Prepare table data
+        const tableHeaders = exportColumns.map(col => col.label);
+        const tableData = exportData.map(row => 
+          exportColumns.map(col => String(row[col.key] || '-'))
         );
 
-        if (blob) {
-          const arrayBuffer = await blob.arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
-          const tempPDF = new jsPDF('landscape', 'mm', 'a4');
-          
-          // Load the generated PDF
-          const loadedPDF = await (window as any).pdfjsLib.getDocument({ data: uint8Array }).promise;
-          
-          for (let pageNum = 1; pageNum <= loadedPDF.numPages; pageNum++) {
-            if (!isFirstPage) {
-              mergedPDF.addPage();
-            }
-            isFirstPage = false;
-
-            const page = await loadedPDF.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.5 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
-            
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            mergedPDF.addImage(imgData, 'JPEG', 0, 0, 297, 210);
-          }
-        }
+        // Add table
+        autoTable(doc, {
+          head: [tableHeaders],
+          body: tableData,
+          startY: 28,
+          styles: {
+            fontSize: 8,
+            cellPadding: 2,
+          },
+          headStyles: {
+            fillColor: [66, 139, 202],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245],
+          },
+          margin: { left: 14, right: 14 },
+        });
       }
 
-      // Download merged PDF
+      // Download PDF
       const startMonthLabel = monthOptions[start].label;
       const endMonthLabel = monthOptions[end].label;
       const filename = `laporan_kehadiran_${startMonthLabel}-${endMonthLabel}_${selectedYear}.pdf`;
       
-      mergedPDF.save(filename);
+      doc.save(filename);
 
       toast({
         title: "Export Berhasil",
@@ -320,7 +318,7 @@ const LaporanKehadiran = () => {
       console.error("Error exporting multi-month report:", error);
       toast({
         title: "Export Gagal",
-        description: "Terjadi kesalahan saat mengekspor laporan",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat mengekspor laporan",
         variant: "destructive",
       });
     } finally {
