@@ -11,6 +11,7 @@ import { getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
 import { PDFDocument } from "pdf-lib";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { hariLiburNasional } from "@/lib/hariLiburData";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 
 interface Kelas {
   id: string;
@@ -53,6 +54,7 @@ const LaporanKehadiran = () => {
   const [startMonth, setStartMonth] = useState(() => getSavedState('start_month', "0"));
   const [endMonth, setEndMonth] = useState(() => getSavedState('end_month', "0"));
   const [selectedYear, setSelectedYear] = useState(() => getSavedState('year', new Date().getFullYear().toString()));
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   
   const [allKelas, setAllKelas] = useState<Kelas[]>([]);
   const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
@@ -94,8 +96,13 @@ const LaporanKehadiran = () => {
   }));
 
   useEffect(() => {
-    fetchKelas();
-    fetchMataPelajaran();
+    const initData = async () => {
+      const year = await getActiveTahunAjaran();
+      setActiveTahunAjaran(year);
+      fetchKelas(year);
+      fetchMataPelajaran();
+    };
+    initData();
   }, []);
 
   // Filter kelas by tingkat and auto-select first kelas
@@ -125,9 +132,13 @@ const LaporanKehadiran = () => {
     }
   }, [mataPelajaran]);
 
-  const fetchKelas = async () => {
+  const fetchKelas = async (year?: string) => {
     try {
-      const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif");
+      const currentYear = year || activeTahunAjaran || await getActiveTahunAjaran();
+      
+      const data = await indexedDB.select("kelas", (kelas: any) => 
+        kelas.status === "Aktif" && kelas.tahun_ajaran === currentYear
+      );
       const sortedData = data.sort((a, b) => {
         if (a.tingkat !== b.tingkat) {
           return a.tingkat.localeCompare(b.tingkat);
