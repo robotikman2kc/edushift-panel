@@ -373,12 +373,18 @@ const Siswa = () => {
       const serialNumber = typeof dateStr === 'number' ? dateStr : Number(dateStr);
       
       // Excel epoch starts at December 30, 1899
-      const excelEpoch = new Date(1899, 11, 30);
-      const milliseconds = serialNumber * 86400000; // 24 * 60 * 60 * 1000
-      const jsDate = new Date(excelEpoch.getTime() + milliseconds);
+      // Convert to JavaScript date using UTC to avoid timezone issues
+      const daysSince1900 = serialNumber - 1; // Excel serial starts at 1, not 0
+      const millisecondsPerDay = 86400000;
+      const excelEpoch = Date.UTC(1899, 11, 30); // December 30, 1899 in UTC
+      const jsDate = new Date(excelEpoch + (daysSince1900 * millisecondsPerDay));
       
       if (!isNaN(jsDate.getTime())) {
-        const isoFormat = jsDate.toISOString().split('T')[0];
+        // Get the date components in UTC to avoid timezone shift
+        const year = jsDate.getUTCFullYear();
+        const month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(jsDate.getUTCDate()).padStart(2, '0');
+        const isoFormat = `${year}-${month}-${day}`;
         console.log('Excel serial converted:', serialNumber, '->', isoFormat);
         return isoFormat;
       }
