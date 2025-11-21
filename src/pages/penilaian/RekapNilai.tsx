@@ -142,9 +142,14 @@ const RekapNilai = () => {
         s.kelas_id === selectedKelas && s.status === "Aktif"
       );
 
-      console.log("Filtered students:", filteredSiswa.length);
+      // Sort siswa by nama
+      const sortedSiswa = filteredSiswa.sort((a, b) => 
+        a.nama_siswa.localeCompare(b.nama_siswa, 'id')
+      );
 
-      const rekapData: StudentGrade[] = filteredSiswa.map((siswa: Siswa) => {
+      console.log("Filtered students:", sortedSiswa.length);
+
+      const rekapData: StudentGrade[] = sortedSiswa.map((siswa: Siswa) => {
         // Get all grades for this student and subject
         const studentNilai = nilai.filter((n: NilaiSiswa) => 
           n.siswa_id === siswa.id && n.mata_pelajaran_id === selectedMataPelajaran
@@ -209,7 +214,7 @@ const RekapNilai = () => {
       });
 
       setStudentGrades(rekapData);
-      setSiswaList(filteredSiswa);
+      setSiswaList(sortedSiswa);
     } catch (error) {
       console.error("Error loading rekap nilai:", error);
       toast({

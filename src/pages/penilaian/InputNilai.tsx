@@ -146,7 +146,11 @@ const InputNilai = () => {
       const siswaData = await indexedDB.select('siswa', (siswa: Siswa) => 
         siswa.kelas_id === selectedClass && siswa.status === 'Aktif'
       );
-      setStudents(siswaData);
+      // Sort by nama_siswa
+      const sortedSiswa = siswaData.sort((a, b) => 
+        a.nama_siswa.localeCompare(b.nama_siswa, 'id')
+      );
+      setStudents(sortedSiswa);
     } catch (error) {
       toast({
         title: "Error",
