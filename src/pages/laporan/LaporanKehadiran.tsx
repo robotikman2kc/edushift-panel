@@ -453,7 +453,7 @@ const LaporanKehadiran = () => {
           </CardContent>
         </Card>
 
-        {selectedKelasData && selectedMataPelajaranData && (
+        {selectedKelas && selectedMataPelajaran && selectedKelasData && selectedMataPelajaranData && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Info Laporan</CardTitle>
