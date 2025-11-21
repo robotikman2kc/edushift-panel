@@ -20,7 +20,9 @@ import {
   LayoutDashboard,
   Bell,
   Cloud,
-  HardDrive
+  HardDrive,
+  FileBarChart,
+  BookText
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -80,6 +82,15 @@ const menuItems = [
     items: [
       { title: "Jurnal Guru", url: "/jurnal/jurnal-guru", icon: FileText },
       { title: "Agenda Mengajar", url: "/jurnal/agenda-mengajar", icon: ClipboardList },
+    ],
+  },
+  {
+    title: "LAPORAN",
+    icon: FileBarChart,
+    items: [
+      { title: "Laporan Kehadiran", url: "/laporan/kehadiran", icon: FileText },
+      { title: "Laporan Penilaian", url: "/laporan/penilaian", icon: BarChart3 },
+      { title: "Laporan Jurnal Guru", url: "/laporan/jurnal-guru", icon: BookText },
     ],
   },
   {
