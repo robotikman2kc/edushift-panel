@@ -451,11 +451,13 @@ const Siswa = () => {
 
       for (const row of data) {
         try {
-          // Validasi data yang diperlukan
-          if (!row.nisn || !row.nama_siswa) {
-            errors.push(`Baris dengan NISN "${row.nisn || 'kosong'}" - NISN dan Nama Siswa harus diisi`);
-            errorCount++;
-            continue;
+          // Skip baris kosong atau baris instruksi
+          if (!row.nisn || !row.nama_siswa || 
+              String(row.nisn).trim() === '' || 
+              String(row.nama_siswa).trim() === '' ||
+              String(row.jenis_kelamin).includes('Isi dengan') ||
+              String(row.tanggal_masuk).includes('Format:')) {
+            continue; // Skip baris ini tanpa error
           }
 
           // Cek apakah NISN sudah ada - jika ada, update data
