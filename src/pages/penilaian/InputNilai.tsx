@@ -62,10 +62,14 @@ const InputNilai = () => {
       const lastKelas = settings.find((s: any) => s.key === "last_selected_kelas_nilai");
       const lastMapel = settings.find((s: any) => s.key === "last_selected_mapel_nilai");
       const lastCategory = settings.find((s: any) => s.key === "last_selected_category_nilai");
+      const lastSemester = settings.find((s: any) => s.key === "last_selected_semester_nilai");
+      const lastTahunAjaran = settings.find((s: any) => s.key === "last_selected_tahun_ajaran_nilai");
       
       if (lastKelas) setSelectedClass(lastKelas.value);
       if (lastMapel) setSelectedSubject(lastMapel.value);
       if (lastCategory) setSelectedCategory(lastCategory.value);
+      if (lastSemester) setSelectedSemester(lastSemester.value);
+      if (lastTahunAjaran) setSelectedTahunAjaran(lastTahunAjaran.value);
     } catch (error) {
       console.error("Error loading last selected filters:", error);
     }
@@ -104,6 +108,42 @@ const InputNilai = () => {
       }
     } catch (error) {
       console.error("Error saving mapel:", error);
+    }
+  };
+
+  const saveLastSelectedSemester = async (semester: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_semester_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: semester });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_semester_nilai",
+          value: semester,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving semester:", error);
+    }
+  };
+
+  const saveLastSelectedTahunAjaran = async (tahunAjaran: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_tahun_ajaran_nilai");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: tahunAjaran });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_tahun_ajaran_nilai",
+          value: tahunAjaran,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving tahun ajaran:", error);
     }
   };
 
@@ -424,17 +464,11 @@ const InputNilai = () => {
               tahunAjaran={selectedTahunAjaran}
               onSemesterChange={(value) => {
                 setSelectedSemester(value);
-                toast({
-                  title: "Filter Tersimpan",
-                  description: "Pilihan semester tersimpan otomatis",
-                });
+                saveLastSelectedSemester(value);
               }}
               onTahunAjaranChange={(value) => {
                 setSelectedTahunAjaran(value);
-                toast({
-                  title: "Filter Tersimpan",
-                  description: "Pilihan tahun ajaran tersimpan otomatis",
-                });
+                saveLastSelectedTahunAjaran(value);
               }}
             />
             
@@ -443,10 +477,6 @@ const InputNilai = () => {
               <Select value={selectedClass} onValueChange={(value) => {
                 setSelectedClass(value);
                 saveLastSelectedClass(value);
-                toast({
-                  title: "Filter Tersimpan",
-                  description: "Pilihan kelas tersimpan otomatis",
-                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kelas" />
@@ -466,10 +496,6 @@ const InputNilai = () => {
               <Select value={selectedSubject} onValueChange={(value) => {
                 setSelectedSubject(value);
                 saveLastSelectedSubject(value);
-                toast({
-                  title: "Filter Tersimpan",
-                  description: "Pilihan mata pelajaran tersimpan otomatis",
-                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih mata pelajaran" />
@@ -539,10 +565,6 @@ const InputNilai = () => {
               <Select value={selectedCategory} onValueChange={(value) => {
                 setSelectedCategory(value);
                 saveLastSelectedCategory(value);
-                toast({
-                  title: "Filter Tersimpan",
-                  description: "Pilihan kategori penilaian tersimpan otomatis",
-                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kategori" />
