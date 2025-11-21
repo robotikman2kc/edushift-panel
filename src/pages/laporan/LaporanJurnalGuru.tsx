@@ -23,6 +23,7 @@ const LaporanJurnalGuru = () => {
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   const [currentExportMonth, setCurrentExportMonth] = useState<{ month: number; monthName: string } | null>(null);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const { toast } = useToast();
 
   const monthNames = [
@@ -31,8 +32,28 @@ const LaporanJurnalGuru = () => {
   ];
 
   useEffect(() => {
+    loadAvailableYears();
     fetchMonthsData();
   }, [selectedYear]);
+
+  const loadAvailableYears = async () => {
+    try {
+      const allJurnal = await indexedDB.select("jurnal");
+      const years = [...new Set(allJurnal.map((j: any) => new Date(j.tanggal).getFullYear()))];
+      
+      const currentYear = new Date().getFullYear();
+      for (let i = 0; i <= 3; i++) {
+        const year = currentYear + i;
+        if (!years.includes(year)) {
+          years.push(year);
+        }
+      }
+      
+      setAvailableYears(years.sort((a, b) => b - a));
+    } catch (error) {
+      console.error("Error loading available years:", error);
+    }
+  };
 
   const fetchMonthsData = async () => {
     setLoading(true);
@@ -178,11 +199,6 @@ const LaporanJurnalGuru = () => {
     }
   };
 
-  const years = Array.from({ length: 10 }, (_, i) => {
-    const year = new Date().getFullYear() - 5 + i;
-    return year.toString();
-  });
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -194,8 +210,8 @@ const LaporanJurnalGuru = () => {
             <SelectValue placeholder="Pilih Tahun" />
           </SelectTrigger>
           <SelectContent>
-            {years.map((year) => (
-              <SelectItem key={year} value={year}>
+            {availableYears.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
                 {year}
               </SelectItem>
             ))}
