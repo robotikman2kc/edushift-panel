@@ -113,6 +113,7 @@ export interface JadwalPelajaran extends BaseRecord {
   kelas_id: string;
   mata_pelajaran_id: string;
   jumlah_jp: number;
+  semester: string;
   tahun_ajaran: string;
 }
 
