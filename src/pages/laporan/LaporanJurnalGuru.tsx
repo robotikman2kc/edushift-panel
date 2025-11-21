@@ -177,7 +177,7 @@ const LaporanJurnalGuru = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {[...Array(12)].map((_, i) => (
                 <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
               ))}
@@ -190,19 +190,19 @@ const LaporanJurnalGuru = () => {
               variant="minimal"
             />
           ) : (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {monthsData.map((monthData) => (
                 <div 
                   key={monthData.month} 
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  className="flex flex-col gap-3 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <FileText className={monthData.hasData ? "text-primary" : "text-muted-foreground"} />
-                    <div>
-                      <h3 className="font-medium">{monthData.monthName}</h3>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3">
+                    <FileText className={monthData.hasData ? "text-primary" : "text-muted-foreground"} size={20} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate">{monthData.monthName}</h3>
+                      <p className="text-xs text-muted-foreground">
                         {monthData.hasData 
-                          ? `${monthData.jurnalCount} kegiatan tercatat`
+                          ? `${monthData.jurnalCount} kegiatan`
                           : "Tidak ada data"
                         }
                       </p>
@@ -212,12 +212,15 @@ const LaporanJurnalGuru = () => {
                     <Button 
                       onClick={() => handleDownload(monthData.month, monthData.monthName)}
                       size="sm"
+                      className="w-full"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download PDF
+                      Download
                     </Button>
                   ) : (
-                    <span className="text-sm text-muted-foreground">-</span>
+                    <div className="h-9 flex items-center justify-center text-xs text-muted-foreground border border-dashed rounded-md">
+                      Tidak ada laporan
+                    </div>
                   )}
                 </div>
               ))}
