@@ -95,8 +95,8 @@ export interface NilaiSiswa extends BaseRecord {
   jenis_penilaian_id: string;
   nilai: number;
   tanggal: string;
-  semester?: string;
-  tahun_ajaran?: string;
+  semester: string;
+  tahun_ajaran: string;
 }
 
 export interface JamPelajaran extends BaseRecord {

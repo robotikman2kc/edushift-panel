@@ -11,11 +11,15 @@ import { Save, Plus } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa } from "@/lib/indexedDB";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { getBobotForKelas } from "@/lib/bobotUtils";
+import { SemesterSelector } from "@/components/common/SemesterSelector";
+import { Badge } from "@/components/ui/badge";
 
 const InputNilai = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedTahunAjaran, setSelectedTahunAjaran] = useState("");
   
   const [classes, setClasses] = useState<Kelas[]>([]);
   const [subjects, setSubjects] = useState<MataPelajaran[]>([]);
@@ -36,7 +40,21 @@ const InputNilai = () => {
   useEffect(() => {
     loadData();
     loadLastSelectedFilters();
+    loadActiveSemester();
   }, []);
+
+  const loadActiveSemester = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const semesterSetting = settings.find((s: any) => s.key === "semester_aktif");
+      const tahunSetting = settings.find((s: any) => s.key === "tahun_ajaran_aktif");
+      
+      if (semesterSetting) setSelectedSemester(semesterSetting.value);
+      if (tahunSetting) setSelectedTahunAjaran(tahunSetting.value);
+    } catch (error) {
+      console.error("Error loading active semester:", error);
+    }
+  };
 
   const loadLastSelectedFilters = async () => {
     try {
@@ -117,10 +135,10 @@ const InputNilai = () => {
 
   // Load existing grades when filters change
   useEffect(() => {
-    if (selectedClass && selectedSubject && selectedCategory) {
+    if (selectedClass && selectedSubject && selectedCategory && selectedSemester && selectedTahunAjaran) {
       loadExistingGrades();
     }
-  }, [selectedClass, selectedSubject, selectedCategory]);
+  }, [selectedClass, selectedSubject, selectedCategory, selectedSemester, selectedTahunAjaran]);
 
   const loadData = async () => {
     try {
@@ -165,7 +183,9 @@ const InputNilai = () => {
     try {
       const nilaiData = await indexedDB.select('nilai_siswa', (nilai: NilaiSiswa) => 
         nilai.mata_pelajaran_id === selectedSubject && 
-        nilai.jenis_penilaian_id === selectedCategory
+        nilai.jenis_penilaian_id === selectedCategory &&
+        nilai.semester === selectedSemester &&
+        nilai.tahun_ajaran === selectedTahunAjaran
       );
       setExistingGrades(nilaiData);
       
@@ -245,10 +265,10 @@ const InputNilai = () => {
   };
 
   const handleSave = async () => {
-    if (!selectedClass || !selectedSubject || !selectedCategory) {
+    if (!selectedClass || !selectedSubject || !selectedCategory || !selectedSemester || !selectedTahunAjaran) {
       toast({
         title: "Data Tidak Lengkap",
-        description: "Silakan pilih kelas, mata pelajaran, dan kategori penilaian",
+        description: "Silakan pilih kelas, mata pelajaran, kategori penilaian, semester, dan tahun ajaran",
         variant: "destructive",
       });
       return;
@@ -293,8 +313,8 @@ const InputNilai = () => {
                 jenis_penilaian_id: selectedCategory,
                 nilai: nilai,
                 tanggal: new Date().toISOString().split('T')[0],
-                semester: "1", // Default semester
-                tahun_ajaran: "2024/2025" // Default tahun ajaran
+                semester: selectedSemester,
+                tahun_ajaran: selectedTahunAjaran
               };
               console.log("Inserting new grade for student:", student.nama_siswa, gradeData);
               const result = await indexedDB.insert('nilai_siswa', gradeData);
@@ -399,6 +419,13 @@ const InputNilai = () => {
             <CardTitle>Filter Data</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <SemesterSelector
+              semester={selectedSemester}
+              tahunAjaran={selectedTahunAjaran}
+              onSemesterChange={setSelectedSemester}
+              onTahunAjaranChange={setSelectedTahunAjaran}
+            />
+            
             <div className="space-y-2">
               <Label htmlFor="kelas">Kelas</Label>
               <Select value={selectedClass} onValueChange={(value) => {
