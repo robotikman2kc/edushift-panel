@@ -35,12 +35,22 @@ interface Siswa {
 }
 
 const LaporanKehadiran = () => {
-  const [selectedTingkat, setSelectedTingkat] = useState("");
-  const [selectedKelas, setSelectedKelas] = useState("");
-  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("");
-  const [startMonth, setStartMonth] = useState("0");
-  const [endMonth, setEndMonth] = useState("0");
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  // Load saved state from localStorage
+  const getSavedState = (key: string, defaultValue: string) => {
+    try {
+      const saved = localStorage.getItem(`laporan_kehadiran_${key}`);
+      return saved || defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  };
+
+  const [selectedTingkat, setSelectedTingkat] = useState(() => getSavedState('tingkat', ""));
+  const [selectedKelas, setSelectedKelas] = useState(() => getSavedState('kelas', ""));
+  const [selectedMataPelajaran, setSelectedMataPelajaran] = useState(() => getSavedState('mata_pelajaran', ""));
+  const [startMonth, setStartMonth] = useState(() => getSavedState('start_month', "0"));
+  const [endMonth, setEndMonth] = useState(() => getSavedState('end_month', "0"));
+  const [selectedYear, setSelectedYear] = useState(() => getSavedState('year', new Date().getFullYear().toString()));
   
   const [allKelas, setAllKelas] = useState<Kelas[]>([]);
   const [filteredKelas, setFilteredKelas] = useState<Kelas[]>([]);
@@ -48,6 +58,15 @@ const LaporanKehadiran = () => {
   const [loading, setLoading] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
+
+  // Save state to localStorage
+  const saveState = (key: string, value: string) => {
+    try {
+      localStorage.setItem(`laporan_kehadiran_${key}`, value);
+    } catch (error) {
+      console.warn('Failed to save state:', error);
+    }
+  };
 
   const monthOptions = [
     { value: "0", label: "Januari" },
@@ -75,14 +94,22 @@ const LaporanKehadiran = () => {
     fetchMataPelajaran();
   }, []);
 
+  // Filter kelas by tingkat (but don't clear selections if we have saved state)
   useEffect(() => {
     if (selectedTingkat && allKelas.length > 0) {
       const filtered = allKelas.filter(kelas => kelas.tingkat === selectedTingkat);
       setFilteredKelas(filtered);
-      setSelectedKelas("");
-    } else {
+      
+      // Only clear selections if no saved state exists
+      const savedKelas = getSavedState('kelas', '');
+      if (!savedKelas) {
+        setSelectedKelas("");
+      }
+    } else if (allKelas.length > 0) {
       setFilteredKelas([]);
-      setSelectedKelas("");
+      if (!getSavedState('kelas', '')) {
+        setSelectedKelas("");
+      }
     }
   }, [selectedTingkat, allKelas]);
 
@@ -346,7 +373,7 @@ const LaporanKehadiran = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="tingkat">Tingkat</Label>
-                <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+                <Select value={selectedTingkat} onValueChange={(val) => { setSelectedTingkat(val); saveState('tingkat', val); }}>
                   <SelectTrigger id="tingkat">
                     <SelectValue placeholder="Pilih tingkat" />
                   </SelectTrigger>
@@ -354,6 +381,86 @@ const LaporanKehadiran = () => {
                     {tingkatOptions.map((tingkat) => (
                       <SelectItem key={tingkat} value={tingkat}>
                         Kelas {tingkat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="kelas">Kelas</Label>
+                <Select value={selectedKelas} onValueChange={(val) => { setSelectedKelas(val); saveState('kelas', val); }} disabled={!selectedTingkat}>
+                  <SelectTrigger id="kelas">
+                    <SelectValue placeholder="Pilih kelas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredKelas.map((kelas) => (
+                      <SelectItem key={kelas.id} value={kelas.id}>
+                        {kelas.nama_kelas}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mapel">Mata Pelajaran</Label>
+                <Select value={selectedMataPelajaran} onValueChange={(val) => { setSelectedMataPelajaran(val); saveState('mata_pelajaran', val); }}>
+                  <SelectTrigger id="mapel">
+                    <SelectValue placeholder="Pilih mata pelajaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mataPelajaran.map((mp) => (
+                      <SelectItem key={mp.id} value={mp.id}>
+                        {mp.nama_mata_pelajaran}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="start-month">Dari Bulan</Label>
+                <Select value={startMonth} onValueChange={(val) => { setStartMonth(val); saveState('start_month', val); }}>
+                  <SelectTrigger id="start-month">
+                    <SelectValue placeholder="Pilih bulan awal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="end-month">Sampai Bulan</Label>
+                <Select value={endMonth} onValueChange={(val) => { setEndMonth(val); saveState('end_month', val); }}>
+                  <SelectTrigger id="end-month">
+                    <SelectValue placeholder="Pilih bulan akhir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="year">Tahun</Label>
+                <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); saveState('year', val); }}>
+                  <SelectTrigger id="year">
+                    <SelectValue placeholder="Pilih tahun" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -453,33 +560,31 @@ const LaporanKehadiran = () => {
           </CardContent>
         </Card>
 
-        {selectedKelas && selectedMataPelajaran && selectedKelasData && selectedMataPelajaranData && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Info Laporan</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Kelas</p>
-                <p className="font-medium">{selectedKelasData.nama_kelas}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Mata Pelajaran</p>
-                <p className="font-medium">{selectedMataPelajaranData.nama_mata_pelajaran}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Periode</p>
-                <p className="font-medium">
-                  {monthOptions[parseInt(startMonth)].label} - {monthOptions[parseInt(endMonth)].label} {selectedYear}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Jumlah Bulan</p>
-                <p className="font-medium">{parseInt(endMonth) - parseInt(startMonth) + 1} bulan</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Info Laporan</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Kelas</p>
+              <p className="font-medium">{selectedKelasData?.nama_kelas || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Mata Pelajaran</p>
+              <p className="font-medium">{selectedMataPelajaranData?.nama_mata_pelajaran || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Periode</p>
+              <p className="font-medium">
+                {monthOptions[parseInt(startMonth)].label} - {monthOptions[parseInt(endMonth)].label} {selectedYear}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Jumlah Bulan</p>
+              <p className="font-medium">{parseInt(endMonth) - parseInt(startMonth) + 1} bulan</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
