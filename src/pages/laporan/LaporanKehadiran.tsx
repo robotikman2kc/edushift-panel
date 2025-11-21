@@ -337,128 +337,128 @@ const LaporanKehadiran = () => {
         description="Download rekap kehadiran berdasarkan rentang bulan"
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filter Laporan</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tingkat">Tingkat</Label>
-              <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
-                <SelectTrigger id="tingkat">
-                  <SelectValue placeholder="Pilih tingkat" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tingkatOptions.map((tingkat) => (
-                    <SelectItem key={tingkat} value={tingkat}>
-                      Kelas {tingkat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="kelas">Kelas</Label>
-              <Select value={selectedKelas} onValueChange={setSelectedKelas} disabled={!selectedTingkat}>
-                <SelectTrigger id="kelas">
-                  <SelectValue placeholder="Pilih kelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredKelas.map((kelas) => (
-                    <SelectItem key={kelas.id} value={kelas.id}>
-                      {kelas.nama_kelas}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="mapel">Mata Pelajaran</Label>
-              <Select value={selectedMataPelajaran} onValueChange={setSelectedMataPelajaran}>
-                <SelectTrigger id="mapel">
-                  <SelectValue placeholder="Pilih mata pelajaran" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mataPelajaran.map((mp) => (
-                    <SelectItem key={mp.id} value={mp.id}>
-                      {mp.nama_mata_pelajaran}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="start-month">Dari Bulan</Label>
-              <Select value={startMonth} onValueChange={setStartMonth}>
-                <SelectTrigger id="start-month">
-                  <SelectValue placeholder="Pilih bulan awal" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="end-month">Sampai Bulan</Label>
-              <Select value={endMonth} onValueChange={setEndMonth}>
-                <SelectTrigger id="end-month">
-                  <SelectValue placeholder="Pilih bulan akhir" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="year">Tahun</Label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger id="year">
-                  <SelectValue placeholder="Pilih tahun" />
-                </SelectTrigger>
-                <SelectContent>
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year.value} value={year.value}>
-                      {year.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button 
-              onClick={handleExportMultiMonth}
-              disabled={!selectedKelas || !selectedMataPelajaran || loading}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {loading ? "Memproses..." : "Download Laporan PDF"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {selectedKelasData && selectedMataPelajaranData && (
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-lg">Info Laporan</CardTitle>
+            <CardTitle className="text-lg">Filter Laporan</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tingkat">Tingkat</Label>
+                <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+                  <SelectTrigger id="tingkat">
+                    <SelectValue placeholder="Pilih tingkat" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tingkatOptions.map((tingkat) => (
+                      <SelectItem key={tingkat} value={tingkat}>
+                        Kelas {tingkat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="kelas">Kelas</Label>
+                <Select value={selectedKelas} onValueChange={setSelectedKelas} disabled={!selectedTingkat}>
+                  <SelectTrigger id="kelas">
+                    <SelectValue placeholder="Pilih kelas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredKelas.map((kelas) => (
+                      <SelectItem key={kelas.id} value={kelas.id}>
+                        {kelas.nama_kelas}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mapel">Mata Pelajaran</Label>
+                <Select value={selectedMataPelajaran} onValueChange={setSelectedMataPelajaran}>
+                  <SelectTrigger id="mapel">
+                    <SelectValue placeholder="Pilih mata pelajaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mataPelajaran.map((mp) => (
+                      <SelectItem key={mp.id} value={mp.id}>
+                        {mp.nama_mata_pelajaran}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="start-month">Dari Bulan</Label>
+                <Select value={startMonth} onValueChange={setStartMonth}>
+                  <SelectTrigger id="start-month">
+                    <SelectValue placeholder="Pilih bulan awal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="end-month">Sampai Bulan</Label>
+                <Select value={endMonth} onValueChange={setEndMonth}>
+                  <SelectTrigger id="end-month">
+                    <SelectValue placeholder="Pilih bulan akhir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="year">Tahun</Label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger id="year">
+                    <SelectValue placeholder="Pilih tahun" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button 
+                onClick={handleExportMultiMonth}
+                disabled={!selectedKelas || !selectedMataPelajaran || loading}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {loading ? "Memproses..." : "Download Laporan PDF"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {selectedKelasData && selectedMataPelajaranData && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Info Laporan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Kelas</p>
                 <p className="font-medium">{selectedKelasData.nama_kelas}</p>
@@ -477,10 +477,10 @@ const LaporanKehadiran = () => {
                 <p className="text-sm text-muted-foreground">Jumlah Bulan</p>
                 <p className="font-medium">{parseInt(endMonth) - parseInt(startMonth) + 1} bulan</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
