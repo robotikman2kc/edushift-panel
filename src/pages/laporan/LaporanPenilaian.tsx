@@ -395,6 +395,9 @@ const LaporanPenilaian = () => {
               <Label>Tingkat</Label>
               <Select value={selectedTingkat} onValueChange={(value) => {
                 setSelectedTingkat(value);
+                setSelectedKelas("");
+                setSelectedMataPelajaran("");
+                setSelectedTahunAjaran("");
                 saveLastSelectedTingkat(value);
               }}>
                 <SelectTrigger>
@@ -416,6 +419,8 @@ const LaporanPenilaian = () => {
                 value={selectedKelas} 
                 onValueChange={(value) => {
                   setSelectedKelas(value);
+                  setSelectedMataPelajaran("");
+                  setSelectedTahunAjaran("");
                   saveLastSelectedKelas(value);
                 }}
                 disabled={!selectedTingkat}
@@ -439,6 +444,7 @@ const LaporanPenilaian = () => {
                 value={selectedMataPelajaran} 
                 onValueChange={(value) => {
                   setSelectedMataPelajaran(value);
+                  setSelectedTahunAjaran("");
                   saveLastSelectedMapel(value);
                 }}
                 disabled={!selectedKelas}
