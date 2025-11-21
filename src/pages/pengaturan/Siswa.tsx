@@ -70,7 +70,9 @@ const Siswa = () => {
 
   const fetchKelas = async () => {
     try {
-      const data = await indexedDB.select('kelas');
+      const { getActiveTahunAjaran } = await import('@/lib/academicYearUtils');
+      const activeTahunAjaran = await getActiveTahunAjaran();
+      const data = await indexedDB.select('kelas', (k: any) => k.tahun_ajaran === activeTahunAjaran);
       setKelas(data);
     } catch (error: any) {
       toast({
@@ -84,21 +86,26 @@ const Siswa = () => {
   const fetchSiswa = async () => {
     try {
       setLoading(true);
+      const { getActiveTahunAjaran } = await import('@/lib/academicYearUtils');
+      const activeTahunAjaran = await getActiveTahunAjaran();
+      
       const data = await indexedDB.select('siswa');
-      const allKelas = await indexedDB.select('kelas');
+      const allKelas = await indexedDB.select('kelas', (k: any) => k.tahun_ajaran === activeTahunAjaran);
 
-      // Format the data to match the expected structure
-      const formattedData = data.map(item => {
-        const kelas = allKelas.find(k => k.id === item.kelas_id);
-        return {
-          ...item,
-          jenis_kelamin: item.jenis_kelamin as 'Laki-laki' | 'Perempuan',
-          kelas_nama: kelas?.nama_kelas || 'Tidak ada kelas',
-          tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toLocaleDateString('id-ID') : '',
-          tanggal_masuk: item.tanggal_masuk ? new Date(item.tanggal_masuk).toLocaleDateString('id-ID') : '-',
-          created_at: new Date(item.created_at).toLocaleDateString('id-ID')
-        };
-      });
+      // Format the data to match the expected structure - only show students in active year's classes
+      const formattedData = data
+        .filter(item => allKelas.some(k => k.id === item.kelas_id))
+        .map(item => {
+          const kelas = allKelas.find(k => k.id === item.kelas_id);
+          return {
+            ...item,
+            jenis_kelamin: item.jenis_kelamin as 'Laki-laki' | 'Perempuan',
+            kelas_nama: kelas?.nama_kelas || 'Tidak ada kelas',
+            tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toLocaleDateString('id-ID') : '',
+            tanggal_masuk: item.tanggal_masuk ? new Date(item.tanggal_masuk).toLocaleDateString('id-ID') : '-',
+            created_at: new Date(item.created_at).toLocaleDateString('id-ID')
+          };
+        });
 
       setSiswa(formattedData);
       setFilteredSiswa(formattedData);

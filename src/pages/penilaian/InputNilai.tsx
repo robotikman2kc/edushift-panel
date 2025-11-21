@@ -182,8 +182,11 @@ const InputNilai = () => {
 
   const loadData = async () => {
     try {
+      const { getActiveTahunAjaran } = await import('@/lib/academicYearUtils');
+      const activeTahunAjaran = await getActiveTahunAjaran();
+      
       const [kelasData, mataPelajaranData, jenisPenilaianData] = await Promise.all([
-        indexedDB.select('kelas', (kelas: Kelas) => kelas.status === 'Aktif'),
+        indexedDB.select('kelas', (kelas: Kelas) => kelas.status === 'Aktif' && kelas.tahun_ajaran === activeTahunAjaran),
         indexedDB.select('mata_pelajaran', (mapel: MataPelajaran) => mapel.status === 'Aktif'),
         indexedDB.select('jenis_penilaian', (jenis: JenisPenilaian) => jenis.status === 'Aktif')
       ]);

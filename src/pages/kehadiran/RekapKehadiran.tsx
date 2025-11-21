@@ -149,7 +149,10 @@ const RekapKehadiran = () => {
 
   const fetchKelas = async () => {
     try {
-      const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif");
+      const { getActiveTahunAjaran } = await import('@/lib/academicYearUtils');
+      const activeTahunAjaran = await getActiveTahunAjaran();
+      
+      const data = await indexedDB.select("kelas", kelas => kelas.status === "Aktif" && kelas.tahun_ajaran === activeTahunAjaran);
       const sortedData = data.sort((a, b) => {
         if (a.tingkat !== b.tingkat) {
           return a.tingkat.localeCompare(b.tingkat);
