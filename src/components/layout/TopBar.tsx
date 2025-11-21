@@ -198,13 +198,16 @@ export function TopBar() {
       )}
       
       <header className="h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex h-full items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger className="h-8 w-8" />
-            <div className="flex items-center gap-4">
+        <div className="flex h-full items-center justify-between px-2 sm:px-4 gap-2">
+          {/* Left Section */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+            <SidebarTrigger className="h-8 w-8 flex-shrink-0" />
+            
+            {/* Status & Time - Hidden on very small screens */}
+            <div className="hidden sm:flex items-center gap-2 lg:gap-4 min-w-0">
               <div className="flex items-center gap-2">
                 <Circle 
-                  className={`h-2 w-2 ${
+                  className={`h-2 w-2 flex-shrink-0 ${
                     isOnline 
                       ? 'fill-green-500 text-green-500' 
                       : 'fill-red-500 text-red-500'
@@ -212,19 +215,21 @@ export function TopBar() {
                 />
                 <Badge 
                   variant="secondary" 
-                  className={
+                  className={`flex-shrink-0 ${
                     isOnline
                       ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800'
                       : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
-                  }
+                  }`}
                 >
                   {isOnline ? 'Online' : 'Offline'}
                 </Badge>
               </div>
-              <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
+              
+              {/* Date & Time - Hidden on tablets */}
+              <div className="hidden lg:flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>{format(currentTime, "EEEE, dd MMMM yyyy", { locale: id })}</span>
+                  <span className="truncate">{format(currentTime, "EEEE, dd MMMM yyyy", { locale: id })}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
@@ -234,36 +239,44 @@ export function TopBar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <AcademicYearSelector />
+          {/* Right Section */}
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
+            {/* Academic Year Selector - Always visible but might be compact */}
+            <div className="hidden sm:block">
+              <AcademicYearSelector />
+            </div>
             
-            <span className="text-sm text-muted-foreground hidden md:block">
+            {/* Welcome Text - Hidden on small/medium screens */}
+            <span className="text-sm text-muted-foreground hidden xl:block">
               Selamat datang, Administrator
             </span>
             
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 flex-shrink-0"
               title="Toggle tema"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             
+            {/* Refresh Database - Hidden on mobile */}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleRefreshDatabase}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hidden md:flex flex-shrink-0"
               title="Refresh Database"
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
             
+            {/* User Avatar Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+                <Button variant="ghost" className="h-8 w-8 rounded-full p-0 flex-shrink-0">
                   <Avatar className="h-8 w-8 border-2 border-primary">
                     <AvatarImage src={userProfile?.avatar_url} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
@@ -286,6 +299,13 @@ export function TopBar() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
+                
+                {/* Show Academic Year in dropdown on mobile */}
+                <div className="sm:hidden px-2 py-1.5">
+                  <AcademicYearSelector />
+                </div>
+                <DropdownMenuSeparator className="sm:hidden" />
+                
                 <DropdownMenuItem onClick={() => navigate('/akun/profil')}>
                   <User className="mr-2 h-4 w-4" />
                   <span>Profil</span>
@@ -293,6 +313,13 @@ export function TopBar() {
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Pengaturan</span>
+                </DropdownMenuItem>
+                
+                {/* Show Refresh Database in dropdown on mobile */}
+                <DropdownMenuSeparator className="md:hidden" />
+                <DropdownMenuItem onClick={handleRefreshDatabase} className="md:hidden">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  <span>Refresh Database</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
