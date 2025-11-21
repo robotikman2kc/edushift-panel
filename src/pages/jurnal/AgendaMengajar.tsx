@@ -163,12 +163,14 @@ const AgendaMengajar = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all required data
+      const year = activeTahunAjaran || await getActiveTahunAjaran();
+      
+      // Fetch all required data - filter kelas and jadwal by tahun_ajaran
       const [agenda, kelas, mataPelajaran, jadwalPelajaran] = await Promise.all([
-        indexedDB.select('agenda_mengajar'),
-        indexedDB.select('kelas'),
+        indexedDB.select('agenda_mengajar', (a: any) => a.tahun_ajaran === year),
+        indexedDB.select('kelas', (k: any) => k.tahun_ajaran === year),
         indexedDB.select('mata_pelajaran'),
-        indexedDB.select('jadwal_pelajaran'),
+        indexedDB.select('jadwal_pelajaran', (j: any) => j.tahun_ajaran === year),
       ]);
 
       // Filter agenda by selected month range and class
