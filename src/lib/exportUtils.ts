@@ -157,15 +157,6 @@ export const generatePDFBlob = (
       doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
       currentY += 13; // Increased spacing after report title
       
-      // Add period info right below title for Jurnal Guru reports
-      if (title.includes('Laporan Jurnal') && additionalInfo?.bulan) {
-        doc.setFontSize(template.styling.fontSize.header);
-        const bulanText = `Periode: ${additionalInfo.bulan}`;
-        const bulanWidth = doc.getTextWidth(bulanText);
-        doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
-        currentY += 8;
-      }
-      
       // Add extra spacing for grade reports
       if (title.includes('Nilai')) {
         currentY += 8;
