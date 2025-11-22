@@ -31,7 +31,11 @@ export function TopBar() {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    // Load from localStorage on mount
+    const saved = localStorage.getItem('selectedDate');
+    return saved ? new Date(saved) : new Date();
+  });
   const [showBackupWarning, setShowBackupWarning] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState(0);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -191,6 +195,19 @@ export function TopBar() {
     return () => clearInterval(interval);
   }, []);
 
+  // Save and broadcast date changes
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+    localStorage.setItem('selectedDate', date.toISOString());
+    // Broadcast to other components
+    window.dispatchEvent(new CustomEvent('dateChanged', { detail: date }));
+  };
+
+  const handleResetToToday = () => {
+    const today = new Date();
+    handleDateChange(today);
+  };
+
   const handleRefreshDatabase = async () => {
     try {
       await indexedDB.initializeDefaultData();
@@ -297,7 +314,7 @@ export function TopBar() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => setSelectedDate(new Date())}
+                        onClick={handleResetToToday}
                         className="h-7 text-xs"
                       >
                         Hari Ini
@@ -306,7 +323,7 @@ export function TopBar() {
                     <Calendar
                       mode="single"
                       selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
+                      onSelect={(date) => date && handleDateChange(date)}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />

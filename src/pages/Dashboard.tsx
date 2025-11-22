@@ -38,6 +38,12 @@ const Dashboard = () => {
   const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
   const { toast } = useToast();
   
+  // Load selected date from localStorage
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const saved = localStorage.getItem('selectedDate');
+    return saved ? new Date(saved) : new Date();
+  });
+  
   // State untuk data statistik
   const [totalSiswa, setTotalSiswa] = useState(0);
   const [totalGuru, setTotalGuru] = useState(0);
@@ -49,11 +55,24 @@ const Dashboard = () => {
   const [calendarNotes, setCalendarNotes] = useState<any[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
 
+  // Listen for date changes from TopBar
+  useEffect(() => {
+    const handleDateChange = (event: CustomEvent) => {
+      setSelectedDate(new Date(event.detail));
+    };
+
+    window.addEventListener('dateChanged', handleDateChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('dateChanged', handleDateChange as EventListener);
+    };
+  }, []);
+
   useEffect(() => {
     fetchStatistics();
     fetchTodaySchedule();
     fetchCalendarNotes();
-  }, []);
+  }, [selectedDate]);
 
   const fetchStatistics = async () => {
     try {
@@ -99,9 +118,8 @@ const Dashboard = () => {
   const fetchCalendarNotes = async () => {
     try {
       setLoadingNotes(true);
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
+      const currentMonth = selectedDate.getMonth();
+      const currentYear = selectedDate.getFullYear();
       
       // Get first and last day of current month
       const firstDay = new Date(currentYear, currentMonth, 1);
@@ -141,8 +159,8 @@ const Dashboard = () => {
     try {
       setLoadingSchedule(true);
       const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-      const today = days[new Date().getDay()];
-      const todayDate = format(new Date(), "yyyy-MM-dd");
+      const today = days[selectedDate.getDay()];
+      const todayDate = format(selectedDate, "yyyy-MM-dd");
       
       const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
       const timeSlots = await indexedDB.select("jam_pelajaran");
@@ -306,7 +324,7 @@ const Dashboard = () => {
             <CardTitle className="flex items-center justify-between gap-2 text-base">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMM yyyy", { locale: idLocale })}
+                Jadwal - {format(selectedDate, "EEEE, dd MMM yyyy", { locale: idLocale })}
               </div>
               <JurnalStatusWidget />
             </CardTitle>
