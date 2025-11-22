@@ -27,7 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran, getActiveSemester, setActiveSemester as setActiveAcademicSemester } from "@/lib/academicYearUtils";
@@ -73,6 +74,7 @@ export default function JadwalPelajaran() {
   const [loading, setLoading] = useState(true);
   const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   const [activeSemester, setActiveSemester] = useState("");
+  const [calendarActiveSemester, setCalendarActiveSemester] = useState("");
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
@@ -97,6 +99,7 @@ export default function JadwalPelajaran() {
       const semester = await getActiveSemester();
       setActiveTahunAjaran(year);
       setActiveSemester(semester);
+      setCalendarActiveSemester(semester);
       fetchData(year, semester);
     };
     initData();
@@ -417,10 +420,21 @@ export default function JadwalPelajaran() {
         <CardContent className="pt-6">
           <div className="mb-6 flex gap-4 items-end">
             <div className="flex-1 max-w-xs">
-              <Label>Semester</Label>
+              <div className="flex items-center gap-2 mb-2">
+                <Label>Semester</Label>
+                {activeSemester === calendarActiveSemester && (
+                  <Badge variant="secondary" className="text-xs">Aktif</Badge>
+                )}
+              </div>
               <Select value={activeSemester} onValueChange={async (value) => {
                 setActiveSemester(value);
+                await setActiveAcademicSemester(value);
+                setCalendarActiveSemester(value);
                 await fetchData(activeTahunAjaran, value);
+                toast({
+                  title: "Berhasil",
+                  description: `Semester ${value} berhasil diaktifkan untuk kalender`,
+                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih semester" />
@@ -431,27 +445,6 @@ export default function JadwalPelajaran() {
                 </SelectContent>
               </Select>
             </div>
-            <Button 
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await setActiveAcademicSemester(activeSemester);
-                  toast({
-                    title: "Berhasil",
-                    description: `Semester ${activeSemester} berhasil diaktifkan untuk kalender`,
-                  });
-                } catch (error) {
-                  toast({
-                    title: "Error",
-                    description: "Gagal mengaktifkan semester",
-                    variant: "destructive",
-                  });
-                }
-              }}
-            >
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Aktifkan Semester
-            </Button>
           </div>
 
           <div className="flex gap-2 mb-6">
