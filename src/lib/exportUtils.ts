@@ -155,7 +155,20 @@ export const generatePDFBlob = (
       doc.setTextColor(0, 0, 0);
       const reportTitleWidth = doc.getTextWidth(template.reportTitle);
       doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
-      currentY += 13; // Increased spacing after report title
+      currentY += 6;
+      
+      // Add period info right below title for Jurnal reports (centered, bold)
+      if (title.includes('Jurnal') && additionalInfo?.bulan) {
+        doc.setFontSize(template.styling.fontSize.subtitle);
+        doc.setFont(template.styling.fontFamily, 'bold');
+        const bulanText = `Bulan ${additionalInfo.bulan}`;
+        const bulanWidth = doc.getTextWidth(bulanText);
+        doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
+        doc.setFont(template.styling.fontFamily, 'normal');
+        currentY += 10;
+      } else {
+        currentY += 7;
+      }
       
       // Add extra spacing for grade reports
       if (title.includes('Nilai')) {
@@ -175,13 +188,7 @@ export const generatePDFBlob = (
         const labelWidth = 25; // Fixed width for labels to align colons
         const schoolName = template.schoolName || template.header?.schoolName || 'Sekolah';
         
-        // Add month/period info if available
-        if (additionalInfo?.bulan) {
-          doc.text('Bulan', template.layout.margins.left, infoY);
-          doc.text(':', template.layout.margins.left + labelWidth, infoY);
-          doc.text(additionalInfo.bulan, template.layout.margins.left + labelWidth + 3, infoY);
-          currentY += 5;
-        }
+        // Month/period info is now shown below title, not here anymore
         
         doc.text('Nama', template.layout.margins.left, currentY);
         doc.text(':', template.layout.margins.left + labelWidth, currentY);
