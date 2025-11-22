@@ -129,6 +129,7 @@ const JurnalGuru = () => {
     fetchData();
     loadAvailableYears();
     ensureLiburNasionalExists();
+    autoFillHariLibur(); // Auto-create entries for holidays
   }, []);
 
   // Watch for tanggal changes and auto-fill if holiday (weekdays only)
@@ -173,10 +174,76 @@ const JurnalGuru = () => {
           nama_kegiatan: "Libur Nasional",
           deskripsi: "Hari libur nasional dan cuti bersama",
         });
-        fetchData(); // Refresh data to include the new jenis kegiatan
+        await fetchData(); // Refresh data to include the new jenis kegiatan
       }
     } catch (error) {
       console.error("Error ensuring Libur Nasional exists:", error);
+    }
+  };
+
+  const autoFillHariLibur = async () => {
+    try {
+      // Wait for jenis kegiatan to load
+      await ensureLiburNasionalExists();
+      
+      const kegiatanData = await indexedDB.select("jenis_kegiatan");
+      const liburNasionalKegiatan = kegiatanData.find(
+        (k: any) => k.nama_kegiatan.toLowerCase() === "libur nasional"
+      );
+      
+      if (!liburNasionalKegiatan) return;
+      
+      // Get all existing jurnal entries
+      const existingJurnal = await indexedDB.select("jurnal");
+      const existingDates = new Set(existingJurnal.map((j: any) => j.tanggal));
+      
+      // Get current year and next year
+      const currentYear = new Date().getFullYear();
+      const years = [currentYear, currentYear + 1];
+      
+      let autoCreatedCount = 0;
+      
+      for (const year of years) {
+        for (let month = 0; month < 12; month++) {
+          const holidays = await import("@/lib/hariLiburUtils").then(m => 
+            m.getHolidaysInMonth(month, year)
+          );
+          
+          for (const holidayDate of holidays) {
+            const { isHariLiburKerja, generateHolidayTemplate } = await import("@/lib/hariLiburUtils");
+            const holiday = isHariLiburKerja(holidayDate);
+            
+            if (holiday) {
+              const dateStr = format(holidayDate, "yyyy-MM-dd");
+              
+              // Only create if doesn't exist yet
+              if (!existingDates.has(dateStr)) {
+                const template = generateHolidayTemplate(holiday);
+                
+                await indexedDB.insert("jurnal", {
+                  tanggal: dateStr,
+                  jenis_kegiatan_id: liburNasionalKegiatan.id,
+                  uraian_kegiatan: template.uraian,
+                  volume: template.volume,
+                  satuan_hasil: template.satuan,
+                });
+                
+                autoCreatedCount++;
+              }
+            }
+          }
+        }
+      }
+      
+      if (autoCreatedCount > 0) {
+        toast({
+          title: "Jurnal Otomatis Dibuat",
+          description: `${autoCreatedCount} entri jurnal untuk hari libur nasional berhasil dibuat otomatis`,
+        });
+        await fetchData(); // Refresh to show new entries
+      }
+    } catch (error) {
+      console.error("Error auto-filling hari libur:", error);
     }
   };
 
