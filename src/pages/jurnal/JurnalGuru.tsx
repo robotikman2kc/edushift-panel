@@ -482,54 +482,59 @@ const JurnalGuru = () => {
     setShowJurnalDialog(true);
   };
 
-  const applyTemplate = (template: string, subType?: string, mapelId?: string, kelasId?: string) => {
-    setSelectedTemplate(template);
-    
-    // Find or create jenis kegiatan based on template
-    let jenisKegiatanId = "";
-    let uraian = "";
-    let volume = 1;
-    let satuan = "kegiatan";
-
-    if (template === "rapat") {
-      const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
-      jenisKegiatanId = rapatKegiatan?.id || jenisKegiatan[0]?.id || "";
-      uraian = "Rapat";
-      satuan = "kali";
-    } else if (template === "upacara") {
-      const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
-      jenisKegiatanId = upacaraKegiatan?.id || jenisKegiatan[0]?.id || "";
+  const saveKoreksiJurnal = async (mapelId: string, kelasId: string) => {
+    try {
+      const koreksiKegiatan = jenisKegiatan.find(k => 
+        k.nama_kegiatan.toLowerCase().includes("koreksi") || 
+        k.nama_kegiatan.toLowerCase().includes("tugas")
+      );
       
-      if (subType === "senin") {
-        uraian = "Upacara Bendera Hari Senin";
-      } else if (subType) {
-        uraian = `Upacara Peringatan ${subType}`;
-      } else {
-        uraian = "Upacara";
+      if (!koreksiKegiatan) {
+        toast({
+          title: "Error",
+          description: "Jenis kegiatan 'Koreksi' tidak ditemukan",
+          variant: "destructive",
+        });
+        return;
       }
-      satuan = "kali";
-    } else if (template === "koreksi") {
-      const koreksiKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("koreksi") || k.nama_kegiatan.toLowerCase().includes("tugas"));
-      jenisKegiatanId = koreksiKegiatan?.id || jenisKegiatan[0]?.id || "";
       
       const mapel = mataPelajaran.find(m => m.id === mapelId);
       const kelasData = kelas.find(k => k.id === kelasId);
       
-      if (mapel && kelasData) {
-        uraian = `Mengkoreksi Tugas/Soal ${mapel.nama_mata_pelajaran} - Kelas ${kelasData.nama_kelas}`;
-        const siswaCount = kelasData.kapasitas || 30;
-        volume = siswaCount;
-        satuan = "lembar";
-      } else {
-        uraian = "Mengkoreksi Tugas/Soal";
-        satuan = "lembar";
+      if (!mapel || !kelasData) {
+        toast({
+          title: "Error",
+          description: "Mata pelajaran atau kelas tidak valid",
+          variant: "destructive",
+        });
+        return;
       }
-    }
 
-    jurnalForm.setValue("jenis_kegiatan_id", jenisKegiatanId);
-    jurnalForm.setValue("uraian_kegiatan", uraian);
-    jurnalForm.setValue("volume", volume);
-    jurnalForm.setValue("satuan_hasil", satuan);
+      const jurnalData = {
+        tanggal: format(new Date(), "yyyy-MM-dd"),
+        jenis_kegiatan_id: koreksiKegiatan.id,
+        uraian_kegiatan: `Mengkoreksi Tugas/Soal ${mapel.nama_mata_pelajaran} - Kelas ${kelasData.nama_kelas}`,
+        volume: 1,
+        satuan_hasil: "Paket",
+      };
+
+      const result = await indexedDB.insert("jurnal", jurnalData);
+      if (result.error) throw new Error(result.error);
+      
+      toast({
+        title: "Berhasil",
+        description: "Jurnal koreksi berhasil ditambahkan",
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error("Error saving koreksi jurnal:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan jurnal",
+        variant: "destructive",
+      });
+    }
   };
 
   const saveQuickJurnal = async (template: string, subType?: string) => {
@@ -686,161 +691,83 @@ const JurnalGuru = () => {
         </div>
       </PageHeader>
 
-      {/* Template Kegiatan Cepat */}
+      {/* Input Koreksi Cepat */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <Zap className="h-4 w-4" />
-            Template Kegiatan Cepat
+            Input Koreksi Tugas/Soal
           </CardTitle>
           <CardDescription className="text-xs">
-            Klik tombol di bawah untuk langsung membuka form dengan template kegiatan
+            Pilih mata pelajaran dan kelas untuk langsung menyimpan jurnal koreksi dengan volume "1 Paket"
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                handleAddNew();
-                setTimeout(() => applyTemplate("rapat"), 100);
-              }}
-            >
-              Rapat
-            </Button>
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm">
-                  Upacara
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Upacara</DialogTitle>
-                  <DialogDescription>
-                    Pilih jenis upacara atau masukkan peringatan khusus
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col gap-3">
-                  <Button
-                    onClick={async () => {
-                      await saveQuickJurnal("upacara", "senin");
-                    }}
-                  >
-                    Upacara Hari Senin
-                  </Button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Atau
-                      </span>
-                    </div>
-                  </div>
-                  <Input
-                    id="upacara-peringatan"
-                    placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const value = (e.target as HTMLInputElement).value;
-                        if (value) {
-                          handleAddNew();
-                          setTimeout(() => applyTemplate("upacara", value), 100);
-                          (e.target as HTMLInputElement).value = "";
-                        }
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={(e) => {
-                      const input = document.getElementById("upacara-peringatan") as HTMLInputElement;
-                      if (input?.value) {
-                        handleAddNew();
-                        setTimeout(() => applyTemplate("upacara", input.value), 100);
-                        input.value = "";
-                      }
-                    }}
-                  >
-                    Buat dengan Peringatan
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm">
-                  Koreksi Tugas/Soal
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Mengkoreksi Tugas/Soal</DialogTitle>
-                  <DialogDescription>
-                    Pilih mata pelajaran dan kelas
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col gap-3">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Mata Pelajaran</label>
-                    <Select onValueChange={(value) => {
-                      const mapelSelect = document.getElementById("template-mapel") as any;
-                      if (mapelSelect) mapelSelect.dataset.mapelId = value;
-                    }}>
-                      <SelectTrigger id="template-mapel">
-                        <SelectValue placeholder="Pilih Mata Pelajaran" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mataPelajaran.map((mapel) => (
-                          <SelectItem key={mapel.id} value={mapel.id}>
-                            {mapel.nama_mata_pelajaran}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Kelas</label>
-                    <Select onValueChange={(value) => {
-                      const kelasSelect = document.getElementById("template-kelas") as any;
-                      if (kelasSelect) kelasSelect.dataset.kelasId = value;
-                    }}>
-                      <SelectTrigger id="template-kelas">
-                        <SelectValue placeholder="Pilih Kelas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {kelas.map((k) => (
-                          <SelectItem key={k.id} value={k.id}>
-                            {k.nama_kelas}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      const mapelSelect = document.getElementById("template-mapel") as any;
-                      const kelasSelect = document.getElementById("template-kelas") as any;
-                      const mapelId = mapelSelect?.dataset.mapelId;
-                      const kelasId = kelasSelect?.dataset.kelasId;
-                      
-                      if (mapelId && kelasId) {
-                        handleAddNew();
-                        setTimeout(() => applyTemplate("koreksi", undefined, mapelId, kelasId), 100);
-                      }
-                    }}
-                  >
-                    Terapkan
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mata Pelajaran</label>
+              <Select onValueChange={(value) => {
+                const mapelSelect = document.getElementById("quick-mapel") as any;
+                if (mapelSelect) mapelSelect.dataset.mapelId = value;
+              }}>
+                <SelectTrigger id="quick-mapel">
+                  <SelectValue placeholder="Pilih Mata Pelajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mataPelajaran.map((mapel) => (
+                    <SelectItem key={mapel.id} value={mapel.id}>
+                      {mapel.nama_mata_pelajaran}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Kelas</label>
+              <Select onValueChange={(value) => {
+                const kelasSelect = document.getElementById("quick-kelas") as any;
+                if (kelasSelect) kelasSelect.dataset.kelasId = value;
+              }}>
+                <SelectTrigger id="quick-kelas">
+                  <SelectValue placeholder="Pilih Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {kelas.map((k) => (
+                    <SelectItem key={k.id} value={k.id}>
+                      {k.nama_kelas}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium invisible">Simpan</label>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  const mapelSelect = document.getElementById("quick-mapel") as any;
+                  const kelasSelect = document.getElementById("quick-kelas") as any;
+                  const mapelId = mapelSelect?.dataset.mapelId;
+                  const kelasId = kelasSelect?.dataset.kelasId;
+                  
+                  if (mapelId && kelasId) {
+                    saveKoreksiJurnal(mapelId, kelasId);
+                    // Reset selects
+                    mapelSelect.dataset.mapelId = "";
+                    kelasSelect.dataset.kelasId = "";
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: "Pilih mata pelajaran dan kelas terlebih dahulu",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Simpan Jurnal
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
