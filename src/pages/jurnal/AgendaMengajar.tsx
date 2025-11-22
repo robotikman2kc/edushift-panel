@@ -629,7 +629,7 @@ const AgendaMengajar = () => {
               </Select>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="materi" className="text-sm font-medium">Materi *</Label>
               <Textarea
                 id="materi"
@@ -641,7 +641,7 @@ const AgendaMengajar = () => {
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="keterangan" className="text-sm font-medium">Keterangan</Label>
               <Textarea
                 id="keterangan"
