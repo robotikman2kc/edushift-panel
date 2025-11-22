@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "@/hooks/use-toast";
 import { Save, Plus } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa } from "@/lib/indexedDB";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { getBobotForKelas } from "@/lib/bobotUtils";
 import { SemesterSelector } from "@/components/common/SemesterSelector";
@@ -29,6 +30,7 @@ const InputNilai = () => {
   const [grades, setGrades] = useState<{[key: string]: string}>({});
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
   const [bulkGrade, setBulkGrade] = useState("");
+  const [notSubmitted, setNotSubmitted] = useState<{[key: string]: boolean}>({});
   
   // Dialog states for adding new category
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -234,10 +236,13 @@ const InputNilai = () => {
       
       // Set existing grades to form
       const gradesMap: {[key: string]: string} = {};
+      const notSubmittedMap: {[key: string]: boolean} = {};
       nilaiData.forEach((nilai: NilaiSiswa) => {
         gradesMap[nilai.siswa_id] = nilai.nilai.toString();
+        notSubmittedMap[nilai.siswa_id] = (nilai as any).belum_mengumpulkan || false;
       });
       setGrades(gradesMap);
+      setNotSubmitted(notSubmittedMap);
     } catch (error) {
       toast({
         title: "Error", 
@@ -263,6 +268,21 @@ const InputNilai = () => {
       ...prev,
       [studentId]: value
     }));
+  };
+
+  const handleNotSubmittedChange = (studentId: string, checked: boolean) => {
+    setNotSubmitted(prev => ({
+      ...prev,
+      [studentId]: checked
+    }));
+    
+    // If checked, clear the grade
+    if (checked) {
+      setGrades(prev => ({
+        ...prev,
+        [studentId]: ""
+      }));
+    }
   };
 
   const handleApplyBulkGrade = () => {
@@ -328,17 +348,56 @@ const InputNilai = () => {
 
       for (const student of students) {
         const gradeValue = grades[student.id];
-        if (gradeValue && gradeValue.trim() !== "") {
+        const isNotSubmitted = notSubmitted[student.id] || false;
+        const existingGrade = existingGrades.find(g => g.siswa_id === student.id);
+        
+        // Handle "Belum Mengumpulkan" status
+        if (isNotSubmitted) {
+          if (existingGrade) {
+            // Update to mark as not submitted
+            console.log("Marking as not submitted for student:", student.nama_siswa);
+            const result = await indexedDB.update('nilai_siswa', existingGrade.id, {
+              nilai: 0,
+              belum_mengumpulkan: true,
+              updated_at: new Date().toISOString()
+            });
+            if (result.error) {
+              errorCount++;
+              console.error("Error updating grade:", result.error);
+            } else {
+              successCount++;
+            }
+          } else {
+            // Insert new grade marked as not submitted
+            const gradeData = {
+              siswa_id: student.id,
+              mata_pelajaran_id: selectedSubject,
+              jenis_penilaian_id: selectedCategory,
+              nilai: 0,
+              belum_mengumpulkan: true,
+              tanggal: new Date().toISOString().split('T')[0],
+              semester: selectedSemester,
+              tahun_ajaran: selectedTahunAjaran
+            };
+            console.log("Inserting not submitted for student:", student.nama_siswa);
+            const result = await indexedDB.insert('nilai_siswa', gradeData);
+            if (result.error) {
+              errorCount++;
+              console.error("Error inserting grade:", result.error);
+            } else {
+              successCount++;
+            }
+          }
+        } else if (gradeValue && gradeValue.trim() !== "") {
+          // Handle normal grade input
           const nilai = parseInt(gradeValue);
           if (nilai >= 0 && nilai <= 100) {
-            // Check if grade already exists
-            const existingGrade = existingGrades.find(g => g.siswa_id === student.id);
-            
             if (existingGrade) {
               // Update existing grade
               console.log("Updating grade for student:", student.nama_siswa, "ID:", student.id);
               const result = await indexedDB.update('nilai_siswa', existingGrade.id, {
                 nilai: nilai,
+                belum_mengumpulkan: false,
                 updated_at: new Date().toISOString()
               });
               if (result.error) {
@@ -355,6 +414,7 @@ const InputNilai = () => {
                 mata_pelajaran_id: selectedSubject,
                 jenis_penilaian_id: selectedCategory,
                 nilai: nilai,
+                belum_mengumpulkan: false,
                 tanggal: new Date().toISOString().split('T')[0],
                 semester: selectedSemester,
                 tahun_ajaran: selectedTahunAjaran
@@ -636,18 +696,20 @@ const InputNilai = () => {
                     <TableHead>Nama Siswa</TableHead>
                     <TableHead className="text-center">Nilai</TableHead>
                     <TableHead className="text-center">Grade</TableHead>
+                    <TableHead className="text-center w-32">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {students.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         {selectedClass ? "Tidak ada siswa aktif dalam kelas ini" : "Pilih kelas untuk menampilkan daftar siswa"}
                       </TableCell>
                     </TableRow>
                   ) : (
                     students.map((student, index) => {
                       const grade = grades[student.id] || "";
+                      const isNotSubmitted = notSubmitted[student.id] || false;
                       return (
                         <TableRow key={student.id}>
                           <TableCell className="text-center font-medium text-muted-foreground">{index + 1}</TableCell>
@@ -662,17 +724,37 @@ const InputNilai = () => {
                               value={grade}
                               onChange={(e) => handleGradeChange(student.id, e.target.value)}
                               className="text-center"
+                              disabled={isNotSubmitted}
                             />
                           </TableCell>
                           <TableCell className="text-center">
-                            {grade && (
+                            {isNotSubmitted ? (
+                              <Badge variant="secondary" className="text-xs">
+                                Belum Mengumpulkan
+                              </Badge>
+                            ) : grade ? (
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getGradeColor(grade)}`}>
                                 {parseInt(grade) >= 90 ? 'A' :
                                  parseInt(grade) >= 80 ? 'B' :
                                  parseInt(grade) >= 70 ? 'C' :
                                  parseInt(grade) >= 60 ? 'D' : 'E'}
                               </span>
-                            )}
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Checkbox
+                                id={`not-submitted-${student.id}`}
+                                checked={isNotSubmitted}
+                                onCheckedChange={(checked) => handleNotSubmittedChange(student.id, checked as boolean)}
+                              />
+                              <Label 
+                                htmlFor={`not-submitted-${student.id}`}
+                                className="text-xs cursor-pointer"
+                              >
+                                Belum Mengumpulkan
+                              </Label>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
