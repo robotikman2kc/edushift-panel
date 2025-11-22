@@ -657,7 +657,7 @@ const JurnalGuru = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -670,35 +670,42 @@ const JurnalGuru = () => {
               Rapat
             </Button>
             
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                handleAddNew();
-                setTimeout(() => applyTemplate("upacara", "senin"), 100);
-              }}
-            >
-              Upacara Senin
-            </Button>
-            
             <Dialog>
               <DialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
-                  Upacara Peringatan
+                  Upacara
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Upacara Peringatan</DialogTitle>
+                  <DialogTitle>Upacara</DialogTitle>
                   <DialogDescription>
-                    Masukkan nama peringatan khusus
+                    Pilih jenis upacara atau masukkan peringatan khusus
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleAddNew();
+                      setTimeout(() => applyTemplate("upacara", "senin"), 100);
+                    }}
+                  >
+                    Upacara Hari Senin
+                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Atau
+                      </span>
+                    </div>
+                  </div>
                   <Input
                     id="upacara-peringatan"
-                    placeholder="Contoh: Hari Kemerdekaan"
+                    placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const value = (e.target as HTMLInputElement).value;
@@ -720,7 +727,7 @@ const JurnalGuru = () => {
                       }
                     }}
                   >
-                    Terapkan
+                    Terapkan Peringatan
                   </Button>
                 </div>
               </DialogContent>
