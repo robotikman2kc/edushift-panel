@@ -425,15 +425,7 @@ export default function JadwalPelajaran() {
         <CardContent className="pt-6">
           <div className="mb-6 flex gap-4 items-end">
             <div className="flex-1 max-w-xs">
-              <Label className="flex items-center gap-2">
-                Semester
-                {activeSemester === calendarActiveSemester && (
-                  <Badge variant="default" className="ml-2">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Aktif di Kalender
-                  </Badge>
-                )}
-              </Label>
+              <Label>Semester</Label>
               <Select value={activeSemester} onValueChange={async (value) => {
                 setActiveSemester(value);
                 await fetchData(activeTahunAjaran, value);
@@ -442,31 +434,13 @@ export default function JadwalPelajaran() {
                   <SelectValue placeholder="Pilih semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">
-                    <div className="flex items-center gap-2">
-                      Semester 1
-                      {calendarActiveSemester === "1" && (
-                        <Badge variant="secondary" className="ml-2 text-xs">
-                          Aktif
-                        </Badge>
-                      )}
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="2">
-                    <div className="flex items-center gap-2">
-                      Semester 2
-                      {calendarActiveSemester === "2" && (
-                        <Badge variant="secondary" className="ml-2 text-xs">
-                          Aktif
-                        </Badge>
-                      )}
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="1">Semester 1</SelectItem>
+                  <SelectItem value="2">Semester 2</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button 
-              variant="outline"
+              variant={activeSemester === calendarActiveSemester ? "default" : "outline"}
               onClick={async () => {
                 try {
                   await setActiveAcademicSemester(activeSemester);
