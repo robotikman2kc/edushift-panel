@@ -499,7 +499,7 @@ const JurnalGuru = () => {
       if (subType === "pembinaan" && customText) {
         uraian = `Pembinaan Oleh ${customText}`;
       } else if (subType === "biasa" && customText) {
-        uraian = customText;
+        uraian = `Rapat ${customText}`;
       } else {
         uraian = "Rapat";
       }
