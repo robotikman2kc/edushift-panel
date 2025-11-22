@@ -216,6 +216,12 @@ export function DataTable({
   };
 
   const openEditDialog = (item: any) => {
+    // If no formFields defined, call onEdit directly without opening dialog
+    if (formFields.length === 0 && onEdit) {
+      onEdit(item.id, item);
+      return;
+    }
+    
     setSelectedItem(item);
     const initialData: Record<string, string> = {};
     formFields.forEach((field) => {
