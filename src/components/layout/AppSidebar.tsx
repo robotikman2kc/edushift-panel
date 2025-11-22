@@ -130,6 +130,14 @@ export function AppSidebar() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   
+  // Icon mapping for localStorage restoration
+  const iconMap: Record<string, any> = {
+    LayoutDashboard, CalendarDays, UserCheck, GraduationCap, Users, BookOpen,
+    TrendingUp, CalendarClock, FileText, Bell, FileInput, BarChart3, CalendarCheck,
+    Calendar, ClipboardList, FileBarChart, BookText, Database, Download, Cloud,
+    HardDrive, User, HelpCircle
+  };
+  
   // Get all available menu items for quick menu
   const getAllMenuItems = () => {
     const allItems: any[] = [];
@@ -144,7 +152,12 @@ export function AppSidebar() {
     const saved = localStorage.getItem('quickMenuItems');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Restore icon components from iconMap
+        return parsed.map((item: any) => ({
+          ...item,
+          icon: iconMap[item.iconName] || LayoutDashboard
+        }));
       } catch (error) {
         return [];
       }
@@ -155,7 +168,13 @@ export function AppSidebar() {
   // Save quick menu to localStorage
   const updateQuickMenu = (items: any[]) => {
     setQuickMenuItems(items);
-    localStorage.setItem('quickMenuItems', JSON.stringify(items));
+    // Save with icon names instead of component references
+    const itemsToSave = items.map(item => ({
+      ...item,
+      iconName: item.icon.name,
+      icon: undefined
+    }));
+    localStorage.setItem('quickMenuItems', JSON.stringify(itemsToSave));
   };
   
   // Track which groups are open - initialize with group containing active route
