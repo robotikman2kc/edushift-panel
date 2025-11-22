@@ -10,6 +10,21 @@ import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
+// Helper function to format date in Indonesian
+const formatDateIndonesia = (date: Date | string): string => {
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const day = dateObj.getDate();
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+};
+
 interface MonthData {
   month: number;
   monthName: string;
@@ -122,7 +137,7 @@ const LaporanJurnalGuru = () => {
           const jenisKegiatan = await indexedDB.selectById("jenis_kegiatan", jurnal.jenis_kegiatan_id);
           return {
             ...jurnal,
-            jenis_kegiatan: jenisKegiatan?.nama_kegiatan || "-",
+            jenis_kegiatan: jenisKegiatan,
           };
         })
       );
@@ -132,23 +147,23 @@ const LaporanJurnalGuru = () => {
         new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
       );
 
-      // Prepare data for PDF export
+      // Prepare data for PDF export - same format as JurnalGuru
       const exportData = sortedJurnal.map((item, index) => ({
         no: index + 1,
-        tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
-        jenis_kegiatan: item.jenis_kegiatan,
+        tanggal: formatDateIndonesia(item.tanggal), // Use Indonesian date format
         uraian_kegiatan: item.uraian_kegiatan,
         volume: item.volume,
         satuan_hasil: item.satuan_hasil,
+        _originalDate: item.tanggal, // Keep original date for holiday check
+        _useHighlight: item.jenis_kegiatan?.use_highlight, // Keep highlight flag
       }));
 
       const columns = [
-        { key: "no", label: "No" },
-        { key: "tanggal", label: "Tanggal" },
-        { key: "jenis_kegiatan", label: "Jenis Kegiatan" },
-        { key: "uraian_kegiatan", label: "Uraian Kegiatan" },
-        { key: "volume", label: "Volume" },
-        { key: "satuan_hasil", label: "Satuan Hasil" },
+        { key: "no", label: "No", align: 'center' as const },
+        { key: "tanggal", label: "Tanggal", align: 'center' as const },
+        { key: "uraian_kegiatan", label: "Uraian Kegiatan", align: 'left' as const },
+        { key: "volume", label: "Volume", align: 'center' as const },
+        { key: "satuan_hasil", label: "Satuan Hasil", align: 'left' as const },
       ];
 
       let template = getCustomPDFTemplate('journal');
