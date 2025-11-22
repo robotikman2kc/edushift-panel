@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
@@ -8,13 +9,19 @@ import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 interface NoTaskStudent {
   siswa_id: string;
   siswa_nama: string;
+  kelas_id: string;
   kelas_nama: string;
+  mata_pelajaran_id: string;
   mata_pelajaran_nama: string;
+  kategori_id: string;
   kategori_nama: string;
   tanggal: string;
+  semester: string;
+  tahun_ajaran: string;
 }
 
 export const NoTaskWidget = () => {
+  const navigate = useNavigate();
   const [noTaskStudents, setNoTaskStudents] = useState<NoTaskStudent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,10 +59,15 @@ export const NoTaskWidget = () => {
         return {
           siswa_id: nilai.siswa_id,
           siswa_nama: siswa?.nama_siswa || "N/A",
+          kelas_id: siswa?.kelas_id || "",
           kelas_nama: kelas?.nama_kelas || "N/A",
+          mata_pelajaran_id: nilai.mata_pelajaran_id,
           mata_pelajaran_nama: mataPelajaran?.nama_mata_pelajaran || "N/A",
+          kategori_id: nilai.jenis_penilaian_id,
           kategori_nama: kategori?.nama_kategori || "N/A",
-          tanggal: nilai.tanggal || nilai.updated_at || new Date().toISOString()
+          tanggal: nilai.tanggal || nilai.updated_at || new Date().toISOString(),
+          semester: nilai.semester || "",
+          tahun_ajaran: nilai.tahun_ajaran || ""
         };
       });
 
@@ -70,6 +82,35 @@ export const NoTaskWidget = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNavigateToInputNilai = async (student: NoTaskStudent) => {
+    // Save filter selections to indexedDB for auto-population
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      
+      const updates = [
+        { key: "last_selected_kelas_nilai", value: student.kelas_id },
+        { key: "last_selected_mapel_nilai", value: student.mata_pelajaran_id },
+        { key: "last_selected_category_nilai", value: student.kategori_id },
+        { key: "last_selected_semester_nilai", value: student.semester },
+        { key: "last_selected_tahun_ajaran_nilai", value: student.tahun_ajaran }
+      ];
+
+      for (const update of updates) {
+        const existing = settings.find((s: any) => s.key === update.key);
+        if (existing) {
+          await indexedDB.update("pengaturan", existing.id, { value: update.value });
+        } else {
+          await indexedDB.insert("pengaturan", update);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving filter selections:", error);
+    }
+
+    // Navigate to input nilai page
+    navigate("/penilaian/input-nilai");
   };
 
   if (loading) {
@@ -124,7 +165,8 @@ export const NoTaskWidget = () => {
           {noTaskStudents.map((student, index) => (
             <div 
               key={`${student.siswa_id}-${index}`}
-              className="flex items-center justify-between gap-2 p-2 rounded border bg-card hover:bg-muted/50 transition-colors text-xs"
+              onClick={() => handleNavigateToInputNilai(student)}
+              className="flex items-center justify-between gap-2 p-2 rounded border bg-card hover:bg-muted/50 transition-colors text-xs cursor-pointer hover:shadow-sm"
             >
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{student.siswa_nama}</p>
