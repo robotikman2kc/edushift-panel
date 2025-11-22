@@ -108,43 +108,33 @@ export const NoTaskWidget = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between gap-2 text-base">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-500" />
-            Siswa Belum Mengumpulkan
+            <AlertCircle className="h-4 w-4 text-orange-500" />
+            No Task
           </div>
           <Badge variant="secondary" className="text-xs">
-            {noTaskStudents.length} Siswa
+            {noTaskStudents.length}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-80 overflow-y-auto">
           {noTaskStudents.map((student, index) => (
             <div 
               key={`${student.siswa_id}-${index}`}
-              className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+              className="flex items-center justify-between gap-2 p-2 rounded border bg-card hover:bg-muted/50 transition-colors text-xs"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{student.siswa_nama}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {student.kelas_nama}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    <Badge variant="outline" className="text-xs">
-                      {student.mata_pelajaran_nama}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {student.kategori_nama}
-                    </Badge>
-                  </div>
-                </div>
-                <Badge variant="destructive" className="text-xs flex-shrink-0">
-                  No Task
-                </Badge>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{student.siswa_nama}</p>
+                <p className="text-muted-foreground truncate">
+                  {student.mata_pelajaran_nama} - {student.kategori_nama}
+                </p>
               </div>
+              <Badge variant="outline" className="text-xs flex-shrink-0">
+                {student.kelas_nama}
+              </Badge>
             </div>
           ))}
         </div>
