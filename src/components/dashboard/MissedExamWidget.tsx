@@ -213,14 +213,12 @@ export function MissedExamWidget() {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="space-y-0.5 flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className="font-semibold text-xs truncate">{student.nama_siswa}</p>
+                <p className="font-semibold text-xs truncate">{student.nama_siswa}</p>
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
+                  <span className="font-medium truncate">{student.nama_mata_pelajaran}</span>
                   <Badge variant={getStatusBadgeVariant(student.status_kehadiran)} className="text-[10px] px-1 py-0">
                     {student.status_kehadiran}
                   </Badge>
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
-                  <span className="font-medium truncate">{student.nama_mata_pelajaran}</span>
                   <span>•</span>
                   <Calendar className="h-2.5 w-2.5" />
                   <span className="whitespace-nowrap">
