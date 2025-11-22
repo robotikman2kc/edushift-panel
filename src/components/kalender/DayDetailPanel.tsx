@@ -102,10 +102,13 @@ export function DayDetailPanel({
           {agendas.length > 0 ? (
             <div className="space-y-2">
               {agendas.map((agenda) => (
-                <div key={agenda.id} className="text-sm p-2 bg-green-500/10 border border-green-500/20 rounded-md">
-                  <div className="font-medium">{agenda.mata_pelajaran_name}</div>
-                  <div className="text-xs text-muted-foreground">{agenda.kelas_name}</div>
-                  <div className="text-xs mt-1">{agenda.materi}</div>
+                <div key={agenda.id} className="text-sm p-2 bg-green-500/10 border border-green-500/20 rounded-md space-y-1">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="font-medium">{agenda.mata_pelajaran_name}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{agenda.kelas_name}</span>
+                  </div>
+                  <div className="text-xs line-clamp-2">{agenda.materi}</div>
                 </div>
               ))}
             </div>
