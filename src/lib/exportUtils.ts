@@ -196,11 +196,21 @@ export const generatePDFBlob = (
         doc.text(schoolName, template.layout.margins.left + labelWidth + 3, infoY + 15);
         currentY += 22;
       } else if (title.includes('Nilai')) {
-        // Grade reports: Show subject info
-        doc.text(`Guru: ${template.teacherInfo.name}`, template.layout.margins.left, infoY);
-        doc.text(`NIP: ${template.teacherInfo.nip}`, template.layout.margins.left, infoY + 4);
-        doc.text(`Mata Pelajaran: ${template.teacherInfo.subject}`, template.layout.margins.left, infoY + 8);
-        currentY += 16;
+        // Grade reports: Show subject info with aligned colons
+        const labelWidth = 35; // Fixed width for labels to align colons
+        
+        doc.text('Guru', template.layout.margins.left, infoY);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY);
+        doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
+        
+        doc.text('NIP', template.layout.margins.left, infoY + 5);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
+        doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, infoY + 5);
+        
+        doc.text('Mata Pelajaran', template.layout.margins.left, infoY + 10);
+        doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
+        doc.text(template.teacherInfo.subject || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
+        currentY += 18;
       }
     }
 
