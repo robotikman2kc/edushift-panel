@@ -177,8 +177,8 @@ export const generatePDFBlob = (
     }
 
 
-    // Add teacher/employee info if available (skip for Agenda reports)
-    if (template.teacherInfo && !title.includes('Agenda')) {
+    // Add teacher/employee info if available (skip for Agenda and Nilai reports)
+    if (template.teacherInfo && !title.includes('Agenda') && !title.includes('Nilai')) {
       doc.setFontSize(template.styling.fontSize.header);
       doc.setTextColor(0, 0, 0);
       const infoY = currentY;
