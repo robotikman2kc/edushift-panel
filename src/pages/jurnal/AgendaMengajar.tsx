@@ -30,10 +30,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/common/PageHeader";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Download, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, FileText } from "lucide-react";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
-import * as XLSX from 'xlsx';
+
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
@@ -421,34 +421,6 @@ const AgendaMengajar = () => {
     return format(new Date(tanggal), 'EEEE', { locale: localeId });
   };
 
-  const handleExportExcel = () => {
-    const exportData = agendaList.map((agenda, index) => ({
-      No: index + 1,
-      Hari: getNamaHari(agenda.tanggal),
-      Tanggal: format(new Date(agenda.tanggal), 'dd MMMM yyyy', { locale: localeId }),
-      Kelas: getKelasName(agenda.kelas_id),
-      'Mata Pelajaran': getMataPelajaranName(agenda.mata_pelajaran_id),
-      Materi: agenda.materi,
-      Keterangan: agenda.keterangan,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Agenda Mengajar");
-
-    const startMonthName = format(new Date(selectedStartMonth + '-01'), 'MMM yyyy', { locale: localeId });
-    const endMonthName = format(new Date(selectedEndMonth + '-01'), 'MMM yyyy', { locale: localeId });
-    const periodName = selectedStartMonth === selectedEndMonth 
-      ? startMonthName 
-      : `${startMonthName}_${endMonthName}`;
-    
-    XLSX.writeFile(workbook, `Agenda_Mengajar_${periodName}.xlsx`);
-
-    toast({
-      title: "Berhasil",
-      description: "Data berhasil diekspor ke Excel",
-    });
-  };
 
   const handleExportPDF = (signatureDate?: Date) => {
     try {
@@ -720,15 +692,7 @@ const AgendaMengajar = () => {
                   disabled={agendaList.length === 0}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  Export PDF
-                </Button>
-                <Button
-                  onClick={handleExportExcel}
-                  className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
-                  disabled={agendaList.length === 0}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Export Excel
+                  Download PDF
                 </Button>
               </div>
             </div>
