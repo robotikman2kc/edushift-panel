@@ -436,6 +436,7 @@ const AgendaMengajar = () => {
         'Tanggal': format(new Date(agenda.tanggal), 'dd MMM yyyy', { locale: localeId }),
         'Kelas': getKelasName(agenda.kelas_id),
         'Mata Pelajaran': getMataPelajaranName(agenda.mata_pelajaran_id),
+        'Jenis Pembelajaran': agenda.jenis_pembelajaran || '-',
         'Materi': agenda.materi,
         'Keterangan': agenda.keterangan,
       }));
@@ -446,6 +447,7 @@ const AgendaMengajar = () => {
         { key: 'Tanggal', label: 'Tanggal' },
         { key: 'Kelas', label: 'Kelas' },
         { key: 'Mata Pelajaran', label: 'Mata Pelajaran' },
+        { key: 'Jenis Pembelajaran', label: 'Jenis Pembelajaran' },
         { key: 'Materi', label: 'Materi' },
         { key: 'Keterangan', label: 'Keterangan' },
       ];
