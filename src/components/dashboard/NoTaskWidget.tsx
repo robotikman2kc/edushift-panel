@@ -196,7 +196,7 @@ export const NoTaskWidget = () => {
   return (
     <>
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setIsDialogOpen(true)}>
-        <CardHeader className="pb-2">
+        <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-orange-500" />
             Nilai Kosong
@@ -205,16 +205,6 @@ export const NoTaskWidget = () => {
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Ada {noTaskStudents.length} siswa yang belum mengumpulkan tugas
-          </p>
-          <div className="flex justify-end">
-            <Button variant="link" className="text-xs p-0 h-auto">
-              Lihat Detail →
-            </Button>
-          </div>
-        </CardContent>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

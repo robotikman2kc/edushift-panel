@@ -249,7 +249,7 @@ export function MissedExamWidget() {
   return (
     <>
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setIsDialogOpen(true)}>
-        <CardHeader className="pb-2">
+        <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-destructive" />
             Siswa Belum Ulangan
@@ -258,16 +258,6 @@ export function MissedExamWidget() {
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Ada {missedExamStudents.length} siswa yang belum mengikuti ulangan
-          </p>
-          <div className="flex justify-end">
-            <Button variant="link" className="text-xs p-0 h-auto">
-              Lihat Detail →
-            </Button>
-          </div>
-        </CardContent>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
