@@ -40,12 +40,10 @@ import {
   Plus, 
   Search, 
   Filter, 
-  Download, 
   Upload, 
   MoreHorizontal,
   Edit,
   Trash2,
-  FileSpreadsheet,
   FileText,
   FileDown,
   Settings2
@@ -629,24 +627,14 @@ export function DataTable({
                 </Button>
               )}
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => setIsExportDateDialogOpen(true)}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Export PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportExcel}>
-                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                    Export Excel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsExportDateDialogOpen(true)}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
 
               {onAdd && (
                 <Button size="sm" onClick={openAddDialog}>
