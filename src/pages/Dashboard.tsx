@@ -171,12 +171,16 @@ const Dashboard = () => {
       // Get schedules for today
       let schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
       
+      console.log('Raw schedules for', today, ':', schedules);
+      
       // Filter by semester and academic year if they exist
       schedules = schedules.filter((s: any) => {
         const semesterMatch = !s.semester || s.semester === activeSemester;
         const tahunAjaranMatch = !s.tahun_ajaran || s.tahun_ajaran === activeTahunAjaran;
         return semesterMatch && tahunAjaranMatch;
       });
+      
+      console.log('After filter:', schedules);
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
