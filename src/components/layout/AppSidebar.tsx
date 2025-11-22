@@ -252,7 +252,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 space-y-1">
         {menuItems.map((group) => {
           const GroupIcon = group.icon;
           const isGroupOpen = openGroups.includes(group.title);
@@ -263,9 +263,9 @@ export function AppSidebar() {
               open={isGroupOpen}
               onOpenChange={() => toggleGroup(group.title)}
             >
-              <SidebarGroup>
+              <SidebarGroup className="py-0">
                 <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="px-2 py-2 cursor-pointer hover:bg-sidebar-accent/50 rounded-md transition-colors group">
+                  <SidebarGroupLabel className="px-2 py-1.5 cursor-pointer hover:bg-sidebar-accent/50 rounded-md transition-colors group">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
                         <GroupIcon className="h-4 w-4 text-sidebar-foreground/70" />
