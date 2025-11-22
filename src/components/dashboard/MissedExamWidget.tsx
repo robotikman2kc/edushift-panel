@@ -1,8 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertCircle, Calendar, Search } from "lucide-react";
 import { indexedDB } from "@/lib/indexedDB";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -25,6 +30,11 @@ export function MissedExamWidget() {
   const navigate = useNavigate();
   const [missedExamStudents, setMissedExamStudents] = useState<MissedExamStudent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+  const [selectedMapel, setSelectedMapel] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   useEffect(() => {
     fetchMissedExamStudents();
@@ -100,10 +110,9 @@ export function MissedExamWidget() {
         }
       }
 
-      // Sort by date (newest first) and limit to 10
+      // Sort by date (newest first) - no limit anymore
       const sortedStudents = missedStudents
-        .sort((a, b) => new Date(b.tanggal_ulangan).getTime() - new Date(a.tanggal_ulangan).getTime())
-        .slice(0, 10);
+        .sort((a, b) => new Date(b.tanggal_ulangan).getTime() - new Date(a.tanggal_ulangan).getTime());
 
       setMissedExamStudents(sortedStudents);
     } catch (error) {
@@ -154,6 +163,35 @@ export function MissedExamWidget() {
     }
   };
 
+  // Get unique values for filters
+  const uniqueKelas = useMemo(() => {
+    const kelasMap = new Map<string, string>();
+    missedExamStudents.forEach(s => {
+      kelasMap.set(s.kelas_id, s.nama_kelas);
+    });
+    return Array.from(kelasMap.entries()).map(([id, nama]) => ({ id, nama }));
+  }, [missedExamStudents]);
+
+  const uniqueMapel = useMemo(() => {
+    const mapelMap = new Map<string, string>();
+    missedExamStudents.forEach(s => {
+      mapelMap.set(s.mata_pelajaran_id, s.nama_mata_pelajaran);
+    });
+    return Array.from(mapelMap.entries()).map(([id, nama]) => ({ id, nama }));
+  }, [missedExamStudents]);
+
+  // Filter students
+  const filteredStudents = useMemo(() => {
+    return missedExamStudents.filter(student => {
+      const matchSearch = student.nama_siswa.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchKelas = selectedKelas === "all" || student.kelas_id === selectedKelas;
+      const matchMapel = selectedMapel === "all" || student.mata_pelajaran_id === selectedMapel;
+      const matchStatus = selectedStatus === "all" || student.status_kehadiran === selectedStatus;
+      
+      return matchSearch && matchKelas && matchMapel && matchStatus;
+    });
+  }, [missedExamStudents, searchQuery, selectedKelas, selectedMapel, selectedStatus]);
+
   if (loading) {
     return (
       <Card>
@@ -194,45 +232,135 @@ export function MissedExamWidget() {
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-destructive" />
-          Siswa Belum Ulangan
-          <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
-            {missedExamStudents.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {missedExamStudents.map((student, index) => (
-          <div
-            key={index}
-            onClick={() => handleNavigateToInputNilai(student)}
-            className="p-2 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="space-y-0.5 flex-1 min-w-0">
-                <p className="font-semibold text-xs truncate">{student.nama_siswa}</p>
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
-                  <Badge variant={getStatusBadgeVariant(student.status_kehadiran)} className="text-[10px] px-1 py-0">
-                    {student.status_kehadiran}
-                  </Badge>
-                  <span className="font-medium truncate">{student.nama_mata_pelajaran}</span>
-                  <span>•</span>
-                  <Calendar className="h-2.5 w-2.5" />
-                  <span className="whitespace-nowrap">
-                    {format(new Date(student.tanggal_ulangan), "dd MMM yyyy", { locale: localeId })}
-                  </span>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-                {student.nama_kelas}
-              </Badge>
-            </div>
+    <>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setIsDialogOpen(true)}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            Siswa Belum Ulangan
+            <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
+              {missedExamStudents.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Ada {missedExamStudents.length} siswa yang belum mengikuti ulangan
+          </p>
+          <div className="flex justify-end">
+            <Button variant="link" className="text-xs p-0 h-auto">
+              Lihat Detail →
+            </Button>
           </div>
-        ))}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Siswa Belum Ulangan
+              <Badge variant="destructive" className="text-xs">
+                {filteredStudents.length}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari nama siswa..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <Select value={selectedKelas} onValueChange={setSelectedKelas}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kelas</SelectItem>
+                  {uniqueKelas.map(k => (
+                    <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedMapel} onValueChange={setSelectedMapel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Mapel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Mapel</SelectItem>
+                  {uniqueMapel.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="Sakit">Sakit</SelectItem>
+                  <SelectItem value="Izin">Izin</SelectItem>
+                  <SelectItem value="Alpha">Alpha</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Student List */}
+            <ScrollArea className="h-[400px] pr-4">
+              {filteredStudents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">Tidak ada data yang sesuai dengan filter</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredStudents.map((student, index) => (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        handleNavigateToInputNilai(student);
+                        setIsDialogOpen(false);
+                      }}
+                      className="p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{student.nama_siswa}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                            <Badge variant={getStatusBadgeVariant(student.status_kehadiran)} className="text-xs">
+                              {student.status_kehadiran}
+                            </Badge>
+                            <span className="font-medium truncate">{student.nama_mata_pelajaran}</span>
+                            <span>•</span>
+                            <Calendar className="h-3 w-3" />
+                            <span className="whitespace-nowrap">
+                              {format(new Date(student.tanggal_ulangan), "dd MMM yyyy", { locale: localeId })}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
+                          {student.nama_kelas}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
