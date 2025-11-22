@@ -64,7 +64,12 @@ export function AcademicYearSelector() {
           ))}
         </SelectContent>
       </Select>
-      <Badge variant="outline" className="hidden sm:inline-flex">Aktif</Badge>
+      <Badge 
+        variant="outline" 
+        className="hidden sm:inline-flex bg-blue-100 text-blue-700 border-blue-300 font-medium dark:bg-blue-950 dark:text-blue-400 dark:border-blue-700"
+      >
+        Aktif
+      </Badge>
     </div>
   );
 }
