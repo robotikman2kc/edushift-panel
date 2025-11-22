@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -159,39 +160,23 @@ const Dashboard = () => {
     try {
       setLoadingSchedule(true);
       
-      // Get active semester and academic year
-      const activeSemester = localStorage.getItem('active_semester') || '1';
-      const activeTahunAjaran = localStorage.getItem('active_tahun_ajaran') || '2024/2025';
+      // Get active semester and academic year from academicYearUtils
+      const activeSemester = await getActiveSemester();
+      const activeTahunAjaran = await getActiveTahunAjaran();
       
       const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
       const today = days[selectedDate.getDay()];
       const todayDate = format(selectedDate, "yyyy-MM-dd");
       
-      console.log('=== DEBUG JADWAL ===');
-      console.log('Selected Date:', selectedDate);
-      console.log('Hari:', today);
-      console.log('Active Semester:', activeSemester);
-      console.log('Active Tahun Ajaran:', activeTahunAjaran);
-      
-      // Get ALL schedules first to see what's in the database
-      const allSchedules = await indexedDB.select("jadwal_pelajaran");
-      console.log('Total jadwal di database:', allSchedules.length);
-      console.log('Sample jadwal:', allSchedules[0]);
-      
       // Get schedules for today
-      let schedules = allSchedules.filter((s: any) => s.hari === today);
-      console.log('Jadwal untuk hari', today, ':', schedules.length);
+      let schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
       
       // Filter by semester and academic year if they exist
       schedules = schedules.filter((s: any) => {
         const semesterMatch = !s.semester || s.semester === activeSemester;
         const tahunAjaranMatch = !s.tahun_ajaran || s.tahun_ajaran === activeTahunAjaran;
-        console.log('Filter check:', s.hari, 'semester:', s.semester, 'tahun:', s.tahun_ajaran, 'match:', semesterMatch && tahunAjaranMatch);
         return semesterMatch && tahunAjaranMatch;
       });
-      
-      console.log('Jadwal setelah filter:', schedules.length);
-      console.log('=== END DEBUG ===');
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
