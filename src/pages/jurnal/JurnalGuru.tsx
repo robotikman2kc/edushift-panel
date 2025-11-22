@@ -482,7 +482,7 @@ const JurnalGuru = () => {
     setShowJurnalDialog(true);
   };
 
-  const applyTemplate = (template: string, subType?: string) => {
+  const applyTemplate = (template: string, subType?: string, customText?: string) => {
     setSelectedTemplate(template);
     
     // Find or create jenis kegiatan based on template
@@ -494,7 +494,14 @@ const JurnalGuru = () => {
     if (template === "rapat") {
       const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
       jenisKegiatanId = rapatKegiatan?.id || jenisKegiatan[0]?.id || "";
-      uraian = "Rapat";
+      
+      if (subType === "pembinaan" && customText) {
+        uraian = `Pembinaan Oleh ${customText}`;
+      } else if (subType === "biasa" && customText) {
+        uraian = customText;
+      } else {
+        uraian = "Rapat";
+      }
       satuan = "kali";
     } else if (template === "upacara") {
       const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
@@ -737,17 +744,98 @@ const JurnalGuru = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                handleAddNew();
-                setTimeout(() => applyTemplate("rapat"), 100);
-              }}
-            >
-              Rapat
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                  Rapat
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Rapat</DialogTitle>
+                  <DialogDescription>
+                    Pilih jenis rapat
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Pembinaan</label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="rapat-pembinaan"
+                        placeholder="Pembinaan oleh siapa? (contoh: Kepala Sekolah)"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const value = (e.target as HTMLInputElement).value;
+                            if (value) {
+                              handleAddNew();
+                              setTimeout(() => applyTemplate("rapat", "pembinaan", value), 100);
+                              (e.target as HTMLInputElement).value = "";
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={() => {
+                          const input = document.getElementById("rapat-pembinaan") as HTMLInputElement;
+                          if (input?.value) {
+                            handleAddNew();
+                            setTimeout(() => applyTemplate("rapat", "pembinaan", input.value), 100);
+                            input.value = "";
+                          }
+                        }}
+                      >
+                        Tambah
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Atau
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Rapat Biasa</label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="rapat-biasa"
+                        placeholder="Rapat apa? (contoh: Rapat Kenaikan Kelas)"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const value = (e.target as HTMLInputElement).value;
+                            if (value) {
+                              handleAddNew();
+                              setTimeout(() => applyTemplate("rapat", "biasa", value), 100);
+                              (e.target as HTMLInputElement).value = "";
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={() => {
+                          const input = document.getElementById("rapat-biasa") as HTMLInputElement;
+                          if (input?.value) {
+                            handleAddNew();
+                            setTimeout(() => applyTemplate("rapat", "biasa", input.value), 100);
+                            input.value = "";
+                          }
+                        }}
+                      >
+                        Tambah
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
             
             <Dialog>
               <DialogTrigger asChild>
