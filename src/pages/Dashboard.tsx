@@ -167,16 +167,31 @@ const Dashboard = () => {
       const today = days[selectedDate.getDay()];
       const todayDate = format(selectedDate, "yyyy-MM-dd");
       
-      // Get all schedules for today first
-      let schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
+      console.log('=== DEBUG JADWAL ===');
+      console.log('Selected Date:', selectedDate);
+      console.log('Hari:', today);
+      console.log('Active Semester:', activeSemester);
+      console.log('Active Tahun Ajaran:', activeTahunAjaran);
       
-      // Filter by semester and academic year if they exist in the schedule data
+      // Get ALL schedules first to see what's in the database
+      const allSchedules = await indexedDB.select("jadwal_pelajaran");
+      console.log('Total jadwal di database:', allSchedules.length);
+      console.log('Sample jadwal:', allSchedules[0]);
+      
+      // Get schedules for today
+      let schedules = allSchedules.filter((s: any) => s.hari === today);
+      console.log('Jadwal untuk hari', today, ':', schedules.length);
+      
+      // Filter by semester and academic year if they exist
       schedules = schedules.filter((s: any) => {
-        // If semester or tahun_ajaran fields don't exist, include the schedule
         const semesterMatch = !s.semester || s.semester === activeSemester;
         const tahunAjaranMatch = !s.tahun_ajaran || s.tahun_ajaran === activeTahunAjaran;
+        console.log('Filter check:', s.hari, 'semester:', s.semester, 'tahun:', s.tahun_ajaran, 'match:', semesterMatch && tahunAjaranMatch);
         return semesterMatch && tahunAjaranMatch;
       });
+      
+      console.log('Jadwal setelah filter:', schedules.length);
+      console.log('=== END DEBUG ===');
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
