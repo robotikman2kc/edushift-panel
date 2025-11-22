@@ -298,18 +298,13 @@ const RekapNilai = () => {
           rowData[kategori.nama_kategori] = student.grades[kategori.id]?.toFixed(1) || '-';
         });
 
-        rowData['Rata-rata'] = student.rata_rata.toFixed(1);
-        rowData['Keaktifan'] = `${student.total_keaktifan}x`;
-
         return rowData;
       });
 
       const exportColumns = [
         { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
-        ...filteredKategori.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
-        { key: 'Rata-rata', label: 'Rata-rata' },
-        { key: 'Keaktifan', label: 'Keaktifan' }
+        ...filteredKategori.map(k => ({ key: k.nama_kategori, label: k.nama_kategori }))
       ];
 
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${selectedSemester} - ${selectedTahunAjaran}`;
