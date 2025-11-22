@@ -141,8 +141,7 @@ export function DayDetailPanel({
             <div className="space-y-2">
               {journals.map((journal) => (
                 <div key={journal.id} className="text-sm p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
-                  <div className="font-medium">Jurnal Guru</div>
-                  <div className="text-xs mt-1 line-clamp-2">{journal.uraian_kegiatan}</div>
+                  <div className="text-xs line-clamp-2">{journal.uraian_kegiatan}</div>
                 </div>
               ))}
             </div>
