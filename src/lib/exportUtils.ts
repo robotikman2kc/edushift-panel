@@ -163,11 +163,11 @@ export const generatePDFBlob = (
       }
     }
 
-    // Add month info for journal reports (before teacher info)
-    if (title.includes('Jurnal') && additionalInfo?.bulan) {
+    // Add month info for agenda/journal reports (before teacher info)
+    if ((title.includes('Agenda') || title.includes('Jurnal')) && additionalInfo?.bulan) {
       doc.setFontSize(template.styling.fontSize.header);
       doc.setTextColor(0, 0, 0);
-      const bulanText = `Bulan ${additionalInfo.bulan}`;
+      const bulanText = `Periode: ${additionalInfo.bulan}`;
       const bulanWidth = doc.getTextWidth(bulanText);
       doc.text(bulanText, (pageWidth - bulanWidth) / 2, currentY);
       currentY += 12;
