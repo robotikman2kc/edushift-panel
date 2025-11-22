@@ -160,19 +160,15 @@ const Dashboard = () => {
       setLoadingSchedule(true);
       
       // Get active semester and academic year
-      const activeSemester = localStorage.getItem('active_semester') || 'Ganjil';
+      const activeSemester = localStorage.getItem('active_semester') || '1';
       const activeTahunAjaran = localStorage.getItem('active_tahun_ajaran') || '2024/2025';
       
       const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
       const today = days[selectedDate.getDay()];
       const todayDate = format(selectedDate, "yyyy-MM-dd");
       
-      console.log('Fetching schedule for:', today, 'Active Semester:', activeSemester, 'Active Year:', activeTahunAjaran);
-      
       // Get all schedules for today first
       let schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
-      
-      console.log('Total schedules for', today, ':', schedules.length);
       
       // Filter by semester and academic year if they exist in the schedule data
       schedules = schedules.filter((s: any) => {
@@ -181,8 +177,6 @@ const Dashboard = () => {
         const tahunAjaranMatch = !s.tahun_ajaran || s.tahun_ajaran === activeTahunAjaran;
         return semesterMatch && tahunAjaranMatch;
       });
-      
-      console.log('Filtered schedules:', schedules.length);
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
