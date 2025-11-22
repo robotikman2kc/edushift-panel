@@ -518,15 +518,14 @@ const JurnalGuru = () => {
 
   const saveKoreksiJurnal = async (mapelId: string, kelasId: string) => {
     try {
-      const koreksiKegiatan = jenisKegiatan.find(k => 
-        k.nama_kegiatan.toLowerCase().includes("koreksi") || 
-        k.nama_kegiatan.toLowerCase().includes("tugas")
+      const administrasiKegiatan = jenisKegiatan.find(k => 
+        k.nama_kegiatan.toLowerCase().includes("administrasi")
       );
       
-      if (!koreksiKegiatan) {
+      if (!administrasiKegiatan) {
         toast({
           title: "Error",
-          description: "Jenis kegiatan 'Koreksi' tidak ditemukan",
+          description: "Jenis kegiatan 'Administrasi' tidak ditemukan",
           variant: "destructive",
         });
         return;
@@ -546,7 +545,7 @@ const JurnalGuru = () => {
 
       const jurnalData = {
         tanggal: format(new Date(), "yyyy-MM-dd"),
-        jenis_kegiatan_id: koreksiKegiatan.id,
+        jenis_kegiatan_id: administrasiKegiatan.id,
         uraian_kegiatan: `Mengkoreksi Tugas/Soal ${mapel.nama_mata_pelajaran} - Kelas ${kelasData.nama_kelas}`,
         volume: 1,
         satuan_hasil: "Paket",
