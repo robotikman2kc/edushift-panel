@@ -256,8 +256,9 @@ export default function JadwalPelajaran() {
     const startJam = Number(selectedJamKe);
     const endJam = startJam + jumlahJP;
     
+    // Find all schedules that overlap in time on the same day (regardless of class)
     const conflicts = schedules.filter(schedule => {
-      if (schedule.hari !== selectedDay || schedule.kelas_id !== selectedKelas) {
+      if (schedule.hari !== selectedDay) {
         return false;
       }
       
@@ -269,18 +270,18 @@ export default function JadwalPelajaran() {
     });
     
     if (conflicts.length > 0) {
-      // Check if all conflicts are the same subject (same kelas & mata pelajaran)
-      const differentSubjectConflicts = conflicts.filter(
-        c => c.mata_pelajaran_id !== selectedMataPelajaran
+      // Check if there are conflicts with different class OR different subject
+      const differentConflicts = conflicts.filter(
+        c => c.kelas_id !== selectedKelas || c.mata_pelajaran_id !== selectedMataPelajaran
       );
       
-      if (differentSubjectConflicts.length > 0) {
-        // There are conflicts with different subjects, show confirmation
-        setConflictingSchedules(conflicts);
+      if (differentConflicts.length > 0) {
+        // There are conflicts with different class or subject, show confirmation
+        setConflictingSchedules(differentConflicts);
         setShowConflictDialog(true);
         return;
       } else {
-        // All conflicts are same subject, delete them silently and proceed
+        // All conflicts are same class AND same subject, delete them silently
         setConflictingSchedules(conflicts);
       }
     }
