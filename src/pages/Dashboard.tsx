@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { JurnalStatusWidget } from "@/components/dashboard/JurnalStatusWidget";
+import { NoTaskWidget } from "@/components/dashboard/NoTaskWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -451,8 +452,11 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Calendar Notes & PWA Controls */}
+        {/* No Task Widget & Calendar Notes & PWA Controls */}
         <div className="lg:col-span-1 space-y-6">
+          {/* No Task Widget */}
+          <NoTaskWidget />
+
           {/* Calendar Notes */}
           <Card>
             <CardHeader>
