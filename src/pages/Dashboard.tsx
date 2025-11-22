@@ -5,6 +5,7 @@ import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { JurnalStatusWidget } from "@/components/dashboard/JurnalStatusWidget";
 import { NoTaskWidget } from "@/components/dashboard/NoTaskWidget";
+import { MissedExamWidget } from "@/components/dashboard/MissedExamWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -454,6 +455,9 @@ const Dashboard = () => {
 
         {/* No Task Widget & Calendar Notes & PWA Controls */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Missed Exam Widget */}
+          <MissedExamWidget />
+          
           {/* No Task Widget */}
           <NoTaskWidget />
 
