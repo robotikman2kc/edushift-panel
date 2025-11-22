@@ -3,7 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Pencil, Trash2 } from "lucide-react";
+import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { isHariLibur, generateHolidayTemplate } from "@/lib/hariLiburUtils";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
@@ -90,6 +92,7 @@ const JurnalGuru = () => {
   const [filterMonth, setFilterMonth] = useState<string>(new Date().getMonth().toString());
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [currentHoliday, setCurrentHoliday] = useState<any>(null);
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -125,7 +128,57 @@ const JurnalGuru = () => {
   useEffect(() => {
     fetchData();
     loadAvailableYears();
+    ensureLiburNasionalExists();
   }, []);
+
+  // Watch for tanggal changes and auto-fill if holiday
+  useEffect(() => {
+    const subscription = jurnalForm.watch((value, { name }) => {
+      if (name === "tanggal" && value.tanggal) {
+        const holiday = isHariLibur(value.tanggal);
+        setCurrentHoliday(holiday);
+        
+        if (holiday && !selectedJurnal) {
+          // Only auto-fill for new entries, not edits
+          const template = generateHolidayTemplate(holiday);
+          
+          // Find "Libur Nasional" jenis kegiatan
+          const liburNasionalKegiatan = jenisKegiatan.find(
+            k => k.nama_kegiatan.toLowerCase() === "libur nasional"
+          );
+          
+          if (liburNasionalKegiatan) {
+            jurnalForm.setValue("jenis_kegiatan_id", liburNasionalKegiatan.id);
+          }
+          
+          jurnalForm.setValue("uraian_kegiatan", template.uraian);
+          jurnalForm.setValue("volume", template.volume);
+          jurnalForm.setValue("satuan_hasil", template.satuan);
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [jurnalForm, jenisKegiatan, selectedJurnal]);
+
+  const ensureLiburNasionalExists = async () => {
+    try {
+      const kegiatanData = await indexedDB.select("jenis_kegiatan");
+      const liburNasionalExists = kegiatanData.some(
+        (k: any) => k.nama_kegiatan.toLowerCase() === "libur nasional"
+      );
+      
+      if (!liburNasionalExists) {
+        await indexedDB.insert("jenis_kegiatan", {
+          nama_kegiatan: "Libur Nasional",
+          deskripsi: "Hari libur nasional dan cuti bersama",
+        });
+        fetchData(); // Refresh data to include the new jenis kegiatan
+      }
+    } catch (error) {
+      console.error("Error ensuring Libur Nasional exists:", error);
+    }
+  };
 
   const loadAvailableYears = async () => {
     try {
@@ -336,6 +389,7 @@ const JurnalGuru = () => {
 
   const handleAddNew = () => {
     setSelectedJurnal(null);
+    setCurrentHoliday(null);
     jurnalForm.reset({
       tanggal: new Date(),
       volume: 0,
@@ -549,6 +603,12 @@ const JurnalGuru = () => {
                         />
                       </PopoverContent>
                     </Popover>
+                    {currentHoliday && (
+                      <Badge variant="secondary" className="mt-2 w-fit">
+                        <PartyPopper className="h-3 w-3 mr-1" />
+                        Hari Libur: {currentHoliday.nama}
+                      </Badge>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
