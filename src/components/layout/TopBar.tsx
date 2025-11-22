@@ -31,6 +31,7 @@ export function TopBar() {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showBackupWarning, setShowBackupWarning] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState(0);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -65,6 +66,7 @@ export function TopBar() {
     navigate(1);
   };
 
+  // Update time only (not date) every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -286,14 +288,25 @@ export function TopBar() {
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center gap-1 h-8 px-2">
                       <CalendarIcon className="h-4 w-4" />
-                      <span className="truncate">{format(currentTime, "EEEE, dd MMMM yyyy", { locale: id })}</span>
+                      <span className="truncate">{format(selectedDate, "EEEE, dd MMMM yyyy", { locale: id })}</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3 border-b flex items-center justify-between">
+                      <span className="text-sm font-medium">Pilih Tanggal</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSelectedDate(new Date())}
+                        className="h-7 text-xs"
+                      >
+                        Hari Ini
+                      </Button>
+                    </div>
                     <Calendar
                       mode="single"
-                      selected={currentTime}
-                      onSelect={(date) => date && setCurrentTime(date)}
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
