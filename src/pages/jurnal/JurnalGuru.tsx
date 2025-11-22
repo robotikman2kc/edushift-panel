@@ -482,6 +482,40 @@ const JurnalGuru = () => {
     setShowJurnalDialog(true);
   };
 
+  const applyTemplate = (template: string, subType?: string) => {
+    setSelectedTemplate(template);
+    
+    // Find or create jenis kegiatan based on template
+    let jenisKegiatanId = "";
+    let uraian = "";
+    let volume = 1;
+    let satuan = "kegiatan";
+
+    if (template === "rapat") {
+      const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
+      jenisKegiatanId = rapatKegiatan?.id || jenisKegiatan[0]?.id || "";
+      uraian = "Rapat";
+      satuan = "kali";
+    } else if (template === "upacara") {
+      const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
+      jenisKegiatanId = upacaraKegiatan?.id || jenisKegiatan[0]?.id || "";
+      
+      if (subType === "senin") {
+        uraian = "Upacara Bendera Hari Senin";
+      } else if (subType) {
+        uraian = `Upacara Peringatan ${subType}`;
+      } else {
+        uraian = "Upacara";
+      }
+      satuan = "kali";
+    }
+
+    jurnalForm.setValue("jenis_kegiatan_id", jenisKegiatanId);
+    jurnalForm.setValue("uraian_kegiatan", uraian);
+    jurnalForm.setValue("volume", volume);
+    jurnalForm.setValue("satuan_hasil", satuan);
+  };
+
   const saveKoreksiJurnal = async (mapelId: string, kelasId: string) => {
     try {
       const koreksiKegiatan = jenisKegiatan.find(k => 
@@ -690,6 +724,96 @@ const JurnalGuru = () => {
           </Button>
         </div>
       </PageHeader>
+
+      {/* Template Kegiatan Cepat */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Template Kegiatan Cepat
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Klik tombol di bawah untuk langsung membuka form dengan template kegiatan
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                handleAddNew();
+                setTimeout(() => applyTemplate("rapat"), 100);
+              }}
+            >
+              Rapat
+            </Button>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                  Upacara
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upacara</DialogTitle>
+                  <DialogDescription>
+                    Pilih jenis upacara atau masukkan peringatan khusus
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={async () => {
+                      await saveQuickJurnal("upacara", "senin");
+                    }}
+                  >
+                    Upacara Hari Senin
+                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Atau
+                      </span>
+                    </div>
+                  </div>
+                  <Input
+                    id="upacara-peringatan"
+                    placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const value = (e.target as HTMLInputElement).value;
+                        if (value) {
+                          handleAddNew();
+                          setTimeout(() => applyTemplate("upacara", value), 100);
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      const input = document.getElementById("upacara-peringatan") as HTMLInputElement;
+                      if (input?.value) {
+                        handleAddNew();
+                        setTimeout(() => applyTemplate("upacara", input.value), 100);
+                        input.value = "";
+                      }
+                    }}
+                  >
+                    Buat dengan Peringatan
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Input Koreksi Cepat */}
       <Card className="border-primary/20 bg-primary/5">
