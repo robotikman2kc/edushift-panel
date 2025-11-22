@@ -430,18 +430,18 @@ export default function JadwalPelajaran() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between w-full gap-3">
                       <span>Semester 1</span>
                       {calendarActiveSemester === "1" && (
-                        <Badge variant="secondary" className="text-xs">Aktif</Badge>
+                        <Badge variant="secondary" className="text-xs ml-auto">Aktif</Badge>
                       )}
                     </div>
                   </SelectItem>
                   <SelectItem value="2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between w-full gap-3">
                       <span>Semester 2</span>
                       {calendarActiveSemester === "2" && (
-                        <Badge variant="secondary" className="text-xs">Aktif</Badge>
+                        <Badge variant="secondary" className="text-xs ml-auto">Aktif</Badge>
                       )}
                     </div>
                   </SelectItem>
