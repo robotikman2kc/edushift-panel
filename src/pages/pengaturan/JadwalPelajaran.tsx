@@ -79,6 +79,8 @@ export default function JadwalPelajaran() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
   const [showBreakSettingsDialog, setShowBreakSettingsDialog] = useState(false);
+  const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [conflictingSchedules, setConflictingSchedules] = useState<Schedule[]>([]);
   const [minutesPerJP, setMinutesPerJP] = useState(45);
   
   // Break settings
@@ -253,7 +255,7 @@ export default function JadwalPelajaran() {
     const startJam = Number(selectedJamKe);
     const endJam = startJam + jumlahJP;
     
-    const hasConflict = schedules.some(schedule => {
+    const conflicts = schedules.filter(schedule => {
       if (schedule.hari !== selectedDay || schedule.kelas_id !== selectedKelas) {
         return false;
       }
@@ -265,18 +267,28 @@ export default function JadwalPelajaran() {
       return (startJam < existingEnd && endJam > existingStart);
     });
     
-    if (hasConflict) {
-      toast({
-        title: "Error",
-        description: "Jadwal bentrok dengan jadwal yang sudah ada untuk kelas ini",
-        variant: "destructive",
-      });
+    if (conflicts.length > 0) {
+      setConflictingSchedules(conflicts);
+      setShowConflictDialog(true);
       return;
     }
+
+    await saveSchedule();
+  };
+
+  const saveSchedule = async () => {
 
     try {
       const year = activeTahunAjaran || await getActiveTahunAjaran();
       const semester = activeSemester || await getActiveSemester();
+      
+      // Delete conflicting schedules if any
+      if (conflictingSchedules.length > 0) {
+        for (const conflict of conflictingSchedules) {
+          await indexedDB.delete("jadwal_pelajaran", conflict.id);
+        }
+      }
+      
       const newSchedule = {
         hari: selectedDay,
         jam_ke: Number(selectedJamKe),
@@ -291,10 +303,14 @@ export default function JadwalPelajaran() {
       
       toast({
         title: "Berhasil",
-        description: "Jadwal berhasil ditambahkan",
+        description: conflictingSchedules.length > 0 
+          ? `Jadwal berhasil ditambahkan (${conflictingSchedules.length} jadwal lama dihapus)`
+          : "Jadwal berhasil ditambahkan",
       });
       
       setShowAddDialog(false);
+      setShowConflictDialog(false);
+      setConflictingSchedules([]);
       resetForm();
       fetchData(year, semester);
     } catch (error) {
@@ -674,6 +690,45 @@ export default function JadwalPelajaran() {
               Batal
             </Button>
             <Button onClick={handleAddSchedule}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Conflict Confirmation Dialog */}
+      <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Jadwal Bentrok</DialogTitle>
+            <DialogDescription>
+              Jadwal baru akan menimpa jadwal yang sudah ada. Yakin ingin melanjutkan?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm font-medium mb-2">Jadwal yang akan dihapus:</p>
+              {conflictingSchedules.map((schedule, idx) => (
+                <div key={idx} className="text-sm text-muted-foreground mb-1">
+                  • Jam {schedule.jam_ke}{schedule.jumlah_jp > 1 && `-${schedule.jam_ke + schedule.jumlah_jp - 1}`} - {schedule.mata_pelajaran_nama} ({schedule.jumlah_jp} JP)
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm font-medium mb-2">Jadwal baru:</p>
+              <div className="text-sm text-muted-foreground">
+                • Jam {selectedJamKe}{jumlahJP > 1 && `-${Number(selectedJamKe) + jumlahJP - 1}`} - {mataPelajaranList.find(mp => mp.id === selectedMataPelajaran)?.nama_mata_pelajaran} ({jumlahJP} JP)
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConflictDialog(false)}>
+              Batal
+            </Button>
+            <Button onClick={saveSchedule} variant="destructive">
+              Ya, Timpa Jadwal
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
