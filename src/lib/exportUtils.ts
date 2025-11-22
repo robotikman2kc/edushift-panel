@@ -422,7 +422,7 @@ export const generatePDFBlob = (
       
       if (title.includes('Jurnal')) {
         // Journal reports: Two signatures side by side
-        const leftColumnX = template.layout.margins.left;
+        const leftColumnX = template.layout.margins.left + 25; // Shifted right to leave space for stamp
         const rightColumnX = pageWidth - 80;
         
         // Left side: Pejabat Penilai (Principal) - NO DATE
