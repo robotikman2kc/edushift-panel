@@ -86,6 +86,7 @@ interface DataTableProps {
   enableCheckbox?: boolean;
   tableId?: string; // ID unik untuk menyimpan preferences
   additionalPDFInfo?: { kelas?: string; bulan?: string }; // For passing additional info to PDF
+  getRowClassName?: (item: any) => string; // Function to add custom row styling
 }
 
 export function DataTable({
@@ -103,6 +104,7 @@ export function DataTable({
   title,
   enableCheckbox = false,
   tableId = 'default', // Default ID jika tidak dispesifikkan
+  getRowClassName,
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<string>("");
@@ -715,9 +717,14 @@ export function DataTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedData.map((item, index) => (
-                    <TableRow key={item.id || index} className={getRowHeightClass()}>
-                      {enableCheckbox && (
+                  paginatedData.map((item, index) => {
+                    const customRowClassName = getRowClassName ? getRowClassName(item) : '';
+                    return (
+                      <TableRow 
+                        key={item.id || index} 
+                        className={`${getRowHeightClass()} ${customRowClassName}`}
+                      >
+                        {enableCheckbox && (
                         <TableCell className={getCellPaddingClass()}>
                           <Checkbox
                             checked={selectedIds.has(item.id)}
@@ -787,7 +794,8 @@ export function DataTable({
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
+                  );
+                  })
                 )}
               </TableBody>
             </Table>

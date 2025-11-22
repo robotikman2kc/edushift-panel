@@ -5,7 +5,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { isHariLiburKerja, generateHolidayTemplate } from "@/lib/hariLiburUtils";
+import { isHariLiburKerja, generateHolidayTemplate, isHariLibur } from "@/lib/hariLiburUtils";
 import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -1238,6 +1238,7 @@ const JurnalGuru = () => {
                   no: index + 1,
                   tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
                   jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
+                  _originalDate: item.tanggal, // Keep original date for holiday check
                 }))}
                 columns={columns}
                 loading={loading}
@@ -1248,6 +1249,16 @@ const JurnalGuru = () => {
                 formFields={[]}
                 additionalPDFInfo={{
                   bulan: `${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][parseInt(filterMonth)]} ${filterYear}`
+                }}
+                getRowClassName={(item) => {
+                  if (item._originalDate) {
+                    const date = new Date(item._originalDate);
+                    const holiday = isHariLibur(date);
+                    if (holiday) {
+                      return 'bg-amber-500/10 hover:bg-amber-500/20';
+                    }
+                  }
+                  return '';
                 }}
               />
             </CardContent>
