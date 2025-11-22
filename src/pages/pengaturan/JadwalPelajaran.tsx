@@ -27,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
@@ -74,7 +73,6 @@ export default function JadwalPelajaran() {
   const [loading, setLoading] = useState(true);
   const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   const [activeSemester, setActiveSemester] = useState("");
-  const [calendarActiveSemester, setCalendarActiveSemester] = useState("");
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
@@ -99,12 +97,6 @@ export default function JadwalPelajaran() {
       const semester = await getActiveSemester();
       setActiveTahunAjaran(year);
       setActiveSemester(semester);
-      
-      // Get calendar active semester
-      const settings = await indexedDB.select('pengaturan');
-      const calendarSemesterSetting = settings.find((s: any) => s.key === 'active_semester');
-      setCalendarActiveSemester(calendarSemesterSetting?.value || semester);
-      
       fetchData(year, semester);
     };
     initData();
@@ -440,11 +432,10 @@ export default function JadwalPelajaran() {
               </Select>
             </div>
             <Button 
-              variant={activeSemester === calendarActiveSemester ? "default" : "outline"}
+              variant="outline"
               onClick={async () => {
                 try {
                   await setActiveAcademicSemester(activeSemester);
-                  setCalendarActiveSemester(activeSemester);
                   toast({
                     title: "Berhasil",
                     description: `Semester ${activeSemester} berhasil diaktifkan untuk kalender`,
