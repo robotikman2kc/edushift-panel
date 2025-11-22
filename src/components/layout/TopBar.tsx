@@ -5,6 +5,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AcademicYearSelector } from "@/components/common/AcademicYearSelector";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, Circle, Clock, Calendar, RotateCcw, AlertTriangle, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
+import { User, Settings, Circle, Clock, Calendar as CalendarIcon, RotateCcw, AlertTriangle, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +23,7 @@ import { opfsStorage } from "@/lib/opfsStorage";
 import { format, differenceInDays } from "date-fns";
 import { id } from "date-fns/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 export function TopBar() {
   const navigate = useNavigate();
@@ -279,10 +282,23 @@ export function TopBar() {
               
               {/* Date & Time - Hidden on tablets */}
               <div className="hidden lg:flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span className="truncate">{format(currentTime, "EEEE, dd MMMM yyyy", { locale: id })}</span>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-1 h-8 px-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      <span className="truncate">{format(currentTime, "EEEE, dd MMMM yyyy", { locale: id })}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={currentTime}
+                      onSelect={(date) => date && setCurrentTime(date)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   <span>{format(currentTime, "HH:mm:ss")}</span>

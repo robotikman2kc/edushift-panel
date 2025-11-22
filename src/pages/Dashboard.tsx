@@ -8,15 +8,13 @@ import { NoTaskWidget } from "@/components/dashboard/NoTaskWidget";
 import { MissedExamWidget } from "@/components/dashboard/MissedExamWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   Users, 
   UserCheck, 
   GraduationCap, 
   BookOpen,
   TrendingUp,
-  Calendar as CalendarIcon,
+  Calendar,
   FileText,
   BarChart3,
   Download,
@@ -34,15 +32,11 @@ import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
   const { toast } = useToast();
-  
-  // State untuk tanggal yang dipilih
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // State untuk data statistik
   const [totalSiswa, setTotalSiswa] = useState(0);
@@ -59,7 +53,7 @@ const Dashboard = () => {
     fetchStatistics();
     fetchTodaySchedule();
     fetchCalendarNotes();
-  }, [selectedDate]);
+  }, []);
 
   const fetchStatistics = async () => {
     try {
@@ -105,8 +99,9 @@ const Dashboard = () => {
   const fetchCalendarNotes = async () => {
     try {
       setLoadingNotes(true);
-      const currentMonth = selectedDate.getMonth();
-      const currentYear = selectedDate.getFullYear();
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
       
       // Get first and last day of current month
       const firstDay = new Date(currentYear, currentMonth, 1);
@@ -146,8 +141,8 @@ const Dashboard = () => {
     try {
       setLoadingSchedule(true);
       const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-      const today = days[selectedDate.getDay()];
-      const todayDate = format(selectedDate, "yyyy-MM-dd");
+      const today = days[new Date().getDay()];
+      const todayDate = format(new Date(), "yyyy-MM-dd");
       
       const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
       const timeSlots = await indexedDB.select("jam_pelajaran");
@@ -257,39 +252,20 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between">
         <PageHeader 
           title="Dashboard" 
           description="Selamat datang di Sistem Administrasi Sekolah"
         />
-        <div className="flex items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {format(selectedDate, "dd MMM yyyy", { locale: idLocale })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-          <Button 
-            onClick={() => navigate('/jurnal/jurnal-guru')}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <BookMarked className="h-4 w-4" />
-            Jurnal Guru
-          </Button>
-        </div>
+        <Button 
+          onClick={() => navigate('/jurnal/jurnal-guru')}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <BookMarked className="h-4 w-4" />
+          Jurnal Guru
+        </Button>
       </div>
       
       {/* Stats Cards */}
@@ -330,7 +306,7 @@ const Dashboard = () => {
             <CardTitle className="flex items-center justify-between gap-2 text-base">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Jadwal - {format(selectedDate, "EEEE, dd MMM yyyy", { locale: idLocale })}
+                Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMM yyyy", { locale: idLocale })}
               </div>
               <JurnalStatusWidget />
             </CardTitle>
