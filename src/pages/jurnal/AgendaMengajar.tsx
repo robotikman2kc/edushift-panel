@@ -976,6 +976,22 @@ const AgendaMengajar = () => {
               </Select>
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="edit-jenis-pembelajaran">Jenis Pembelajaran</Label>
+              <Select
+                value={formData.jenis_pembelajaran}
+                onValueChange={(value) => setFormData({ ...formData, jenis_pembelajaran: value })}
+              >
+                <SelectTrigger id="edit-jenis-pembelajaran">
+                  <SelectValue placeholder="Pilih jenis pembelajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Penilaian Harian">Penilaian Harian</SelectItem>
+                  <SelectItem value="Kegiatan Belajar Mengajar">Kegiatan Belajar Mengajar</SelectItem>
+                  <SelectItem value="Praktek">Praktek</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="edit-materi">Materi *</Label>
               <Textarea
                 id="edit-materi"
