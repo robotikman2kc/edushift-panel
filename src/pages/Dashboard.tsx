@@ -8,6 +8,7 @@ import { NoTaskWidget } from "@/components/dashboard/NoTaskWidget";
 import { MissedExamWidget } from "@/components/dashboard/MissedExamWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   Users, 
   UserCheck, 
@@ -286,46 +287,58 @@ const Dashboard = () => {
           title="Dashboard" 
           description="Selamat datang di Sistem Administrasi Sekolah"
         />
-        <Button 
-          onClick={() => navigate('/jurnal/jurnal-guru')}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <BookMarked className="h-4 w-4" />
-          Jurnal Guru
-        </Button>
-      </div>
-      
-      {/* Compact Stats Card */}
-      {loading ? (
-        <LoadingSkeleton type="stats" />
-      ) : (
-        <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {stats.map((stat, index) => {
-                const IconComponent = stat.icon;
-                return (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${stat.bgColor} flex-shrink-0`}>
-                      <IconComponent className={`h-4 w-4 ${stat.color}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground truncate">
-                        {stat.title}
-                      </p>
-                      <p className="text-lg font-bold text-foreground">
-                        {stat.value}
-                      </p>
-                    </div>
+        <div className="flex items-center gap-2">
+          {/* Stats Popover Button */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Statistik
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Card className="border-0 shadow-none">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-4 min-w-[300px]">
+                    {stats.map((stat, index) => {
+                      const IconComponent = stat.icon;
+                      return (
+                        <div key={index} className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${stat.bgColor} flex-shrink-0`}>
+                            <IconComponent className={`h-4 w-4 ${stat.color}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground truncate">
+                              {stat.title}
+                            </p>
+                            <p className="text-lg font-bold text-foreground">
+                              {stat.value}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                </CardContent>
+              </Card>
+            </PopoverContent>
+          </Popover>
+          
+          <Button 
+            onClick={() => navigate('/jurnal/jurnal-guru')}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <BookMarked className="h-4 w-4" />
+            Jurnal Guru
+          </Button>
+        </div>
+      </div>
 
       {/* Today's Schedule & PWA Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
