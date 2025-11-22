@@ -55,11 +55,13 @@ import * as XLSX from 'xlsx';
 import { PDFTemplateSelector } from "@/components/common/PDFTemplateSelector";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { defaultTemplate, PDFTemplate } from "@/lib/pdfTemplates";
+import { cn } from "@/lib/utils";
 
 interface Column {
   key: string;
   label: string;
   sortable?: boolean;
+  align?: 'left' | 'center' | 'right';
 }
 
 interface FormField {
@@ -690,10 +692,16 @@ export function DataTable({
                   {columns.map((column) => (
                     <TableHead
                       key={column.key}
-                      className={column.sortable ? "cursor-pointer hover:bg-muted/50" : ""}
+                      className={cn(
+                        column.sortable ? "cursor-pointer hover:bg-muted/50" : "",
+                        column.align === 'center' ? "text-center" : column.align === 'right' ? "text-right" : "text-left"
+                      )}
                       onClick={() => column.sortable && handleSort(column.key)}
                     >
-                      <div className="flex items-center">
+                      <div className={cn(
+                        "flex items-center",
+                        column.align === 'center' ? "justify-center" : column.align === 'right' ? "justify-end" : "justify-start"
+                      )}>
                         {column.label}
                         {column.sortable && sortColumn === column.key && (
                           <span className="ml-1">
@@ -740,7 +748,10 @@ export function DataTable({
                           <TableCell 
                             key={column.key}
                             onDoubleClick={() => column.key !== 'no' && onEdit && handleCellEdit(item.id, column.key, item[column.key] || "")}
-                            className={`cursor-pointer hover:bg-muted/30 transition-colors ${getCellPaddingClass()}`}
+                            className={cn(
+                              `cursor-pointer hover:bg-muted/30 transition-colors ${getCellPaddingClass()}`,
+                              column.align === 'center' ? "text-center" : column.align === 'right' ? "text-right" : "text-left"
+                            )}
                           >
                             {isEditing ? (
                               <div className="flex gap-1">

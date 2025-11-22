@@ -673,11 +673,11 @@ const JurnalGuru = () => {
   };
 
   const columns = [
-    { key: "no", label: "No", sortable: false },
-    { key: "tanggal", label: "Tanggal", sortable: true },
-    { key: "uraian_kegiatan", label: "Uraian Kegiatan", sortable: true },
-    { key: "volume", label: "Volume", sortable: true },
-    { key: "satuan_hasil", label: "Satuan Hasil", sortable: false },
+    { key: "no", label: "No", sortable: false, align: 'center' as const },
+    { key: "tanggal", label: "Tanggal", sortable: true, align: 'center' as const },
+    { key: "uraian_kegiatan", label: "Uraian Kegiatan", sortable: true, align: 'left' as const },
+    { key: "volume", label: "Volume", sortable: true, align: 'center' as const },
+    { key: "satuan_hasil", label: "Satuan Hasil", sortable: false, align: 'left' as const },
   ];
 
   const handleAddNew = () => {
