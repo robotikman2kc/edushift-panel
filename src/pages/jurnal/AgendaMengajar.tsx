@@ -557,80 +557,82 @@ const AgendaMengajar = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="tanggal" className="text-sm font-medium">Tanggal *</Label>
-                <Input
-                  id="tanggal"
-                  type="date"
-                  value={formData.tanggal}
-                  onChange={(e) => {
-                    const newDate = e.target.value;
-                    setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
-                    filterByDate(newDate);
-                  }}
-                  className="w-full"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="kelas" className="text-sm font-medium">Kelas *</Label>
-                <Select
-                  value={formData.kelas_id}
-                  onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
-                  disabled={!formData.tanggal || filteredKelasList.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal" : "Pilih kelas"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredKelasList.map((kelas) => (
-                      <SelectItem key={kelas.id} value={kelas.id}>
-                        {kelas.nama_kelas}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tanggal" className="text-sm font-medium">Tanggal *</Label>
+                  <Input
+                    id="tanggal"
+                    type="date"
+                    value={formData.tanggal}
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setFormData({ ...formData, tanggal: newDate, kelas_id: '', mata_pelajaran_id: '' });
+                      filterByDate(newDate);
+                    }}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="kelas" className="text-sm font-medium">Kelas *</Label>
+                  <Select
+                    value={formData.kelas_id}
+                    onValueChange={(value) => setFormData({ ...formData, kelas_id: value })}
+                    disabled={!formData.tanggal || filteredKelasList.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal dahulu" : filteredKelasList.length === 0 ? "Tidak ada jadwal" : "Pilih kelas"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredKelasList.map((kelas) => (
+                        <SelectItem key={kelas.id} value={kelas.id}>
+                          {kelas.nama_kelas}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mata_pelajaran" className="text-sm font-medium">Mata Pelajaran *</Label>
+                  <Select
+                    value={formData.mata_pelajaran_id}
+                    onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
+                    disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal" : "Pilih mata pelajaran"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredMataPelajaranList.map((mapel) => (
+                        <SelectItem key={mapel.id} value={mapel.id}>
+                          {mapel.nama_mata_pelajaran}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="jenis-pembelajaran" className="text-sm font-medium">Jenis Pembelajaran</Label>
+                  <Select
+                    value={formData.jenis_pembelajaran}
+                    onValueChange={(value) => setFormData({ ...formData, jenis_pembelajaran: value })}
+                  >
+                    <SelectTrigger id="jenis-pembelajaran">
+                      <SelectValue placeholder="Pilih jenis pembelajaran" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Penilaian Harian">Penilaian Harian</SelectItem>
+                      <SelectItem value="Kegiatan Belajar Mengajar">Kegiatan Belajar Mengajar</SelectItem>
+                      <SelectItem value="Praktek">Praktek</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mata_pelajaran" className="text-sm font-medium">Mata Pelajaran *</Label>
-                <Select
-                  value={formData.mata_pelajaran_id}
-                  onValueChange={(value) => setFormData({ ...formData, mata_pelajaran_id: value })}
-                  disabled={!formData.tanggal || filteredMataPelajaranList.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={!formData.tanggal ? "Pilih tanggal dahulu" : filteredMataPelajaranList.length === 0 ? "Tidak ada jadwal" : "Pilih mata pelajaran"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredMataPelajaranList.map((mapel) => (
-                      <SelectItem key={mapel.id} value={mapel.id}>
-                        {mapel.nama_mata_pelajaran}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="jenis-pembelajaran" className="text-sm font-medium">Jenis Pembelajaran</Label>
-                <Select
-                  value={formData.jenis_pembelajaran}
-                  onValueChange={(value) => setFormData({ ...formData, jenis_pembelajaran: value })}
-                >
-                  <SelectTrigger id="jenis-pembelajaran">
-                    <SelectValue placeholder="Pilih jenis" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Penilaian Harian">Penilaian Harian</SelectItem>
-                    <SelectItem value="Kegiatan Belajar Mengajar">Kegiatan Belajar Mengajar</SelectItem>
-                    <SelectItem value="Praktek">Praktek</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 md:col-span-4">
                 <Label htmlFor="materi" className="text-sm font-medium">Materi *</Label>
                 <Textarea
                   id="materi"
@@ -642,7 +644,7 @@ const AgendaMengajar = () => {
                 />
               </div>
 
-              <div className="space-y-2 md:col-span-4">
+              <div className="space-y-2">
                 <Label htmlFor="keterangan" className="text-sm font-medium">Keterangan</Label>
                 <Textarea
                   id="keterangan"
