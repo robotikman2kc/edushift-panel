@@ -479,7 +479,13 @@ const AgendaMengajar = () => {
         };
       }
 
-      const blob = generatePDFBlob(exportData, exportColumns, title, customTemplate);
+      const blob = generatePDFBlob(
+        exportData, 
+        exportColumns, 
+        title, 
+        customTemplate,
+        { bulan: periodName }
+      );
       
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
