@@ -1251,13 +1251,23 @@ const JurnalGuru = () => {
                   bulan: `${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][parseInt(filterMonth)]} ${filterYear}`
                 }}
                 getRowClassName={(item) => {
+                  // Check if it's a national holiday by date
+                  let isHoliday = false;
                   if (item._originalDate) {
                     const date = new Date(item._originalDate);
                     const holiday = isHariLibur(date);
                     if (holiday) {
-                      return 'bg-amber-500/10 hover:bg-amber-500/20';
+                      isHoliday = true;
                     }
                   }
+                  
+                  // Also check if the category is "Libur Nasional"
+                  const isLiburNasionalCategory = item.jenis_kegiatan?.toLowerCase().includes('libur nasional');
+                  
+                  if (isHoliday || isLiburNasionalCategory) {
+                    return 'bg-amber-500/10 hover:bg-amber-500/20';
+                  }
+                  
                   return '';
                 }}
               />
