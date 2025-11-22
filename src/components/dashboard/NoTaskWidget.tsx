@@ -149,13 +149,11 @@ export const NoTaskWidget = () => {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between gap-2 text-base">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-orange-500" />
-            Nilai Kosong
-          </div>
-          <Badge variant="secondary" className="text-xs">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          Nilai Kosong
+          <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
             {noTaskStudents.length}
           </Badge>
         </CardTitle>
