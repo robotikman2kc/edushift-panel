@@ -50,16 +50,13 @@ import { Separator } from "@/components/ui/separator";
 import { QuickMenuManager } from "./QuickMenuManager";
 import { useState, useEffect } from "react";
 
-const mainMenuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Kalender", url: "/kalender", icon: CalendarDays },
-];
-
 const menuItems = [
   {
     title: "PENGATURAN",
     icon: Settings,
     items: [
+      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Kalender", url: "/kalender", icon: CalendarDays },
       { title: "Daftar Guru", url: "/pengaturan/guru", icon: UserCheck },
       { title: "Daftar Kelas", url: "/pengaturan/kelas", icon: GraduationCap },
       { title: "Daftar Siswa", url: "/pengaturan/siswa", icon: Users },
@@ -135,7 +132,7 @@ export function AppSidebar() {
   
   // Get all available menu items for quick menu
   const getAllMenuItems = () => {
-    const allItems = [...mainMenuItems];
+    const allItems: any[] = [];
     menuItems.forEach((group) => {
       allItems.push(...group.items);
     });
@@ -366,30 +363,6 @@ export function AppSidebar() {
             <Separator className="my-2" />
           </>
         )}
-
-        {/* Main Menu Items */}
-        <SidebarGroup className="py-0 mb-2">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map((item) => {
-                const ItemIcon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="h-10">
-                      <NavLink 
-                        to={item.url} 
-                        className={getNavCls(isActive(item.url))}
-                      >
-                        <ItemIcon className="h-4 w-4" />
-                        {!collapsed && <span className="text-sm font-medium">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
         {/* Grouped Menu Items */}
         {menuItems.map((group) => {
