@@ -197,9 +197,13 @@ const JurnalGuru = () => {
       const existingJurnal = await indexedDB.select("jurnal");
       const existingDates = new Set(existingJurnal.map((j: any) => j.tanggal));
       
-      // Get current year and next year
+      // Get current date (without time)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Only check current year and previous year
       const currentYear = new Date().getFullYear();
-      const years = [currentYear, currentYear + 1];
+      const years = [currentYear - 1, currentYear];
       
       let autoCreatedCount = 0;
       
@@ -210,6 +214,9 @@ const JurnalGuru = () => {
           );
           
           for (const holidayDate of holidays) {
+            // Only process holidays that are today or in the past
+            if (holidayDate > today) continue;
+            
             const { isHariLiburKerja, generateHolidayTemplate } = await import("@/lib/hariLiburUtils");
             const holiday = isHariLiburKerja(holidayDate);
             
