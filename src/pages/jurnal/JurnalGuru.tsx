@@ -43,7 +43,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { cn } from "@/lib/utils";
@@ -114,6 +125,8 @@ const JurnalGuru = () => {
   const [customTemplates, setCustomTemplates] = useState<CustomTemplate[]>([]);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [showTemplateConfirmDialog, setShowTemplateConfirmDialog] = useState(false);
+  const [selectedTemplateToApply, setSelectedTemplateToApply] = useState<CustomTemplate | null>(null);
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -421,14 +434,21 @@ const JurnalGuru = () => {
     });
   };
 
-  const applyCustomTemplate = async (template: CustomTemplate) => {
+  const openTemplateConfirmDialog = (template: CustomTemplate) => {
+    setSelectedTemplateToApply(template);
+    setShowTemplateConfirmDialog(true);
+  };
+
+  const applyCustomTemplate = async () => {
+    if (!selectedTemplateToApply) return;
+    
     try {
       const jurnalData = {
         tanggal: format(new Date(), "yyyy-MM-dd"),
-        jenis_kegiatan_id: template.jenis_kegiatan_id,
-        uraian_kegiatan: template.uraian,
-        volume: template.volume,
-        satuan_hasil: template.satuan,
+        jenis_kegiatan_id: selectedTemplateToApply.jenis_kegiatan_id,
+        uraian_kegiatan: selectedTemplateToApply.uraian,
+        volume: selectedTemplateToApply.volume,
+        satuan_hasil: selectedTemplateToApply.satuan,
       };
 
       const result = await indexedDB.insert("jurnal", jurnalData);
@@ -436,10 +456,12 @@ const JurnalGuru = () => {
       
       toast({
         title: "Berhasil",
-        description: "Jurnal berhasil ditambahkan",
+        description: "Jurnal berhasil ditambahkan dari template",
       });
 
       fetchData();
+      setShowTemplateConfirmDialog(false);
+      setSelectedTemplateToApply(null);
     } catch (error) {
       console.error("Error applying template:", error);
       toast({
@@ -1288,7 +1310,7 @@ const JurnalGuru = () => {
                         variant="outline"
                         size="sm"
                         className="w-full"
-                        onClick={() => applyCustomTemplate(template)}
+                        onClick={() => openTemplateConfirmDialog(template)}
                       >
                         {template.nama}
                       </Button>
@@ -1591,6 +1613,38 @@ const JurnalGuru = () => {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Template Confirmation Dialog */}
+      <AlertDialog open={showTemplateConfirmDialog} onOpenChange={setShowTemplateConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda akan menambahkan jurnal dengan template "{selectedTemplateToApply?.nama}".
+              <div className="mt-4 space-y-2 p-4 bg-muted rounded-md text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium">Uraian:</span>
+                  <span className="text-foreground">{selectedTemplateToApply?.uraian}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Volume:</span>
+                  <span className="text-foreground">{selectedTemplateToApply?.volume} {selectedTemplateToApply?.satuan}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Tanggal:</span>
+                  <span className="text-foreground">{format(new Date(), "dd/MM/yyyy")}</span>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={applyCustomTemplate}>
+              Tambahkan ke Jurnal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
