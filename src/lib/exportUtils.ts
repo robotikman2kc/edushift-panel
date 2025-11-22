@@ -269,32 +269,29 @@ export const generatePDFBlob = (
       },
       margin: template.layout.margins,
       didDrawCell: (cellData) => {
-        // Color rows for national holidays in journal reports
+        // Color rows for highlighted kegiatan in journal reports
         if (title.includes('Jurnal') && cellData.section === 'body') {
           const rowIndex = cellData.row.index;
           const originalItem = data[rowIndex]; // Access original data array
           
-          // Check if this row is a national holiday
-          let isHoliday = false;
+          // Check if this row should be highlighted
+          let shouldHighlight = false;
           
-          // Check by date - look for _originalDate in the data
-          if (originalItem._originalDate) {
+          // Primary check: use_highlight flag from jenis kegiatan
+          if (originalItem._useHighlight === true) {
+            shouldHighlight = true;
+          }
+          
+          // Backwards compatibility: Check by date - look for _originalDate in the data
+          if (!shouldHighlight && originalItem._originalDate) {
             const date = new Date(originalItem._originalDate);
             if (isHariLibur(date)) {
-              isHoliday = true;
+              shouldHighlight = true;
             }
           }
           
-          // Also check by category (jenis_kegiatan contains "Libur Nasional" or "Cuti")
-          if (originalItem.jenis_kegiatan && typeof originalItem.jenis_kegiatan === 'string') {
-            const lowerKegiatan = originalItem.jenis_kegiatan.toLowerCase();
-            if (lowerKegiatan.includes('libur nasional') || lowerKegiatan.includes('cuti')) {
-              isHoliday = true;
-            }
-          }
-          
-          // Apply yellow background to the entire row if it's a holiday
-          if (isHoliday) {
+          // Apply yellow background to the entire row if it should be highlighted
+          if (shouldHighlight) {
             doc.setFillColor(255, 237, 213); // Light amber/yellow color
             doc.rect(cellData.cell.x, cellData.cell.y, cellData.cell.width, cellData.cell.height, 'F');
             
