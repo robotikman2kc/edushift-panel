@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper } from "lucide-react";
+import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isHariLiburKerja, generateHolidayTemplate } from "@/lib/hariLiburUtils";
 import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
@@ -94,6 +94,9 @@ const JurnalGuru = () => {
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [currentHoliday, setCurrentHoliday] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [mataPelajaran, setMataPelajaran] = useState<any[]>([]);
+  const [kelas, setKelas] = useState<any[]>([]);
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -299,8 +302,14 @@ const JurnalGuru = () => {
         a.nama_kegiatan.localeCompare(b.nama_kegiatan)
       );
 
+      // Fetch mata pelajaran dan kelas untuk template
+      const mapelData = await indexedDB.select("mata_pelajaran");
+      const kelasData = await indexedDB.select("kelas");
+
       setJurnal(sortedJurnal);
       setJenisKegiatan(sortedKegiatan);
+      setMataPelajaran(mapelData);
+      setKelas(kelasData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -465,11 +474,62 @@ const JurnalGuru = () => {
   const handleAddNew = () => {
     setSelectedJurnal(null);
     setCurrentHoliday(null);
+    setSelectedTemplate("");
     jurnalForm.reset({
       tanggal: new Date(),
       volume: 0,
     });
     setShowJurnalDialog(true);
+  };
+
+  const applyTemplate = (template: string, subType?: string, mapelId?: string, kelasId?: string) => {
+    setSelectedTemplate(template);
+    
+    // Find or create jenis kegiatan based on template
+    let jenisKegiatanId = "";
+    let uraian = "";
+    let volume = 1;
+    let satuan = "kegiatan";
+
+    if (template === "rapat") {
+      const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
+      jenisKegiatanId = rapatKegiatan?.id || jenisKegiatan[0]?.id || "";
+      uraian = "Rapat";
+      satuan = "kali";
+    } else if (template === "upacara") {
+      const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
+      jenisKegiatanId = upacaraKegiatan?.id || jenisKegiatan[0]?.id || "";
+      
+      if (subType === "senin") {
+        uraian = "Upacara Bendera Hari Senin";
+      } else if (subType) {
+        uraian = `Upacara Peringatan ${subType}`;
+      } else {
+        uraian = "Upacara";
+      }
+      satuan = "kali";
+    } else if (template === "koreksi") {
+      const koreksiKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("koreksi") || k.nama_kegiatan.toLowerCase().includes("tugas"));
+      jenisKegiatanId = koreksiKegiatan?.id || jenisKegiatan[0]?.id || "";
+      
+      const mapel = mataPelajaran.find(m => m.id === mapelId);
+      const kelasData = kelas.find(k => k.id === kelasId);
+      
+      if (mapel && kelasData) {
+        uraian = `Mengkoreksi Tugas/Soal ${mapel.nama_mata_pelajaran} - Kelas ${kelasData.nama_kelas}`;
+        const siswaCount = kelasData.kapasitas || 30;
+        volume = siswaCount;
+        satuan = "lembar";
+      } else {
+        uraian = "Mengkoreksi Tugas/Soal";
+        satuan = "lembar";
+      }
+    }
+
+    jurnalForm.setValue("jenis_kegiatan_id", jenisKegiatanId);
+    jurnalForm.setValue("uraian_kegiatan", uraian);
+    jurnalForm.setValue("volume", volume);
+    jurnalForm.setValue("satuan_hasil", satuan);
   };
 
   return (
@@ -635,7 +695,7 @@ const JurnalGuru = () => {
       </Tabs>
 
       <Dialog open={showJurnalDialog} onOpenChange={setShowJurnalDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedJurnal ? "Edit Jurnal" : "Tambah Jurnal"}
@@ -644,6 +704,107 @@ const JurnalGuru = () => {
               Isi form untuk {selectedJurnal ? "mengedit" : "menambahkan"} jurnal kegiatan
             </DialogDescription>
           </DialogHeader>
+          
+          {!selectedJurnal && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Template Kegiatan Cepat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => applyTemplate("rapat")}
+                    className={cn(selectedTemplate === "rapat" && "border-primary bg-primary/10")}
+                  >
+                    Rapat
+                  </Button>
+                  
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => applyTemplate("upacara", "senin")}
+                    >
+                      Upacara Hari Senin
+                    </Button>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Peringatan khusus (opsional)"
+                        className="text-sm h-8"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const value = (e.target as HTMLInputElement).value;
+                            if (value) applyTemplate("upacara", value);
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={(e) => {
+                          const input = (e.currentTarget.previousSibling as HTMLInputElement);
+                          if (input?.value) applyTemplate("upacara", input.value);
+                        }}
+                      >
+                        Terapkan
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Mengkoreksi Tugas/Soal</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select onValueChange={(value) => {
+                        const kelasId = jurnalForm.watch("satuan_hasil");
+                        if (kelasId && kelasId !== "lembar") {
+                          applyTemplate("koreksi", undefined, value, kelasId);
+                        }
+                      }}>
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Pilih Mapel" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {mataPelajaran.map((mapel) => (
+                            <SelectItem key={mapel.id} value={mapel.id}>
+                              {mapel.nama_mata_pelajaran}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select onValueChange={(value) => {
+                        const mapelId = jurnalForm.watch("jenis_kegiatan_id");
+                        if (mapelId) {
+                          applyTemplate("koreksi", undefined, mapelId, value);
+                        }
+                      }}>
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Pilih Kelas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {kelas.map((k) => (
+                            <SelectItem key={k.id} value={k.id}>
+                              {k.nama_kelas}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <Form {...jurnalForm}>
             <form onSubmit={jurnalForm.handleSubmit(handleJurnalSubmit)} className="space-y-4">
               <FormField
