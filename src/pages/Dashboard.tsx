@@ -297,34 +297,34 @@ const Dashboard = () => {
         </Button>
       </div>
       
-      {/* Stats Cards */}
+      {/* Compact Stats Card */}
       {loading ? (
         <LoadingSkeleton type="stats" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => {
-            const IconComponent = stat.icon;
-            return (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">
+        <Card>
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {stats.map((stat, index) => {
+                const IconComponent = stat.icon;
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${stat.bgColor} flex-shrink-0`}>
+                      <IconComponent className={`h-4 w-4 ${stat.color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground truncate">
                         {stat.title}
                       </p>
                       <p className="text-lg font-bold text-foreground">
                         {stat.value}
                       </p>
                     </div>
-                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                      <IconComponent className={`h-4 w-4 ${stat.color}`} />
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Today's Schedule & PWA Controls */}
