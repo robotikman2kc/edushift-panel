@@ -89,6 +89,7 @@ const JurnalGuru = () => {
   const [selectedJurnal, setSelectedJurnal] = useState<JurnalEntry | null>(null);
   const [showJurnalDialog, setShowJurnalDialog] = useState(false);
   const [showKegiatanDialog, setShowKegiatanDialog] = useState(false);
+  const [showRapatDialog, setShowRapatDialog] = useState(false);
   const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>(new Date().getMonth().toString());
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
@@ -744,7 +745,7 @@ const JurnalGuru = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <Dialog>
+            <Dialog open={showRapatDialog} onOpenChange={setShowRapatDialog}>
               <DialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
                   Rapat
@@ -768,6 +769,7 @@ const JurnalGuru = () => {
                           if (e.key === "Enter") {
                             const value = (e.target as HTMLInputElement).value;
                             if (value) {
+                              setShowRapatDialog(false);
                               handleAddNew();
                               setTimeout(() => applyTemplate("rapat", "pembinaan", value), 100);
                               (e.target as HTMLInputElement).value = "";
@@ -779,6 +781,7 @@ const JurnalGuru = () => {
                         onClick={() => {
                           const input = document.getElementById("rapat-pembinaan") as HTMLInputElement;
                           if (input?.value) {
+                            setShowRapatDialog(false);
                             handleAddNew();
                             setTimeout(() => applyTemplate("rapat", "pembinaan", input.value), 100);
                             input.value = "";
@@ -811,6 +814,7 @@ const JurnalGuru = () => {
                           if (e.key === "Enter") {
                             const value = (e.target as HTMLInputElement).value;
                             if (value) {
+                              setShowRapatDialog(false);
                               handleAddNew();
                               setTimeout(() => applyTemplate("rapat", "biasa", value), 100);
                               (e.target as HTMLInputElement).value = "";
@@ -822,6 +826,7 @@ const JurnalGuru = () => {
                         onClick={() => {
                           const input = document.getElementById("rapat-biasa") as HTMLInputElement;
                           if (input?.value) {
+                            setShowRapatDialog(false);
                             handleAddNew();
                             setTimeout(() => applyTemplate("rapat", "biasa", input.value), 100);
                             input.value = "";
