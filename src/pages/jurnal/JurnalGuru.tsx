@@ -5,6 +5,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { isHariLiburKerja, generateHolidayTemplate, isHariLibur } from "@/lib/hariLiburUtils";
 import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -60,6 +61,7 @@ const jurnalSchema = z.object({
 const jenisKegiatanSchema = z.object({
   nama_kegiatan: z.string().min(1, "Nama kegiatan harus diisi"),
   deskripsi: z.string().optional(),
+  use_highlight: z.boolean().optional(),
 });
 
 type JurnalFormData = z.infer<typeof jurnalSchema>;
@@ -70,6 +72,7 @@ interface JurnalEntry {
   tanggal: string;
   jenis_kegiatan: {
     nama_kegiatan: string;
+    use_highlight?: boolean;
   };
   uraian_kegiatan: string;
   volume: number;
@@ -80,6 +83,7 @@ interface JenisKegiatan {
   id: string;
   nama_kegiatan: string;
   deskripsi: string;
+  use_highlight?: boolean;
 }
 
 interface CustomTemplate {
@@ -209,6 +213,21 @@ const JurnalGuru = () => {
       // Re-fetch after cleanup
       const cleanedData = await indexedDB.select("jenis_kegiatan");
       
+      // Migrate existing data to add use_highlight field
+      let needsUpdate = false;
+      for (const kegiatan of cleanedData) {
+        if (kegiatan.use_highlight === undefined) {
+          const normalizedName = kegiatan.nama_kegiatan.toLowerCase().trim();
+          // Auto-enable highlight for Libur Nasional and Cuti
+          const shouldHighlight = normalizedName === "libur nasional" || normalizedName === "cuti";
+          await indexedDB.update("jenis_kegiatan", kegiatan.id, {
+            ...kegiatan,
+            use_highlight: shouldHighlight,
+          });
+          needsUpdate = true;
+        }
+      }
+      
       // Check for Libur Nasional
       const liburNasionalExists = cleanedData.some(
         (k: any) => k.nama_kegiatan.toLowerCase().trim() === "libur nasional"
@@ -218,6 +237,7 @@ const JurnalGuru = () => {
         await indexedDB.insert("jenis_kegiatan", {
           nama_kegiatan: "Libur Nasional",
           deskripsi: "Hari libur nasional dan cuti bersama",
+          use_highlight: true,
         });
       }
       
@@ -230,11 +250,12 @@ const JurnalGuru = () => {
         await indexedDB.insert("jenis_kegiatan", {
           nama_kegiatan: "Cuti",
           deskripsi: "Cuti pegawai/guru",
+          use_highlight: true,
         });
       }
       
       // Refresh if we made any changes
-      if (duplicateIds.length > 0 || !liburNasionalExists || !cutiExists) {
+      if (duplicateIds.length > 0 || needsUpdate || !liburNasionalExists || !cutiExists) {
         await fetchData();
       }
     } catch (error) {
@@ -439,7 +460,8 @@ const JurnalGuru = () => {
           return {
             ...jurnal,
             jenis_kegiatan: {
-              nama_kegiatan: jenisKegiatan?.nama_kegiatan || ""
+              nama_kegiatan: jenisKegiatan?.nama_kegiatan || "",
+              use_highlight: jenisKegiatan?.use_highlight || false,
             }
           };
         })
@@ -876,6 +898,28 @@ const JurnalGuru = () => {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={kegiatanForm.control}
+                    name="use_highlight"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Beri warna pada jurnal dengan jenis kegiatan ini
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Baris jurnal akan ditampilkan dengan latar kuning di tabel dan PDF
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setShowKegiatanDialog(false)}>
                       Batal
@@ -1282,6 +1326,7 @@ const JurnalGuru = () => {
                   tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
                   jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
                   _originalDate: item.tanggal, // Keep original date for holiday check
+                  _useHighlight: item.jenis_kegiatan.use_highlight, // Keep highlight flag
                 }))}
                 columns={columns}
                 loading={loading}
@@ -1294,22 +1339,18 @@ const JurnalGuru = () => {
                   bulan: `${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][parseInt(filterMonth)]} ${filterYear}`
                 }}
                 getRowClassName={(item) => {
-                  // Check if it's a national holiday by date
-                  let isHoliday = false;
+                  // Check if this jenis kegiatan should be highlighted
+                  if (item._useHighlight) {
+                    return 'bg-amber-500/10 hover:bg-amber-500/20';
+                  }
+                  
+                  // Also check if it's a national holiday by date (backwards compatibility)
                   if (item._originalDate) {
                     const date = new Date(item._originalDate);
                     const holiday = isHariLibur(date);
                     if (holiday) {
-                      isHoliday = true;
+                      return 'bg-amber-500/10 hover:bg-amber-500/20';
                     }
-                  }
-                  
-                  // Also check if the category is "Libur Nasional" or "Cuti"
-                  const isLiburNasionalCategory = item.jenis_kegiatan?.toLowerCase().includes('libur nasional');
-                  const isCutiCategory = item.jenis_kegiatan?.toLowerCase().includes('cuti');
-                  
-                  if (isHoliday || isLiburNasionalCategory || isCutiCategory) {
-                    return 'bg-amber-500/10 hover:bg-amber-500/20';
                   }
                   
                   return '';
@@ -1323,10 +1364,14 @@ const JurnalGuru = () => {
           <Card>
             <CardContent className="pt-6">
               <DataTable
-                data={jenisKegiatan}
+                data={jenisKegiatan.map((item) => ({
+                  ...item,
+                  use_highlight_display: item.use_highlight ? '✓ Ya' : '✗ Tidak'
+                }))}
                 columns={[
                   { key: "nama_kegiatan", label: "Nama Kegiatan", sortable: true },
                   { key: "deskripsi", label: "Deskripsi", sortable: false },
+                  { key: "use_highlight_display", label: "Beri Warna", sortable: true },
                 ]}
                 loading={loading}
                 onDelete={handleDeleteKegiatan}
