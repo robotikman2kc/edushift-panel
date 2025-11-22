@@ -177,8 +177,8 @@ export const generatePDFBlob = (
     }
 
 
-    // Add teacher/employee info if available (skip for Agenda and Nilai reports)
-    if (template.teacherInfo && !title.includes('Agenda') && !title.includes('Nilai')) {
+    // Add teacher/employee info if available (skip for Agenda reports)
+    if (template.teacherInfo && !title.includes('Agenda')) {
       doc.setFontSize(template.styling.fontSize.header);
       doc.setTextColor(0, 0, 0);
       const infoY = currentY;
@@ -207,29 +207,21 @@ export const generatePDFBlob = (
         doc.text(schoolName, template.layout.margins.left + labelWidth + 3, currentY + 15);
         currentY += 20; // Reduced spacing before table
       } else if (title.includes('Nilai')) {
-        // Grade reports: Show subject info with aligned colons
+        // Grade reports: Show only subject and class info (no teacher name/NIP)
         const labelWidth = 35; // Fixed width for labels to align colons
         
-        doc.text('Guru', template.layout.margins.left, infoY);
+        doc.text('Mata Pelajaran', template.layout.margins.left, infoY);
         doc.text(':', template.layout.margins.left + labelWidth, infoY);
-        doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
-        
-        doc.text('NIP', template.layout.margins.left, infoY + 5);
-        doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
-        doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, infoY + 5);
-        
-        doc.text('Mata Pelajaran', template.layout.margins.left, infoY + 10);
-        doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
-        doc.text(template.teacherInfo.subject || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
+        doc.text(template.teacherInfo.subject || '-', template.layout.margins.left + labelWidth + 3, infoY);
         
         // Add Kelas info if available
         if (additionalInfo?.kelas) {
-          doc.text('Kelas', template.layout.margins.left, infoY + 15);
-          doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
-          doc.text(additionalInfo.kelas, template.layout.margins.left + labelWidth + 3, infoY + 15);
-          currentY += 23;
+          doc.text('Kelas', template.layout.margins.left, infoY + 5);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
+          doc.text(additionalInfo.kelas, template.layout.margins.left + labelWidth + 3, infoY + 5);
+          currentY += 13;
         } else {
-          currentY += 18;
+          currentY += 8;
         }
       }
     }
