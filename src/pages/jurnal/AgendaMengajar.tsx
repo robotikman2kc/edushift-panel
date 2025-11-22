@@ -46,6 +46,7 @@ interface AgendaMengajar {
   mata_pelajaran_id: string;
   materi: string;
   keterangan: string;
+  jenis_pembelajaran?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -85,6 +86,7 @@ const AgendaMengajar = () => {
     mata_pelajaran_id: '',
     materi: '',
     keterangan: '',
+    jenis_pembelajaran: '',
   });
 
 
@@ -103,6 +105,7 @@ const AgendaMengajar = () => {
           mata_pelajaran_id: mata_pelajaran_id || '',
           materi: '',
           keterangan: '',
+          jenis_pembelajaran: '',
         });
         
         setSelectedKelasFilter(kelas_id || 'all');
@@ -136,6 +139,7 @@ const AgendaMengajar = () => {
         mata_pelajaran_id: mata_pelajaran_id,
         materi: '',
         keterangan: '',
+        jenis_pembelajaran: '',
       });
       
       // Filter kelas and mata pelajaran based on today
@@ -215,6 +219,7 @@ const AgendaMengajar = () => {
       mata_pelajaran_id: '',
       materi: '',
       keterangan: '',
+      jenis_pembelajaran: '',
     });
     filterByDate(today);
   };
@@ -397,6 +402,7 @@ const AgendaMengajar = () => {
       mata_pelajaran_id: agenda.mata_pelajaran_id,
       materi: agenda.materi,
       keterangan: agenda.keterangan,
+      jenis_pembelajaran: agenda.jenis_pembelajaran || '',
     });
     filterByDate(agenda.tanggal);
     setIsEditDialogOpen(true);
@@ -606,6 +612,23 @@ const AgendaMengajar = () => {
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="jenis-pembelajaran" className="text-sm font-medium">Jenis Pembelajaran</Label>
+              <Select
+                value={formData.jenis_pembelajaran}
+                onValueChange={(value) => setFormData({ ...formData, jenis_pembelajaran: value })}
+              >
+                <SelectTrigger id="jenis-pembelajaran">
+                  <SelectValue placeholder="Pilih jenis pembelajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Penilaian Harian">Penilaian Harian</SelectItem>
+                  <SelectItem value="Kegiatan Belajar Mengajar">Kegiatan Belajar Mengajar</SelectItem>
+                  <SelectItem value="Praktek">Praktek</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="materi" className="text-sm font-medium">Materi *</Label>
               <Textarea
@@ -715,6 +738,7 @@ const AgendaMengajar = () => {
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Kelas</TableHead>
                     <TableHead>Mata Pelajaran</TableHead>
+                    <TableHead>Jenis Pembelajaran</TableHead>
                     <TableHead>Materi</TableHead>
                     <TableHead>Keterangan</TableHead>
                     <TableHead className="w-24">Aksi</TableHead>
@@ -730,6 +754,7 @@ const AgendaMengajar = () => {
                       </TableCell>
                       <TableCell>{getKelasName(agenda.kelas_id)}</TableCell>
                       <TableCell>{getMataPelajaranName(agenda.mata_pelajaran_id)}</TableCell>
+                      <TableCell>{agenda.jenis_pembelajaran || '-'}</TableCell>
                       <TableCell
                         onDoubleClick={() => handleCellEdit(agenda.id, 'materi', agenda.materi)}
                         className="cursor-pointer hover:bg-muted/30 transition-colors"

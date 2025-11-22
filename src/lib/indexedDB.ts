@@ -136,6 +136,7 @@ export interface AgendaMengajar extends BaseRecord {
   materi: string;
   keterangan: string;
   tahun_ajaran: string;
+  jenis_pembelajaran?: string;
 }
 
 export interface CatatanKalender extends BaseRecord {
