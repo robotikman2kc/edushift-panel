@@ -394,7 +394,8 @@ const LaporanPenilaian = () => {
         exportData, 
         exportColumns, 
         title, 
-        customTemplate
+        customTemplate,
+        { kelas: selectedKelasData?.nama_kelas }
       );
 
       if (!blob) {
