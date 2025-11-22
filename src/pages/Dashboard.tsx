@@ -348,7 +348,7 @@ const Dashboard = () => {
             <CardTitle className="flex items-center justify-between gap-2 text-base">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Jadwal - {format(selectedDate, "EEEE, dd MMM yyyy", { locale: idLocale })}
+                Jadwal hari ini - {format(selectedDate, "EEEE, dd MMM yyyy", { locale: idLocale })}
               </div>
               <JurnalStatusWidget />
             </CardTitle>
