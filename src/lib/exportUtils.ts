@@ -75,6 +75,19 @@ const hexToRgb = (hex: string): [number, number, number] => {
     : [59, 130, 246]; // default blue
 };
 
+const formatDateIndonesia = (date: Date): string => {
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+};
+
 export const generatePDFBlob = (
   data: any[],
   columns: ExportColumn[],
@@ -367,8 +380,8 @@ export const generatePDFBlob = (
         
         // Use custom signature date if provided, otherwise use current date
         const signatureDate = template.signatureDate 
-          ? new Date(template.signatureDate).toLocaleDateString('id-ID')
-          : new Date().toLocaleDateString('id-ID');
+          ? formatDateIndonesia(new Date(template.signatureDate))
+          : formatDateIndonesia(new Date());
         
         doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
         doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
@@ -385,8 +398,8 @@ export const generatePDFBlob = (
         
         // Use custom signature date if provided, otherwise use current date
         const signatureDate = template.signatureDate 
-          ? new Date(template.signatureDate).toLocaleDateString('id-ID')
-          : new Date().toLocaleDateString('id-ID');
+          ? formatDateIndonesia(new Date(template.signatureDate))
+          : formatDateIndonesia(new Date());
         
         const rightColumnX = pageWidth - 80;
         doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
