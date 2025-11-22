@@ -106,6 +106,21 @@ interface CustomTemplate {
   satuan: string;
 }
 
+
+const formatDateIndonesia = (date: Date | string): string => {
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const day = dateObj.getDate();
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+};
+
 const JurnalGuru = () => {
   const [jurnal, setJurnal] = useState<JurnalEntry[]>([]);
   const [jenisKegiatan, setJenisKegiatan] = useState<JenisKegiatan[]>([]);
@@ -1345,7 +1360,7 @@ const JurnalGuru = () => {
                 data={filteredJurnal.map((item, index) => ({
                   ...item,
                   no: index + 1,
-                  tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
+                  tanggal: formatDateIndonesia(item.tanggal),
                   jenis_kegiatan: item.jenis_kegiatan.nama_kegiatan,
                   _originalDate: item.tanggal, // Keep original date for holiday check
                   _useHighlight: item.jenis_kegiatan.use_highlight, // Keep highlight flag
