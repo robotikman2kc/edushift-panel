@@ -354,11 +354,6 @@ export function TopBar() {
               <AcademicYearSelector />
             </div>
             
-            {/* Welcome Text - Hidden on small/medium screens */}
-            <span className="text-sm text-muted-foreground hidden xl:block">
-              Selamat datang, Administrator
-            </span>
-            
             {/* Theme Toggle */}
             <Button
               variant="ghost"
