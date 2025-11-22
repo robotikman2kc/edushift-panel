@@ -433,7 +433,7 @@ export default function JadwalPelajaran() {
                     <div className="flex items-center justify-between w-full gap-3">
                       <span>Semester 1</span>
                       {calendarActiveSemester === "1" && (
-                        <Badge variant="secondary" className="text-xs ml-auto">Aktif</Badge>
+                        <Badge className="text-xs ml-auto bg-green-500 hover:bg-green-600 text-white">Aktif</Badge>
                       )}
                     </div>
                   </SelectItem>
@@ -441,7 +441,7 @@ export default function JadwalPelajaran() {
                     <div className="flex items-center justify-between w-full gap-3">
                       <span>Semester 2</span>
                       {calendarActiveSemester === "2" && (
-                        <Badge variant="secondary" className="text-xs ml-auto">Aktif</Badge>
+                        <Badge className="text-xs ml-auto bg-green-500 hover:bg-green-600 text-white">Aktif</Badge>
                       )}
                     </div>
                   </SelectItem>
