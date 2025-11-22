@@ -532,6 +532,47 @@ const JurnalGuru = () => {
     jurnalForm.setValue("satuan_hasil", satuan);
   };
 
+  const saveQuickJurnal = async (template: string, subType?: string) => {
+    try {
+      let jenisKegiatanId = "";
+      let uraian = "";
+      let volume = 1;
+      let satuan = "kegiatan";
+
+      if (template === "upacara" && subType === "senin") {
+        const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
+        jenisKegiatanId = upacaraKegiatan?.id || jenisKegiatan[0]?.id || "";
+        uraian = "Upacara Bendera Hari Senin";
+        satuan = "kali";
+      }
+
+      const jurnalData = {
+        tanggal: format(new Date(), "yyyy-MM-dd"),
+        jenis_kegiatan_id: jenisKegiatanId,
+        uraian_kegiatan: uraian,
+        volume: volume,
+        satuan_hasil: satuan,
+      };
+
+      const result = await indexedDB.insert("jurnal", jurnalData);
+      if (result.error) throw new Error(result.error);
+      
+      toast({
+        title: "Berhasil",
+        description: "Jurnal berhasil ditambahkan",
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error("Error saving quick jurnal:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan jurnal",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Status Jurnal Widget */}
@@ -657,7 +698,7 @@ const JurnalGuru = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -670,35 +711,40 @@ const JurnalGuru = () => {
               Rapat
             </Button>
             
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                handleAddNew();
-                setTimeout(() => applyTemplate("upacara", "senin"), 100);
-              }}
-            >
-              Upacara Senin
-            </Button>
-            
             <Dialog>
               <DialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
-                  Upacara Peringatan
+                  Upacara
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Upacara Peringatan</DialogTitle>
+                  <DialogTitle>Upacara</DialogTitle>
                   <DialogDescription>
-                    Masukkan nama peringatan khusus
+                    Pilih jenis upacara atau masukkan peringatan khusus
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={async () => {
+                      await saveQuickJurnal("upacara", "senin");
+                    }}
+                  >
+                    Upacara Hari Senin
+                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Atau
+                      </span>
+                    </div>
+                  </div>
                   <Input
                     id="upacara-peringatan"
-                    placeholder="Contoh: Hari Kemerdekaan"
+                    placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const value = (e.target as HTMLInputElement).value;
@@ -711,6 +757,7 @@ const JurnalGuru = () => {
                     }}
                   />
                   <Button
+                    variant="outline"
                     onClick={(e) => {
                       const input = document.getElementById("upacara-peringatan") as HTMLInputElement;
                       if (input?.value) {
@@ -720,7 +767,7 @@ const JurnalGuru = () => {
                       }
                     }}
                   >
-                    Terapkan
+                    Buat dengan Peringatan
                   </Button>
                 </div>
               </DialogContent>
