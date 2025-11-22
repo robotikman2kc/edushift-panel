@@ -295,17 +295,17 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Jurnal Status Widget */}
-      <JurnalStatusWidget />
-
       {/* Today's Schedule & PWA Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Schedule */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMMM yyyy", { locale: idLocale })}
+            <CardTitle className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMMM yyyy", { locale: idLocale })}
+              </div>
+              <JurnalStatusWidget />
             </CardTitle>
           </CardHeader>
           <CardContent>
