@@ -788,7 +788,7 @@ export default function JadwalPelajaran() {
               <p className="text-sm font-medium mb-2">Jadwal yang akan dihapus:</p>
               {conflictingSchedules.map((schedule, idx) => (
                 <div key={idx} className="text-sm text-muted-foreground mb-1">
-                  • Jam {schedule.jam_ke}{schedule.jumlah_jp > 1 && `-${schedule.jam_ke + schedule.jumlah_jp - 1}`} - {schedule.mata_pelajaran_nama} ({schedule.jumlah_jp} JP)
+                  • {schedule.kelas_nama} - Jam {schedule.jam_ke}{schedule.jumlah_jp > 1 && `-${schedule.jam_ke + schedule.jumlah_jp - 1}`} - {schedule.mata_pelajaran_nama} ({schedule.jumlah_jp} JP)
                 </div>
               ))}
             </div>
@@ -796,7 +796,7 @@ export default function JadwalPelajaran() {
             <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
               <p className="text-sm font-medium mb-2">Jadwal baru:</p>
               <div className="text-sm text-muted-foreground">
-                • Jam {selectedJamKe}{jumlahJP > 1 && `-${Number(selectedJamKe) + jumlahJP - 1}`} - {mataPelajaranList.find(mp => mp.id === selectedMataPelajaran)?.nama_mata_pelajaran} ({jumlahJP} JP)
+                • {kelasList.find(k => k.id === selectedKelas)?.nama_kelas} - Jam {selectedJamKe}{jumlahJP > 1 && `-${Number(selectedJamKe) + jumlahJP - 1}`} - {mataPelajaranList.find(mp => mp.id === selectedMataPelajaran)?.nama_mata_pelajaran} ({jumlahJP} JP)
               </div>
             </div>
           </div>
