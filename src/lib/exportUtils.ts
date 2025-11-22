@@ -7,6 +7,7 @@ import { isHariLibur } from './hariLiburUtils';
 export interface ExportColumn {
   key: string;
   label: string;
+  align?: 'left' | 'center' | 'right';
 }
 
 export const getCustomPDFTemplate = (templateType: 'attendance' | 'grade' | 'journal'): PDFTemplate => {
@@ -262,6 +263,23 @@ export const generatePDFBlob = (
     // Get row height from template settings
     const rowHeight = (template as any).tableSettings?.rowHeight || 8;
     
+    // Create column styles for alignment
+    const columnStyles: any = {
+      0: { halign: 'center' }, // No. column is always centered
+    };
+    
+    // Apply alignment for other columns
+    columnsWithoutNo.forEach((col, index) => {
+      const colIndex = index + 1; // +1 because column 0 is the 'No.' column
+      if (col.align === 'center') {
+        columnStyles[colIndex] = { halign: 'center' };
+      } else if (col.align === 'right') {
+        columnStyles[colIndex] = { halign: 'right' };
+      } else {
+        columnStyles[colIndex] = { halign: 'left' };
+      }
+    });
+
     autoTable(doc, {
       head: [tableHeaders],
       body: tableData,
@@ -281,7 +299,9 @@ export const generatePDFBlob = (
         minCellHeight: rowHeight,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
+        halign: 'center', // Center all headers
       },
+      columnStyles: columnStyles,
       alternateRowStyles: {
         fillColor: template.styling.secondaryColor
       },
