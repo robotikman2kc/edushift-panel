@@ -339,16 +339,6 @@ export function TopBar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
-            {/* Reset to Today Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleResetToToday}
-              className="h-8 w-8 p-0 flex-shrink-0"
-              title="Reset ke tanggal hari ini"
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </Button>
             {/* Academic Year Selector - Always visible but might be compact */}
             <div className="hidden sm:block">
               <AcademicYearSelector />
