@@ -164,14 +164,14 @@ export const generatePDFBlob = (
     }
 
 
-    // Add teacher/employee info if available
-    if (template.teacherInfo) {
+    // Add teacher/employee info if available (skip for Agenda reports)
+    if (template.teacherInfo && !title.includes('Agenda')) {
       doc.setFontSize(template.styling.fontSize.header);
       doc.setTextColor(0, 0, 0);
       const infoY = currentY;
       
-      if (title.includes('Jurnal') || title.includes('Agenda')) {
-        // Journal/Agenda reports: Show employee info left-aligned above table with aligned colons
+      if (title.includes('Jurnal')) {
+        // Journal reports: Show employee info left-aligned above table with aligned colons
         const labelWidth = 25; // Fixed width for labels to align colons
         const schoolName = template.schoolName || template.header?.schoolName || 'Sekolah';
         
@@ -420,8 +420,8 @@ export const generatePDFBlob = (
       const pageWidth = doc.internal.pageSize.getWidth();
       const signatureLocation = template.signatureLocation || 'Jakarta';
       
-      if (title.includes('Jurnal')) {
-        // Journal reports: Two signatures side by side
+      if (title.includes('Jurnal') || title.includes('Agenda')) {
+        // Journal/Agenda reports: Two signatures side by side
         const leftColumnX = template.layout.margins.left;
         const rightColumnX = pageWidth - 80;
         
@@ -441,6 +441,7 @@ export const generatePDFBlob = (
         // Right side: Pegawai Yang Dinilai (Teacher) - WITH DATE
         const teacherName = template.teacherInfo?.name || 'Guru';
         const teacherNIP = template.teacherInfo?.nip;
+        const teacherJabatan = template.teacherInfo?.jabatan;
         
         // Use custom signature date if provided, otherwise use current date
         const signatureDate = template.signatureDate 
@@ -449,6 +450,9 @@ export const generatePDFBlob = (
         
         doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
         doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
+        if (teacherJabatan) {
+          doc.text(teacherJabatan, rightColumnX, signatureStartY + 10);
+        }
         doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
         doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 30);
         if (teacherNIP) {

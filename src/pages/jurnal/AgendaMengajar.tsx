@@ -466,11 +466,10 @@ const AgendaMengajar = () => {
       
       let customTemplate = getCustomPDFTemplate('journal');
       
-      // Override reportTitle and remove teacherInfo for Agenda Mengajar
+      // Override reportTitle for Agenda Mengajar (keep teacherInfo for signature)
       customTemplate = {
         ...customTemplate,
-        reportTitle: 'LAPORAN DAFTAR AGENDA MENGAJAR',
-        teacherInfo: undefined // Remove teacher info from agenda report
+        reportTitle: 'LAPORAN DAFTAR AGENDA MENGAJAR'
       };
       
       if (signatureDate) {
