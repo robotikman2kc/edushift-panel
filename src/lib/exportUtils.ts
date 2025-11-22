@@ -244,7 +244,7 @@ export const generatePDFBlob = (
         doc.text(`Periode: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
         currentY += 5;
       }
-      currentY += 1; // Minimal spacing before table for agenda
+      currentY += 0.25; // Very minimal spacing before table for agenda
     } else {
       console.log('No additional info to add'); // Debug log
     }
