@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap } from "lucide-react";
+import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isHariLiburKerja, generateHolidayTemplate } from "@/lib/hariLiburUtils";
 import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
@@ -82,6 +82,15 @@ interface JenisKegiatan {
   deskripsi: string;
 }
 
+interface CustomTemplate {
+  id: string;
+  nama: string;
+  jenis_kegiatan_id: string;
+  uraian: string;
+  volume: number;
+  satuan: string;
+}
+
 const JurnalGuru = () => {
   const [jurnal, setJurnal] = useState<JurnalEntry[]>([]);
   const [jenisKegiatan, setJenisKegiatan] = useState<JenisKegiatan[]>([]);
@@ -98,6 +107,9 @@ const JurnalGuru = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [mataPelajaran, setMataPelajaran] = useState<any[]>([]);
   const [kelas, setKelas] = useState<any[]>([]);
+  const [customTemplates, setCustomTemplates] = useState<CustomTemplate[]>([]);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [templateName, setTemplateName] = useState("");
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -135,6 +147,7 @@ const JurnalGuru = () => {
     loadAvailableYears();
     ensureLiburNasionalExists();
     autoFillHariLibur(); // Auto-create entries for holidays
+    loadCustomTemplates();
   }, []);
 
   // Watch for tanggal changes and auto-fill if holiday (weekdays only)
@@ -277,6 +290,99 @@ const JurnalGuru = () => {
       setAvailableYears(years.sort((a, b) => a - b));
     } catch (error) {
       console.error("Error loading available years:", error);
+    }
+  };
+
+  const loadCustomTemplates = () => {
+    const saved = localStorage.getItem("custom_jurnal_templates");
+    if (saved) {
+      try {
+        setCustomTemplates(JSON.parse(saved));
+      } catch (error) {
+        console.error("Error loading custom templates:", error);
+      }
+    }
+  };
+
+  const saveCustomTemplate = () => {
+    if (!templateName.trim()) {
+      toast({
+        title: "Error",
+        description: "Nama template harus diisi",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const formData = jurnalForm.getValues();
+    if (!formData.jenis_kegiatan_id || !formData.uraian_kegiatan) {
+      toast({
+        title: "Error",
+        description: "Lengkapi data jurnal terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newTemplate: CustomTemplate = {
+      id: Date.now().toString(),
+      nama: templateName,
+      jenis_kegiatan_id: formData.jenis_kegiatan_id,
+      uraian: formData.uraian_kegiatan,
+      volume: formData.volume,
+      satuan: formData.satuan_hasil,
+    };
+
+    const updated = [...customTemplates, newTemplate];
+    setCustomTemplates(updated);
+    localStorage.setItem("custom_jurnal_templates", JSON.stringify(updated));
+    
+    toast({
+      title: "Berhasil",
+      description: "Template berhasil disimpan",
+    });
+    
+    setShowTemplateDialog(false);
+    setTemplateName("");
+  };
+
+  const deleteCustomTemplate = (id: string) => {
+    const updated = customTemplates.filter(t => t.id !== id);
+    setCustomTemplates(updated);
+    localStorage.setItem("custom_jurnal_templates", JSON.stringify(updated));
+    
+    toast({
+      title: "Berhasil",
+      description: "Template berhasil dihapus",
+    });
+  };
+
+  const applyCustomTemplate = async (template: CustomTemplate) => {
+    try {
+      const jurnalData = {
+        tanggal: format(new Date(), "yyyy-MM-dd"),
+        jenis_kegiatan_id: template.jenis_kegiatan_id,
+        uraian_kegiatan: template.uraian,
+        volume: template.volume,
+        satuan_hasil: template.satuan,
+      };
+
+      const result = await indexedDB.insert("jurnal", jurnalData);
+      if (result.error) throw new Error(result.error);
+      
+      toast({
+        title: "Berhasil",
+        description: "Jurnal berhasil ditambahkan",
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error("Error applying template:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan jurnal",
+        variant: "destructive",
+      });
     }
   };
 
@@ -752,11 +858,14 @@ const JurnalGuru = () => {
             Template Kegiatan Cepat
           </CardTitle>
           <CardDescription className="text-xs">
-            Klik tombol di bawah untuk langsung membuka form dengan template kegiatan
+            Template permanen tidak bisa dihapus. Anda dapat menyimpan template kustom Anda sendiri.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Template Permanen</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <Dialog open={showRapatDialog} onOpenChange={setShowRapatDialog}>
               <DialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
@@ -987,6 +1096,38 @@ const JurnalGuru = () => {
                 </div>
               </DialogContent>
             </Dialog>
+              </div>
+            </div>
+
+            {customTemplates.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Template Kustom</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {customTemplates.map((template) => (
+                    <div key={template.id} className="relative group">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => applyCustomTemplate(template)}
+                      >
+                        {template.nama}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => deleteCustomTemplate(template.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1168,21 +1309,71 @@ const JurnalGuru = () => {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowJurnalDialog(false);
-                    setSelectedJurnal(null);
-                    jurnalForm.reset();
-                  }}
-                >
-                  Batal
-                </Button>
-                <Button type="submit">
-                  {selectedJurnal ? "Perbarui" : "Simpan"}
-                </Button>
+              <div className="flex justify-between gap-2">
+                <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Save className="h-4 w-4 mr-2" />
+                      Simpan sebagai Template
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Simpan Template</DialogTitle>
+                      <DialogDescription>
+                        Template yang disimpan dapat digunakan kembali dengan cepat
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium">Nama Template</label>
+                        <Input
+                          placeholder="Contoh: Rapat Koordinasi"
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              saveCustomTemplate();
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setShowTemplateDialog(false);
+                            setTemplateName("");
+                          }}
+                        >
+                          Batal
+                        </Button>
+                        <Button type="button" onClick={saveCustomTemplate}>
+                          Simpan Template
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowJurnalDialog(false);
+                      setSelectedJurnal(null);
+                      jurnalForm.reset();
+                    }}
+                  >
+                    Batal
+                  </Button>
+                  <Button type="submit">
+                    {selectedJurnal ? "Perbarui" : "Simpan"}
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>
