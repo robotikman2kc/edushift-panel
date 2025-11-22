@@ -240,15 +240,20 @@ export const generatePDFBlob = (
 
     // Prepare table data with numbering (unless 'no' column already exists)
     const hasNoColumn = columns.some(col => col.key === 'no' || col.label === 'No' || col.label === 'No.');
-    const tableHeaders = hasNoColumn 
-      ? columns.map(col => col.label)
-      : ['No.', ...columns.map(col => col.label)];
+    
+    // If 'no' column exists, filter it out and add fresh numbering
+    const columnsWithoutNo = hasNoColumn 
+      ? columns.filter(col => col.key !== 'no' && col.label !== 'No' && col.label !== 'No.')
+      : columns;
+    
+    const tableHeaders = ['No.', ...columnsWithoutNo.map(col => col.label)];
+    
     const tableData = data.map((item, index) => {
-      const rowData = columns.map(col => {
+      const rowData = columnsWithoutNo.map(col => {
         const value = item[col.key];
         return value !== null && value !== undefined ? String(value) : '-';
       });
-      return hasNoColumn ? rowData : [String(index + 1), ...rowData];
+      return [String(index + 1), ...rowData];
     });
 
     // Generate table
