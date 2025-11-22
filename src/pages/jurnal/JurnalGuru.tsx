@@ -184,9 +184,34 @@ const JurnalGuru = () => {
     try {
       const kegiatanData = await indexedDB.select("jenis_kegiatan");
       
+      // Remove duplicates by keeping only the first occurrence of each unique name (case-insensitive)
+      const seen = new Map<string, any>();
+      const duplicateIds: string[] = [];
+      
+      kegiatanData.forEach((k: any) => {
+        const normalizedName = k.nama_kegiatan.toLowerCase().trim();
+        if (seen.has(normalizedName)) {
+          // This is a duplicate, mark for deletion
+          duplicateIds.push(k.id);
+        } else {
+          seen.set(normalizedName, k);
+        }
+      });
+      
+      // Delete duplicates
+      if (duplicateIds.length > 0) {
+        console.log(`Removing ${duplicateIds.length} duplicate jenis kegiatan`);
+        for (const id of duplicateIds) {
+          await indexedDB.delete("jenis_kegiatan", id);
+        }
+      }
+      
+      // Re-fetch after cleanup
+      const cleanedData = await indexedDB.select("jenis_kegiatan");
+      
       // Check for Libur Nasional
-      const liburNasionalExists = kegiatanData.some(
-        (k: any) => k.nama_kegiatan.toLowerCase() === "libur nasional"
+      const liburNasionalExists = cleanedData.some(
+        (k: any) => k.nama_kegiatan.toLowerCase().trim() === "libur nasional"
       );
       
       if (!liburNasionalExists) {
@@ -197,8 +222,8 @@ const JurnalGuru = () => {
       }
       
       // Check for Cuti
-      const cutiExists = kegiatanData.some(
-        (k: any) => k.nama_kegiatan.toLowerCase() === "cuti"
+      const cutiExists = cleanedData.some(
+        (k: any) => k.nama_kegiatan.toLowerCase().trim() === "cuti"
       );
       
       if (!cutiExists) {
@@ -208,8 +233,8 @@ const JurnalGuru = () => {
         });
       }
       
-      // Refresh if we added anything
-      if (!liburNasionalExists || !cutiExists) {
+      // Refresh if we made any changes
+      if (duplicateIds.length > 0 || !liburNasionalExists || !cutiExists) {
         await fetchData();
       }
     } catch (error) {
