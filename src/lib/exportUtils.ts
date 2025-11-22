@@ -155,7 +155,7 @@ export const generatePDFBlob = (
       doc.setTextColor(0, 0, 0);
       const reportTitleWidth = doc.getTextWidth(template.reportTitle);
       doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
-      currentY += 5;
+      currentY += 10; // Increased spacing after report title
       
       // Add extra spacing for grade reports
       if (title.includes('Nilai')) {
@@ -170,27 +170,35 @@ export const generatePDFBlob = (
       doc.setTextColor(0, 0, 0);
       const infoY = currentY;
       
-      if (title.includes('Jurnal')) {
-        // Journal reports: Show employee info left-aligned above table with aligned colons
+      if (title.includes('Jurnal') || title.includes('Agenda')) {
+        // Journal/Agenda reports: Show employee info left-aligned above table with aligned colons
         const labelWidth = 25; // Fixed width for labels to align colons
         const schoolName = template.schoolName || template.header?.schoolName || 'Sekolah';
         
-        doc.text('Nama', template.layout.margins.left, infoY);
-        doc.text(':', template.layout.margins.left + labelWidth, infoY);
-        doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, infoY);
+        // Add month/period info if available
+        if (additionalInfo?.bulan) {
+          doc.text('Periode', template.layout.margins.left, infoY);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY);
+          doc.text(additionalInfo.bulan, template.layout.margins.left + labelWidth + 3, infoY);
+          currentY += 5;
+        }
         
-        doc.text('NIP', template.layout.margins.left, infoY + 5);
-        doc.text(':', template.layout.margins.left + labelWidth, infoY + 5);
-        doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, infoY + 5);
+        doc.text('Nama', template.layout.margins.left, currentY);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY);
+        doc.text(template.teacherInfo.name, template.layout.margins.left + labelWidth + 3, currentY);
         
-        doc.text('Jabatan', template.layout.margins.left, infoY + 10);
-        doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
-        doc.text(template.teacherInfo.jabatan || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
+        doc.text('NIP', template.layout.margins.left, currentY + 5);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY + 5);
+        doc.text(template.teacherInfo.nip, template.layout.margins.left + labelWidth + 3, currentY + 5);
         
-        doc.text('Satuan Kerja', template.layout.margins.left, infoY + 15);
-        doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
-        doc.text(schoolName, template.layout.margins.left + labelWidth + 3, infoY + 15);
-        currentY += 22;
+        doc.text('Jabatan', template.layout.margins.left, currentY + 10);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY + 10);
+        doc.text(template.teacherInfo.jabatan || '-', template.layout.margins.left + labelWidth + 3, currentY + 10);
+        
+        doc.text('Satuan Kerja', template.layout.margins.left, currentY + 15);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY + 15);
+        doc.text(schoolName, template.layout.margins.left + labelWidth + 3, currentY + 15);
+        currentY += 20; // Reduced spacing before table
       } else if (title.includes('Nilai')) {
         // Grade reports: Show subject info with aligned colons
         const labelWidth = 35; // Fixed width for labels to align colons
