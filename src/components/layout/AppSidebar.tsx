@@ -23,7 +23,8 @@ import {
   HardDrive,
   FileBarChart,
   BookText,
-  CalendarClock
+  CalendarClock,
+  ChevronDown
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -122,6 +123,38 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const [userProfile, setUserProfile] = useState<any>(null);
+  
+  // Track which groups are open - initialize with group containing active route
+  const getInitialOpenGroups = () => {
+    const openGroups: string[] = [];
+    menuItems.forEach((group) => {
+      if (group.items.some((item) => currentPath === item.url)) {
+        openGroups.push(group.title);
+      }
+    });
+    return openGroups;
+  };
+  
+  const [openGroups, setOpenGroups] = useState<string[]>(getInitialOpenGroups);
+  
+  const toggleGroup = (title: string) => {
+    setOpenGroups((prev) =>
+      prev.includes(title)
+        ? prev.filter((g) => g !== title)
+        : [...prev, title]
+    );
+  };
+  
+  // Auto-open group when route changes
+  useEffect(() => {
+    menuItems.forEach((group) => {
+      if (group.items.some((item) => currentPath === item.url)) {
+        if (!openGroups.includes(group.title)) {
+          setOpenGroups((prev) => [...prev, group.title]);
+        }
+      }
+    });
+  }, [currentPath]);
 
   // Load profile from localStorage
   useEffect(() => {
@@ -221,37 +254,62 @@ export function AppSidebar() {
 
       <SidebarContent className="p-2">
         {menuItems.map((group) => {
+          const GroupIcon = group.icon;
+          const isGroupOpen = openGroups.includes(group.title);
+          
           return (
-            <SidebarGroup key={group.title}>
-              <SidebarGroupLabel className="px-2 py-2">
-                {!collapsed && (
-                  <span className="text-xs font-semibold text-sidebar-foreground/70">
-                    {group.title}
-                  </span>
-                )}
-              </SidebarGroupLabel>
-              
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <NavLink 
-                            to={item.url} 
-                            className={getNavCls(isActive(item.url))}
-                          >
-                            <ItemIcon className="h-4 w-4" />
-                            {!collapsed && <span className="text-sm">{item.title}</span>}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <Collapsible
+              key={group.title}
+              open={isGroupOpen}
+              onOpenChange={() => toggleGroup(group.title)}
+            >
+              <SidebarGroup>
+                <CollapsibleTrigger asChild>
+                  <SidebarGroupLabel className="px-2 py-2 cursor-pointer hover:bg-sidebar-accent/50 rounded-md transition-colors group">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <GroupIcon className="h-4 w-4 text-sidebar-foreground/70" />
+                        {!collapsed && (
+                          <span className="text-xs font-semibold text-sidebar-foreground/70">
+                            {group.title}
+                          </span>
+                        )}
+                      </div>
+                      {!collapsed && (
+                        <ChevronDown
+                          className={`h-3 w-3 text-sidebar-foreground/70 transition-transform duration-200 ${
+                            isGroupOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      )}
+                    </div>
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent className="transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {group.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        return (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton asChild>
+                              <NavLink 
+                                to={item.url} 
+                                className={getNavCls(isActive(item.url))}
+                              >
+                                <ItemIcon className="h-4 w-4" />
+                                {!collapsed && <span className="text-sm">{item.title}</span>}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
           );
         })}
       </SidebarContent>
