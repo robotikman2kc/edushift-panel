@@ -251,7 +251,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <PageHeader 
           title="Dashboard" 
@@ -260,6 +260,7 @@ const Dashboard = () => {
         <Button 
           onClick={() => navigate('/jurnal/jurnal-guru')}
           variant="outline"
+          size="sm"
           className="flex items-center gap-2"
         >
           <BookMarked className="h-4 w-4" />
@@ -271,23 +272,23 @@ const Dashboard = () => {
       {loading ? (
         <LoadingSkeleton type="stats" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, index) => {
             const IconComponent = stat.icon;
             return (
               <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">
                         {stat.title}
                       </p>
-                      <p className="text-xl font-bold text-foreground">
+                      <p className="text-lg font-bold text-foreground">
                         {stat.value}
                       </p>
                     </div>
                     <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                      <IconComponent className={`h-5 w-5 ${stat.color}`} />
+                      <IconComponent className={`h-4 w-4 ${stat.color}`} />
                     </div>
                   </div>
                 </CardContent>
@@ -298,14 +299,14 @@ const Dashboard = () => {
       )}
 
       {/* Today's Schedule & PWA Controls */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Today's Schedule */}
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between gap-2 text-base">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMMM yyyy", { locale: idLocale })}
+                <Clock className="h-4 w-4" />
+                Jadwal Hari Ini - {format(new Date(), "EEEE, dd MMM yyyy", { locale: idLocale })}
               </div>
               <JurnalStatusWidget />
             </CardTitle>
@@ -321,16 +322,16 @@ const Dashboard = () => {
                 variant="minimal"
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {todaySchedule.map((schedule, index) => (
                   <div 
                     key={index}
-                    className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 hover:shadow-sm"
+                    className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 hover:shadow-sm"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-primary/10 flex-shrink-0">
-                        <span className="text-xs font-medium text-muted-foreground">Jam ke</span>
-                        <span className="text-lg font-bold text-primary">
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-primary/10 flex-shrink-0">
+                        <span className="text-[10px] font-medium text-muted-foreground">Jam</span>
+                        <span className="text-sm font-bold text-primary">
                           {schedule.jumlah_jp > 1 
                             ? `${schedule.jam_ke}-${schedule.jam_ke + schedule.jumlah_jp - 1}`
                             : schedule.jam_ke
@@ -340,10 +341,10 @@ const Dashboard = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
-                          <p className="font-semibold">{schedule.mata_pelajaran_nama}</p>
+                          <p className="font-semibold text-sm">{schedule.mata_pelajaran_nama}</p>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {schedule.jumlah_jp > 1 && (
-                              <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-medium">
+                              <div className="px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[10px] font-medium">
                                 {schedule.jumlah_jp} JP
                               </div>
                             )}
@@ -351,57 +352,51 @@ const Dashboard = () => {
                         </div>
                         
                         {/* Status Indicators */}
-                        <div className="flex gap-2 mb-2">
-                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
+                        <div className="flex gap-1.5 mb-1.5">
+                          <div className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded transition-colors ${
                             schedule.hasAgendaToday 
                               ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800' 
                               : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
                           }`}>
                             {schedule.hasAgendaToday ? (
-                              <CheckCircle2 className="h-3 w-3" />
+                              <CheckCircle2 className="h-2.5 w-2.5" />
                             ) : (
-                              <XCircle className="h-3 w-3" />
+                              <XCircle className="h-2.5 w-2.5" />
                             )}
-                            <span>{schedule.hasAgendaToday ? 'Agenda ✓' : 'Agenda belum diisi'}</span>
+                            <span>{schedule.hasAgendaToday ? 'Agenda' : 'Agenda'}</span>
                           </div>
                           
-                          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
+                          <div className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded transition-colors ${
                             schedule.hasKehadiranToday 
                               ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800' 
                               : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
                           }`}>
                             {schedule.hasKehadiranToday ? (
-                              <CheckCircle2 className="h-3 w-3" />
+                              <CheckCircle2 className="h-2.5 w-2.5" />
                             ) : (
-                              <XCircle className="h-3 w-3" />
+                              <XCircle className="h-2.5 w-2.5" />
                             )}
-                            <span>{schedule.hasKehadiranToday ? 'Presensi ✓' : 'Presensi belum diisi'}</span>
+                            <span>{schedule.hasKehadiranToday ? 'Presensi' : 'Presensi'}</span>
                           </div>
                         </div>
                         
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground">Kelas: {schedule.kelas_nama}</p>
-                          <p className="text-sm text-muted-foreground">Waktu: {schedule.waktu}</p>
+                        <div className="space-y-0.5">
+                          <p className="text-xs text-muted-foreground">{schedule.kelas_nama} • {schedule.waktu}</p>
                           
                           {schedule.materi_terakhir && (
-                            <div className="mt-2 pt-2 border-t">
-                              <p className="text-xs font-medium text-muted-foreground mb-1">
-                                Materi Terakhir ({format(new Date(schedule.tanggal_terakhir), "dd MMM yyyy", { locale: idLocale })}):
+                            <div className="mt-1.5 pt-1.5 border-t">
+                              <p className="text-[10px] font-medium text-muted-foreground mb-0.5">
+                                Materi Terakhir ({format(new Date(schedule.tanggal_terakhir), "dd MMM", { locale: idLocale })}):
                               </p>
-                              <p className="text-sm text-foreground">{schedule.materi_terakhir}</p>
-                              {schedule.keterangan_terakhir && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Ket: {schedule.keterangan_terakhir}
-                                </p>
-                              )}
+                              <p className="text-xs text-foreground line-clamp-1">{schedule.materi_terakhir}</p>
                             </div>
                           )}
                           
-                          <div className="flex gap-2 mt-3 pt-2 border-t">
+                          <div className="flex gap-1.5 mt-2 pt-1.5 border-t">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 hover:scale-105 transition-transform"
+                              className="flex-1 h-7 text-xs"
                               onClick={() => navigate('/kehadiran/input-kehadiran', { 
                                 state: { 
                                   fromSchedule: true,
@@ -417,14 +412,14 @@ const Dashboard = () => {
                                 } 
                               })}
                             >
-                              <ClipboardList className="h-4 w-4 mr-1" />
+                              <ClipboardList className="h-3 w-3 mr-1" />
                               Presensi
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 hover:scale-105 transition-transform"
-                              onClick={() => navigate('/jurnal/agenda-mengajar', { 
+                              className="flex-1 h-7 text-xs"
+                              onClick={() => navigate('/jurnal/agenda-mengajar', {
                                 state: { 
                                   fromSchedule: true,
                                   scheduleData: {
@@ -439,7 +434,7 @@ const Dashboard = () => {
                                 } 
                               })}
                             >
-                              <BookMarked className="h-4 w-4 mr-1" />
+                              <BookMarked className="h-3 w-3 mr-1" />
                               Agenda
                             </Button>
                           </div>
@@ -454,7 +449,7 @@ const Dashboard = () => {
         </Card>
 
         {/* No Task Widget & Calendar Notes & PWA Controls */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-4">
           {/* Missed Exam Widget */}
           <MissedExamWidget />
           
@@ -463,10 +458,10 @@ const Dashboard = () => {
 
           {/* Calendar Notes */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Calendar className="h-5 w-5" />
-                Catatan Kegiatan Bulan {format(new Date(), "MMMM yyyy", { locale: idLocale })}
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4" />
+                Catatan {format(new Date(), "MMM yyyy", { locale: idLocale })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -476,17 +471,17 @@ const Dashboard = () => {
                 <EmptyState
                   icon={Calendar}
                   title="Belum ada catatan"
-                  description="Tambahkan catatan kegiatan di kalender untuk tracking lebih baik"
+                  description="Tambahkan catatan kegiatan di kalender"
                   actionLabel="Buka Kalender"
                   onAction={() => navigate('/kalender')}
                   variant="minimal"
                 />
               ) : (
-                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                <div className="space-y-2 max-h-[250px] overflow-y-auto">
                   {calendarNotes.map((note) => (
                     <div 
                       key={note.id}
-                      className={`p-3 border rounded-lg hover:shadow-sm transition-shadow ${
+                      className={`p-2 border rounded-lg hover:shadow-sm transition-shadow ${
                         note.type === 'holiday' 
                           ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
                           : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
@@ -494,21 +489,18 @@ const Dashboard = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <p className="text-sm font-medium">{note.catatan}</p>
-                          {note.type === 'holiday' && note.keterangan && (
-                            <p className="text-xs text-muted-foreground mt-1">{note.keterangan}</p>
-                          )}
+                          <p className="text-xs font-medium line-clamp-2">{note.catatan}</p>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                           {note.type === 'holiday' ? (
-                            <CalendarDays className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            <CalendarDays className="h-3 w-3 text-red-600 dark:text-red-400" />
                           ) : note.warna ? (
                             <div 
-                              className="w-4 h-4 rounded border border-gray-300"
+                              className="w-3 h-3 rounded border border-gray-300"
                               style={{ backgroundColor: note.warna }}
                             />
                           ) : null}
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                             {format(new Date(note.tanggal), "dd MMM", { locale: idLocale })}
                           </span>
                         </div>
@@ -522,61 +514,43 @@ const Dashboard = () => {
 
           {/* PWA Controls */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Download className="h-5 w-5" />
-                Kontrol Aplikasi PWA
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Download className="h-4 w-4" />
+                Aplikasi
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-3">
-                <Button 
-                  onClick={handleInstall} 
-                  variant={isInstallable && !isInstalled ? "default" : "outline"}
-                  disabled={!isInstallable || isInstalled}
+            <CardContent className="space-y-2">
+              {isInstallable && !isInstalled && (
+                <Button
+                  onClick={handleInstall}
+                  variant="default"
                   size="sm"
                   className="w-full"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  {isInstalled ? "Sudah Terinstall" : "Install Aplikasi"}
+                  <Download className="h-3 w-3 mr-1" />
+                  Install Aplikasi
                 </Button>
-                
-                <Button 
-                  onClick={handleUpdate} 
-                  variant={updateAvailable ? "default" : "outline"}
-                  disabled={!updateAvailable}
+              )}
+              {updateAvailable && (
+                <Button
+                  onClick={handleUpdate}
+                  variant="outline"
                   size="sm"
                   className="w-full"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {updateAvailable ? "Update Tersedia" : "Tidak Ada Update"}
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Update Tersedia
                 </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-3">
-                Install aplikasi ke perangkat Anda untuk akses lebih cepat dan bisa bekerja offline.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* App Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Info className="h-5 w-5" />
-                Informasi Aplikasi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Versi</span>
-                  <span className="text-sm font-medium">1.0.0</span>
+              )}
+              <div className="pt-2 border-t space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Versi</span>
+                  <span className="font-medium">1.0.0</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Update Terakhir</span>
-                  <span className="text-sm font-medium">
-                    {format(new Date('2025-01-15'), "dd MMM yyyy", { locale: idLocale })}
-                  </span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Update</span>
+                  <span className="font-medium">{format(new Date(), "dd MMM yyyy", { locale: idLocale })}</span>
                 </div>
               </div>
             </CardContent>
