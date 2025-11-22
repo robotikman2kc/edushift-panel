@@ -1096,6 +1096,97 @@ const JurnalGuru = () => {
                 </div>
               </DialogContent>
             </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                  Kegiatan Sekolah
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Kegiatan Sekolah</DialogTitle>
+                  <DialogDescription>
+                    Masukkan nama kegiatan sekolah (Volume otomatis: 1 Kali)
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3">
+                  <div className="flex gap-2">
+                    <Input
+                      id="kegiatan-sekolah-input"
+                      placeholder="Nama kegiatan (contoh: Lomba 17 Agustus)"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const value = (e.target as HTMLInputElement).value.trim();
+                          if (value) {
+                            const kegiatanSekolahKegiatan = jenisKegiatan.find(k => 
+                              k.nama_kegiatan.toLowerCase().includes("kegiatan sekolah")
+                            );
+                            const jurnalData = {
+                              tanggal: format(new Date(), "yyyy-MM-dd"),
+                              jenis_kegiatan_id: kegiatanSekolahKegiatan?.id || jenisKegiatan[0]?.id || "",
+                              uraian_kegiatan: value,
+                              volume: 1,
+                              satuan_hasil: "kali",
+                            };
+                            indexedDB.insert("jurnal", jurnalData).then(() => {
+                              toast({
+                                title: "Berhasil",
+                                description: "Jurnal kegiatan sekolah berhasil ditambahkan",
+                              });
+                              fetchData();
+                              (e.target as HTMLInputElement).value = "";
+                            }).catch((error) => {
+                              console.error("Error:", error);
+                              toast({
+                                title: "Error",
+                                description: "Gagal menyimpan jurnal",
+                                variant: "destructive",
+                              });
+                            });
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={() => {
+                        const input = document.getElementById("kegiatan-sekolah-input") as HTMLInputElement;
+                        const value = input?.value.trim();
+                        if (value) {
+                          const kegiatanSekolahKegiatan = jenisKegiatan.find(k => 
+                            k.nama_kegiatan.toLowerCase().includes("kegiatan sekolah")
+                          );
+                          const jurnalData = {
+                            tanggal: format(new Date(), "yyyy-MM-dd"),
+                            jenis_kegiatan_id: kegiatanSekolahKegiatan?.id || jenisKegiatan[0]?.id || "",
+                            uraian_kegiatan: value,
+                            volume: 1,
+                            satuan_hasil: "kali",
+                          };
+                          indexedDB.insert("jurnal", jurnalData).then(() => {
+                            toast({
+                              title: "Berhasil",
+                              description: "Jurnal kegiatan sekolah berhasil ditambahkan",
+                            });
+                            fetchData();
+                            input.value = "";
+                          }).catch((error) => {
+                            console.error("Error:", error);
+                            toast({
+                              title: "Error",
+                              description: "Gagal menyimpan jurnal",
+                              variant: "destructive",
+                            });
+                          });
+                        }
+                      }}
+                    >
+                      Tambah
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
               </div>
             </div>
 
