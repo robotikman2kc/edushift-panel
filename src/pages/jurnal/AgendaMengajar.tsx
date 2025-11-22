@@ -557,7 +557,7 @@ const AgendaMengajar = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="tanggal" className="text-sm font-medium">Tanggal *</Label>
                 <Input
@@ -620,7 +620,7 @@ const AgendaMengajar = () => {
                   onValueChange={(value) => setFormData({ ...formData, jenis_pembelajaran: value })}
                 >
                   <SelectTrigger id="jenis-pembelajaran">
-                    <SelectValue placeholder="Pilih jenis pembelajaran" />
+                    <SelectValue placeholder="Pilih jenis" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Penilaian Harian">Penilaian Harian</SelectItem>
@@ -630,19 +630,19 @@ const AgendaMengajar = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 md:col-span-4">
                 <Label htmlFor="materi" className="text-sm font-medium">Materi *</Label>
                 <Textarea
                   id="materi"
                   value={formData.materi}
                   onChange={(e) => setFormData({ ...formData, materi: e.target.value })}
                   placeholder="Masukkan materi yang diajarkan"
-                  rows={3}
+                  rows={2}
                   className="resize-none"
                 />
               </div>
 
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 md:col-span-4">
                 <Label htmlFor="keterangan" className="text-sm font-medium">Keterangan</Label>
                 <Textarea
                   id="keterangan"
