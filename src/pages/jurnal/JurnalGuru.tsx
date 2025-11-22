@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isHariLiburKerja, generateHolidayTemplate } from "@/lib/hariLiburUtils";
+import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
@@ -473,7 +474,10 @@ const JurnalGuru = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
+      {/* Status Jurnal Widget */}
+      <JurnalDetailStatusWidget />
+      
+      <PageHeader
         title="Jurnal Guru" 
         description="Kelola jurnal kegiatan mengajar"
       >
