@@ -111,14 +111,18 @@ export default function Kalender() {
       const enrichedSchedules = (schedules as JadwalPelajaran[]).map((schedule) => {
         const kelas = (kelasList as Kelas[]).find((k) => k.id === schedule.kelas_id);
         const mataPelajaran = (mataPelajaranList as MataPelajaran[]).find((m) => m.id === schedule.mata_pelajaran_id);
-        const jam = (jamPelajaran as JamPelajaran[]).find((j) => j.jam_ke === schedule.jam_ke);
+        const jamMulai = (jamPelajaran as JamPelajaran[]).find((j) => j.jam_ke === schedule.jam_ke);
+        
+        // Hitung jam selesai berdasarkan jumlah JP
+        const jamSelesaiKe = schedule.jam_ke + schedule.jumlah_jp - 1;
+        const jamSelesai = (jamPelajaran as JamPelajaran[]).find((j) => j.jam_ke === jamSelesaiKe);
         
         return {
           ...schedule,
           kelas_name: kelas?.nama_kelas || "Unknown",
           mata_pelajaran_name: mataPelajaran?.nama_mata_pelajaran || "Unknown",
-          jam_mulai: jam?.waktu_mulai || "",
-          jam_selesai: jam?.waktu_selesai || "",
+          jam_mulai: jamMulai?.waktu_mulai || "",
+          jam_selesai: jamSelesai?.waktu_selesai || "",
         };
       });
 
