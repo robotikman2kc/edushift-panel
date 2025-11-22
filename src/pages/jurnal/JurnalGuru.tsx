@@ -5,7 +5,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { isHariLibur, generateHolidayTemplate } from "@/lib/hariLiburUtils";
+import { isHariLiburKerja, generateHolidayTemplate } from "@/lib/hariLiburUtils";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
@@ -131,15 +131,15 @@ const JurnalGuru = () => {
     ensureLiburNasionalExists();
   }, []);
 
-  // Watch for tanggal changes and auto-fill if holiday
+  // Watch for tanggal changes and auto-fill if holiday (weekdays only)
   useEffect(() => {
     const subscription = jurnalForm.watch((value, { name }) => {
       if (name === "tanggal" && value.tanggal) {
-        const holiday = isHariLibur(value.tanggal);
+        const holiday = isHariLiburKerja(value.tanggal); // Only weekday holidays
         setCurrentHoliday(holiday);
         
         if (holiday && !selectedJurnal) {
-          // Only auto-fill for new entries, not edits
+          // Only auto-fill for new entries on weekday holidays
           const template = generateHolidayTemplate(holiday);
           
           // Find "Libur Nasional" jenis kegiatan
