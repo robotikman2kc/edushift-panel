@@ -111,15 +111,10 @@ const RekapNilai = () => {
   }, [selectedKelas, kategoriList]);
 
   useEffect(() => {
-    if (selectedKelas && selectedMataPelajaran && selectedSemester && selectedTahunAjaran) {
-      setLoading(true);
-      // Reload kategori first to ensure we have the latest data
-      indexedDB.select("jenis_penilaian").then(kategori => {
-        const filteredKategori = kategori.filter((k: JenisPenilaian) => k.status === "Aktif");
-        setKategoriList(filteredKategori);
-      });
+    if (selectedKelas && selectedMataPelajaran && kategoriList.length > 0 && Object.keys(bobotMap).length > 0 && selectedSemester && selectedTahunAjaran) {
+      loadRekapNilai();
     }
-  }, [selectedKelas, selectedMataPelajaran, selectedSemester, selectedTahunAjaran]);
+  }, [selectedKelas, selectedMataPelajaran, kategoriList, bobotMap, selectedSemester, selectedTahunAjaran]);
 
   const loadMasterData = async () => {
     try {
