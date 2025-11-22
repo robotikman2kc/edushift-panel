@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
@@ -34,6 +34,7 @@ import { indexedDB } from "@/lib/indexedDB";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
+import { useStaticDataCache } from "@/hooks/useDataCache";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -57,6 +58,21 @@ const Dashboard = () => {
   const [calendarNotes, setCalendarNotes] = useState<any[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
 
+  // Use cached data for static entities
+  const { data: siswaData, loading: loadingSiswa } = useStaticDataCache('siswa', 'siswa');
+  const { data: guruData, loading: loadingGuru } = useStaticDataCache('guru', 'guru');
+  const { data: kelasData, loading: loadingKelas } = useStaticDataCache('kelas', 'kelas');
+  const { data: mataPelajaranData, loading: loadingMapel } = useStaticDataCache('mata_pelajaran', 'mata_pelajaran');
+
+  // Update stats when cached data changes
+  useEffect(() => {
+    setTotalSiswa(siswaData.length);
+    setTotalGuru(guruData.length);
+    setTotalKelas(kelasData.length);
+    setTotalMataPelajaran(mataPelajaranData.length);
+    setLoading(loadingSiswa || loadingGuru || loadingKelas || loadingMapel);
+  }, [siswaData, guruData, kelasData, mataPelajaranData, loadingSiswa, loadingGuru, loadingKelas, loadingMapel]);
+
   // Listen for date changes from TopBar
   useEffect(() => {
     const handleDateChange = (event: CustomEvent) => {
@@ -71,35 +87,9 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchStatistics();
     fetchTodaySchedule();
     fetchCalendarNotes();
   }, [selectedDate]);
-
-  const fetchStatistics = async () => {
-    try {
-      setLoading(true);
-      
-      const siswaData = await indexedDB.select("siswa");
-      const guruData = await indexedDB.select("guru");
-      const kelasData = await indexedDB.select("kelas");
-      const mataPelajaranData = await indexedDB.select("mata_pelajaran");
-      
-      setTotalSiswa(siswaData.length);
-      setTotalGuru(guruData.length);
-      setTotalKelas(kelasData.length);
-      setTotalMataPelajaran(mataPelajaranData.length);
-    } catch (error) {
-      console.error("Error fetching statistics:", error);
-      toast({
-        title: "Error",
-        description: "Gagal memuat statistik",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleInstall = async () => {
     await installApp();
@@ -176,8 +166,6 @@ const Dashboard = () => {
         jadwal.semester === activeSemester
       );
       const timeSlots = await indexedDB.select("jam_pelajaran");
-      const kelasData = await indexedDB.select("kelas");
-      const mataPelajaranData = await indexedDB.select("mata_pelajaran");
       const agendaData = await indexedDB.select("agenda_mengajar");
       const kehadiranData = await indexedDB.select("kehadiran");
       
@@ -185,7 +173,7 @@ const Dashboard = () => {
       const todayAgenda = agendaData.filter((a: any) => a.tanggal === todayDate);
       const todayKehadiran = kehadiranData.filter((k: any) => k.tanggal === todayDate);
       
-      // Enrich schedule with names and sort by jam_ke
+      // Enrich schedule with names and sort by jam_ke - use cached data
       const enrichedSchedules = schedules
         .map((schedule: any) => {
           const kelas = kelasData.find((k: any) => k.id === schedule.kelas_id);
@@ -249,7 +237,7 @@ const Dashboard = () => {
     }
   };
 
-  const stats = [
+  const stats = useMemo(() => [
     {
       title: "Total Siswa",
       value: loading ? "..." : totalSiswa.toString(),
@@ -278,7 +266,7 @@ const Dashboard = () => {
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
-  ];
+  ], [loading, totalSiswa, totalGuru, totalKelas, totalMataPelajaran]);
 
   return (
     <div className="space-y-4">
