@@ -281,18 +281,18 @@ export function TopBar() {
             <div className="hidden sm:flex items-center gap-2 lg:gap-4 min-w-0">
               <div className="flex items-center gap-2">
                 <Circle 
-                  className={`h-2 w-2 flex-shrink-0 ${
+                  className={`h-2.5 w-2.5 flex-shrink-0 animate-pulse ${
                     isOnline 
-                      ? 'fill-green-500 text-green-500' 
-                      : 'fill-red-500 text-red-500'
+                      ? 'fill-emerald-500 text-emerald-500 drop-shadow-[0_0_6px_rgba(16,185,129,0.8)]' 
+                      : 'fill-red-500 text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]'
                   }`} 
                 />
                 <Badge 
                   variant="secondary" 
-                  className={`flex-shrink-0 ${
+                  className={`flex-shrink-0 font-medium ${
                     isOnline
-                      ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800'
-                      : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800'
+                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-700'
+                      : 'bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-400 dark:border-red-700'
                   }`}
                 >
                   {isOnline ? 'Online' : 'Offline'}
