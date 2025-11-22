@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,6 +36,7 @@ export function MissedExamWidget() {
   const [selectedKelas, setSelectedKelas] = useState<string>("all");
   const [selectedMapel, setSelectedMapel] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [confirmStudent, setConfirmStudent] = useState<MissedExamStudent | null>(null);
 
   useEffect(() => {
     fetchMissedExamStudents();
@@ -75,7 +77,8 @@ export function MissedExamWidget() {
             kehadiran.tanggal === agenda.tanggal &&
             kehadiran.kelas_id === agenda.kelas_id &&
             kehadiran.mata_pelajaran_id === agenda.mata_pelajaran_id &&
-            ['Sakit', 'Izin', 'Alpha'].includes(kehadiran.status_kehadiran)
+            ['Sakit', 'Izin', 'Alpha'].includes(kehadiran.status_kehadiran) &&
+            !kehadiran.sudah_ulangan_susulan // Exclude students who already took makeup exam
           );
         });
 
@@ -123,30 +126,42 @@ export function MissedExamWidget() {
     }
   };
 
-  const handleNavigateToInputNilai = async (student: MissedExamStudent) => {
-    try {
-      // Save selection to settings for the Input Nilai page
-      await indexedDB.update('pengaturan', 'selected_kelas', {
-        key: 'selected_kelas',
-        value: student.kelas_id
-      });
-      await indexedDB.update('pengaturan', 'selected_mata_pelajaran', {
-        key: 'selected_mata_pelajaran',
-        value: student.mata_pelajaran_id
-      });
-      await indexedDB.update('pengaturan', 'selected_semester', {
-        key: 'selected_semester',
-        value: student.semester
-      });
-      await indexedDB.update('pengaturan', 'selected_tahun_ajaran', {
-        key: 'selected_tahun_ajaran',
-        value: student.tahun_ajaran
-      });
+  const handleStudentClick = (student: MissedExamStudent) => {
+    setConfirmStudent(student);
+  };
 
-      // Navigate to input nilai page
-      navigate('/penilaian/input-nilai');
+  const handleConfirmExamTaken = async () => {
+    if (!confirmStudent) return;
+
+    try {
+      // Update kehadiran record to mark exam as taken
+      const allKehadiran = await indexedDB.select('kehadiran');
+      const kehadiranRecord = allKehadiran.find((k: any) => 
+        k.tanggal === confirmStudent.tanggal_ulangan &&
+        k.kelas_id === confirmStudent.kelas_id &&
+        k.mata_pelajaran_id === confirmStudent.mata_pelajaran_id &&
+        k.siswa_id === confirmStudent.siswa_id
+      );
+
+      if (kehadiranRecord) {
+        await indexedDB.update('kehadiran', kehadiranRecord.id, {
+          ...kehadiranRecord,
+          sudah_ulangan_susulan: true
+        });
+      }
+
+      // Remove from local state
+      setMissedExamStudents(prev => 
+        prev.filter(s => 
+          !(s.siswa_id === confirmStudent.siswa_id &&
+            s.tanggal_ulangan === confirmStudent.tanggal_ulangan &&
+            s.mata_pelajaran_id === confirmStudent.mata_pelajaran_id)
+        )
+      );
+
+      setConfirmStudent(null);
     } catch (error) {
-      console.error("Error navigating to input nilai:", error);
+      console.error("Error marking exam as taken:", error);
     }
   };
 
@@ -328,10 +343,7 @@ export function MissedExamWidget() {
                   {filteredStudents.map((student, index) => (
                     <div
                       key={index}
-                      onClick={() => {
-                        handleNavigateToInputNilai(student);
-                        setIsDialogOpen(false);
-                      }}
+                      onClick={() => handleStudentClick(student)}
                       className="p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -361,6 +373,27 @@ export function MissedExamWidget() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmStudent} onOpenChange={(open) => !open && setConfirmStudent(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Ulangan Susulan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah <span className="font-semibold">{confirmStudent?.nama_siswa}</span> sudah mengikuti ulangan susulan untuk{" "}
+              <span className="font-semibold">{confirmStudent?.nama_mata_pelajaran}</span> pada{" "}
+              {confirmStudent && (
+                <span className="font-semibold">
+                  {format(new Date(confirmStudent.tanggal_ulangan), "dd MMMM yyyy", { locale: localeId })}
+                </span>
+              )}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Belum</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmExamTaken}>Sudah</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
