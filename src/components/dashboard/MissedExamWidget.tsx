@@ -229,21 +229,7 @@ export function MissedExamWidget() {
   }
 
   if (missedExamStudents.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Siswa Belum Ulangan
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Tidak ada siswa yang belum mengikuti ulangan
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
