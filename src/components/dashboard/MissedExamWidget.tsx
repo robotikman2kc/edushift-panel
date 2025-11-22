@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar, User } from "lucide-react";
+import { AlertCircle, Calendar } from "lucide-react";
 import { indexedDB } from "@/lib/indexedDB";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -214,7 +214,6 @@ export function MissedExamWidget() {
             <div className="flex items-start justify-between gap-2">
               <div className="space-y-0.5 flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                   <p className="font-semibold text-xs truncate">{student.nama_siswa}</p>
                   <Badge variant={getStatusBadgeVariant(student.status_kehadiran)} className="text-[10px] px-1 py-0">
                     {student.status_kehadiran}
