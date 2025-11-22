@@ -269,9 +269,20 @@ export default function JadwalPelajaran() {
     });
     
     if (conflicts.length > 0) {
-      setConflictingSchedules(conflicts);
-      setShowConflictDialog(true);
-      return;
+      // Check if all conflicts are the same subject (same kelas & mata pelajaran)
+      const differentSubjectConflicts = conflicts.filter(
+        c => c.mata_pelajaran_id !== selectedMataPelajaran
+      );
+      
+      if (differentSubjectConflicts.length > 0) {
+        // There are conflicts with different subjects, show confirmation
+        setConflictingSchedules(conflicts);
+        setShowConflictDialog(true);
+        return;
+      } else {
+        // All conflicts are same subject, delete them silently and proceed
+        setConflictingSchedules(conflicts);
+      }
     }
 
     await saveSchedule();
