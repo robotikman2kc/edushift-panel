@@ -108,7 +108,10 @@ export function DayDetailPanel({
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">{agenda.kelas_name}</span>
                   </div>
-                  <div className="text-xs line-clamp-2">{agenda.materi}</div>
+                  <div className="text-xs">
+                    <span className="font-medium">Materi Terakhir: </span>
+                    <span className="line-clamp-2">{agenda.materi}</span>
+                  </div>
                 </div>
               ))}
             </div>
