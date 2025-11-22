@@ -24,7 +24,9 @@ import {
   FileBarChart,
   BookText,
   CalendarClock,
-  ChevronDown
+  ChevronDown,
+  Star,
+  Sparkles
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -43,6 +45,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { QuickMenuManager } from "./QuickMenuManager";
 import { useState, useEffect } from "react";
 
 const mainMenuItems = [
@@ -126,6 +131,35 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [quickMenuOpen, setQuickMenuOpen] = useState(false);
+  
+  // Get all available menu items for quick menu
+  const getAllMenuItems = () => {
+    const allItems = [...mainMenuItems];
+    menuItems.forEach((group) => {
+      allItems.push(...group.items);
+    });
+    return allItems;
+  };
+  
+  // Load quick menu from localStorage
+  const [quickMenuItems, setQuickMenuItems] = useState<any[]>(() => {
+    const saved = localStorage.getItem('quickMenuItems');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        return [];
+      }
+    }
+    return [];
+  });
+  
+  // Save quick menu to localStorage
+  const updateQuickMenu = (items: any[]) => {
+    setQuickMenuItems(items);
+    localStorage.setItem('quickMenuItems', JSON.stringify(items));
+  };
   
   // Track which groups are open - initialize with group containing active route
   const getInitialOpenGroups = () => {
@@ -256,6 +290,83 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="p-2 space-y-1">
+        {/* Quick Menu Section */}
+        {quickMenuItems.length > 0 && (
+          <>
+            <SidebarGroup className="py-0">
+              <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  {!collapsed && (
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      QUICK MENU
+                    </span>
+                  )}
+                </div>
+                {!collapsed && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setQuickMenuOpen(true)}
+                  >
+                    <Settings className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {quickMenuItems.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild className="h-9">
+                          <NavLink 
+                            to={item.url} 
+                            className={getNavCls(isActive(item.url))}
+                          >
+                            <ItemIcon className="h-4 w-4" />
+                            {!collapsed && <span className="text-sm font-medium">{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <Separator className="my-2" />
+          </>
+        )}
+
+        {/* Empty State for Quick Menu */}
+        {quickMenuItems.length === 0 && (
+          <>
+            <SidebarGroup className="py-0">
+              <div className="px-2 py-3 text-center">
+                {!collapsed && (
+                  <div className="space-y-2">
+                    <Sparkles className="h-8 w-8 text-muted-foreground mx-auto" />
+                    <p className="text-xs text-muted-foreground">
+                      Belum ada Quick Menu
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setQuickMenuOpen(true)}
+                    >
+                      <Star className="h-3 w-3 mr-1" />
+                      Atur Quick Menu
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </SidebarGroup>
+            <Separator className="my-2" />
+          </>
+        )}
+
         {/* Main Menu Items */}
         <SidebarGroup className="py-0 mb-2">
           <SidebarGroupContent>
@@ -341,6 +452,15 @@ export function AppSidebar() {
           );
         })}
       </SidebarContent>
+      
+      {/* Quick Menu Manager Dialog */}
+      <QuickMenuManager
+        open={quickMenuOpen}
+        onOpenChange={setQuickMenuOpen}
+        quickMenuItems={quickMenuItems}
+        onUpdate={updateQuickMenu}
+        allMenuItems={getAllMenuItems()}
+      />
     </Sidebar>
   );
 }
