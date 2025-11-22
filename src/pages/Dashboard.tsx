@@ -158,11 +158,21 @@ const Dashboard = () => {
   const fetchTodaySchedule = async () => {
     try {
       setLoadingSchedule(true);
+      
+      // Get active semester and academic year
+      const activeSemester = localStorage.getItem('active_semester') || 'Ganjil';
+      const activeTahunAjaran = localStorage.getItem('active_tahun_ajaran') || '2024/2025';
+      
       const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
       const today = days[selectedDate.getDay()];
       const todayDate = format(selectedDate, "yyyy-MM-dd");
       
-      const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
+      // Filter schedules by active semester and academic year
+      const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => 
+        s.hari === today && 
+        s.semester === activeSemester && 
+        s.tahun_ajaran === activeTahunAjaran
+      );
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
