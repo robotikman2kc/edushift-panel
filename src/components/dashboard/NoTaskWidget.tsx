@@ -112,7 +112,7 @@ export const NoTaskWidget = () => {
         <CardTitle className="flex items-center justify-between gap-2 text-base">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-orange-500" />
-            No Task
+            Nilai Kosong
           </div>
           <Badge variant="secondary" className="text-xs">
             {noTaskStudents.length}
