@@ -626,15 +626,6 @@ export function DataTable({
                   Import
                 </Button>
               )}
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsExportDateDialogOpen(true)}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
 
               {onAdd && (
                 <Button size="sm" onClick={openAddDialog}>
@@ -670,6 +661,14 @@ export function DataTable({
             <Button variant="outline" size="sm">
               <Filter className="mr-2 h-4 w-4" />
               Filter
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsExportDateDialogOpen(true)}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Download PDF
             </Button>
           </div>
 
