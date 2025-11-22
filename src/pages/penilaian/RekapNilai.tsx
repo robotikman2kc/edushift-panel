@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, Star, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { indexedDB, Kelas, MataPelajaran, Siswa, JenisPenilaian, NilaiSiswa, Kehadiran } from "@/lib/indexedDB";
@@ -53,6 +55,8 @@ const RekapNilai = () => {
   const [loading, setLoading] = useState(false);
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
 
@@ -261,6 +265,12 @@ const RekapNilai = () => {
     }
   };
 
+  const handleOpenColumnSelector = () => {
+    // By default select all columns
+    setSelectedColumns(kategoriList.map(k => k.id));
+    setIsColumnSelectorOpen(true);
+  };
+
   const handleExportPDF = (signatureDate?: Date) => {
     if (studentGrades.length === 0) {
       toast({
@@ -275,13 +285,16 @@ const RekapNilai = () => {
       const selectedKelasData = kelasList.find(k => k.id === selectedKelas);
       const selectedMapelData = mataPelajaranList.find(m => m.id === selectedMataPelajaran);
 
+      // Filter kategori based on selected columns
+      const filteredKategori = kategoriList.filter(k => selectedColumns.includes(k.id));
+
       const exportData = studentGrades.map((student) => {
         const rowData: any = {
           'NISN': student.nisn,
           'Nama Siswa': student.nama_siswa
         };
 
-        kategoriList.forEach(kategori => {
+        filteredKategori.forEach(kategori => {
           rowData[kategori.nama_kategori] = student.grades[kategori.id]?.toFixed(1) || '-';
         });
 
@@ -294,7 +307,7 @@ const RekapNilai = () => {
       const exportColumns = [
         { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
-        ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
+        ...filteredKategori.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
         { key: 'Rata-rata', label: 'Rata-rata' },
         { key: 'Keaktifan', label: 'Keaktifan' }
       ];
@@ -586,7 +599,7 @@ const RekapNilai = () => {
             {studentGrades.length > 0 && (
               <div className="flex gap-2">
                 <Button 
-                  onClick={() => setIsExportDateDialogOpen(true)}
+                  onClick={handleOpenColumnSelector}
                   variant="outline"
                   size="sm"
                 >
@@ -709,6 +722,62 @@ const RekapNilai = () => {
         </Card>
       </div>
       
+      {/* Column Selector Dialog */}
+      <Dialog open={isColumnSelectorOpen} onOpenChange={setIsColumnSelectorOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pilih Kolom Nilai untuk Dicetak</DialogTitle>
+            <DialogDescription>
+              Pilih kategori nilai yang ingin ditampilkan di PDF
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {kategoriList.map((kategori) => (
+              <div key={kategori.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={kategori.id}
+                  checked={selectedColumns.includes(kategori.id)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedColumns([...selectedColumns, kategori.id]);
+                    } else {
+                      setSelectedColumns(selectedColumns.filter(id => id !== kategori.id));
+                    }
+                  }}
+                />
+                <Label htmlFor={kategori.id} className="cursor-pointer">
+                  {kategori.nama_kategori}
+                </Label>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsColumnSelectorOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedColumns.length === 0) {
+                  toast({
+                    title: "Pilih Minimal Satu Kolom",
+                    description: "Pilih minimal satu kategori nilai untuk dicetak",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                setIsColumnSelectorOpen(false);
+                setIsExportDateDialogOpen(true);
+              }}
+            >
+              Lanjut ke PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ExportDateDialog
         open={isExportDateDialogOpen}
         onOpenChange={setIsExportDateDialogOpen}
