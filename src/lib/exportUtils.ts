@@ -177,7 +177,7 @@ export const generatePDFBlob = (
         
         // Add month/period info if available
         if (additionalInfo?.bulan) {
-          doc.text('Periode', template.layout.margins.left, infoY);
+          doc.text('Bulan', template.layout.margins.left, infoY);
           doc.text(':', template.layout.margins.left + labelWidth, infoY);
           doc.text(additionalInfo.bulan, template.layout.margins.left + labelWidth + 3, infoY);
           currentY += 5;
