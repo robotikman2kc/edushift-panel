@@ -1366,12 +1366,23 @@ const JurnalGuru = () => {
               <DataTable
                 data={jenisKegiatan.map((item) => ({
                   ...item,
-                  use_highlight_display: item.use_highlight ? '✓ Ya' : '✗ Tidak'
+                  use_highlight_display: item.use_highlight ? (
+                    <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-white"></span>
+                        Warna Aktif
+                      </span>
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                      Tidak Berwarna
+                    </Badge>
+                  )
                 }))}
                 columns={[
                   { key: "nama_kegiatan", label: "Nama Kegiatan", sortable: true },
                   { key: "deskripsi", label: "Deskripsi", sortable: false },
-                  { key: "use_highlight_display", label: "Beri Warna", sortable: true },
+                  { key: "use_highlight_display", label: "Highlight", sortable: true },
                 ]}
                 loading={loading}
                 onDelete={handleDeleteKegiatan}
