@@ -271,7 +271,7 @@ const RekapNilai = () => {
     setIsColumnSelectorOpen(true);
   };
 
-  const handleExportPDF = (signatureDate?: Date) => {
+  const handleExportPDFWithColumns = (signatureDate?: Date) => {
     if (studentGrades.length === 0) {
       toast({
         title: "Tidak Ada Data",
@@ -308,6 +308,97 @@ const RekapNilai = () => {
         { key: 'NISN', label: 'NISN' },
         { key: 'Nama Siswa', label: 'Nama Siswa' },
         ...filteredKategori.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
+        { key: 'Rata-rata', label: 'Rata-rata' },
+        { key: 'Keaktifan', label: 'Keaktifan' }
+      ];
+
+      const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${selectedSemester} - ${selectedTahunAjaran}`;
+      let customTemplate = getCustomPDFTemplate('grade');
+      
+      // Add subject info and signature date to template
+      customTemplate = {
+        ...customTemplate,
+        teacherInfo: {
+          ...customTemplate.teacherInfo,
+          subject: selectedMapelData?.nama_mata_pelajaran || '-',
+        },
+      };
+      
+      if (signatureDate) {
+        customTemplate = {
+          ...customTemplate,
+          signatureDate: signatureDate.toISOString().split('T')[0],
+        };
+      }
+      
+      const filename = `rekap_nilai_${selectedKelasData?.nama_kelas}_${selectedMapelData?.nama_mata_pelajaran}_S${selectedSemester}_${selectedTahunAjaran.replace('/', '-')}.pdf`;
+      
+      const blob = generatePDFBlob(
+        exportData, 
+        exportColumns, 
+        title, 
+        customTemplate,
+        { kelas: selectedKelasData?.nama_kelas }
+      );
+
+      // Download PDF directly
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export Berhasil",
+        description: "Rekap nilai berhasil diekspor ke PDF",
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Error",
+        description: "Gagal membuat PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExportPDF = (signatureDate?: Date) => {
+    if (studentGrades.length === 0) {
+      toast({
+        title: "Tidak Ada Data",
+        description: "Tidak ada data untuk diekspor",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const selectedKelasData = kelasList.find(k => k.id === selectedKelas);
+      const selectedMapelData = mataPelajaranList.find(m => m.id === selectedMataPelajaran);
+
+      const exportData = studentGrades.map((student) => {
+        const rowData: any = {
+          'NISN': student.nisn,
+          'Nama Siswa': student.nama_siswa
+        };
+
+        kategoriList.forEach(kategori => {
+          rowData[kategori.nama_kategori] = student.grades[kategori.id]?.toFixed(1) || '-';
+        });
+
+        rowData['Rata-rata'] = student.rata_rata.toFixed(1);
+        rowData['Keaktifan'] = `${student.total_keaktifan}x`;
+
+        return rowData;
+      });
+
+      const exportColumns = [
+        { key: 'NISN', label: 'NISN' },
+        { key: 'Nama Siswa', label: 'Nama Siswa' },
+        ...kategoriList.map(k => ({ key: k.nama_kategori, label: k.nama_kategori })),
         { key: 'Rata-rata', label: 'Rata-rata' },
         { key: 'Keaktifan', label: 'Keaktifan' }
       ];
@@ -599,12 +690,20 @@ const RekapNilai = () => {
             {studentGrades.length > 0 && (
               <div className="flex gap-2">
                 <Button 
-                  onClick={handleOpenColumnSelector}
+                  onClick={() => setIsExportDateDialogOpen(true)}
                   variant="outline"
                   size="sm"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   PDF
+                </Button>
+                <Button 
+                  onClick={handleOpenColumnSelector}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF Kustom
                 </Button>
                 <Button 
                   onClick={handleExportExcel}
@@ -778,10 +877,76 @@ const RekapNilai = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Column Selector Dialog */}
+      <Dialog open={isColumnSelectorOpen} onOpenChange={setIsColumnSelectorOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pilih Kolom Nilai untuk Dicetak</DialogTitle>
+            <DialogDescription>
+              Pilih kategori nilai yang ingin ditampilkan di PDF
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {kategoriList.map((kategori) => (
+              <div key={kategori.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={kategori.id}
+                  checked={selectedColumns.includes(kategori.id)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedColumns([...selectedColumns, kategori.id]);
+                    } else {
+                      setSelectedColumns(selectedColumns.filter(id => id !== kategori.id));
+                    }
+                  }}
+                />
+                <Label htmlFor={kategori.id} className="cursor-pointer">
+                  {kategori.nama_kategori}
+                </Label>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsColumnSelectorOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedColumns.length === 0) {
+                  toast({
+                    title: "Pilih Minimal Satu Kolom",
+                    description: "Pilih minimal satu kategori nilai untuk dicetak",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                setIsColumnSelectorOpen(false);
+                setIsExportDateDialogOpen(true);
+              }}
+            >
+              Lanjut ke PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ExportDateDialog
         open={isExportDateDialogOpen}
-        onOpenChange={setIsExportDateDialogOpen}
-        onExport={handleExportPDF}
+        onOpenChange={(open) => {
+          setIsExportDateDialogOpen(open);
+          // If dialog is for custom columns, use different handler
+        }}
+        onExport={(date) => {
+          // Check if we're exporting with custom columns
+          if (selectedColumns.length > 0 && selectedColumns.length < kategoriList.length) {
+            handleExportPDFWithColumns(date);
+          } else {
+            handleExportPDF(date);
+          }
+        }}
         title="Export Rekap Nilai"
         description="Pilih tanggal untuk tanda tangan pada laporan nilai"
       />
