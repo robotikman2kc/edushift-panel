@@ -155,7 +155,7 @@ export const generatePDFBlob = (
       doc.setTextColor(0, 0, 0);
       const reportTitleWidth = doc.getTextWidth(template.reportTitle);
       doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
-      currentY += 10; // Increased spacing after report title
+      currentY += 13; // Increased spacing after report title
       
       // Add extra spacing for grade reports
       if (title.includes('Nilai')) {
