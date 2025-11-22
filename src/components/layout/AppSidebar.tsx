@@ -153,7 +153,7 @@ export function AppSidebar() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Restore icon components from iconMap
+        // Restore icon components from iconMap using iconName
         return parsed.map((item: any) => ({
           ...item,
           icon: iconMap[item.iconName] || LayoutDashboard
@@ -165,14 +165,25 @@ export function AppSidebar() {
     return [];
   });
   
+  // Get icon name from component
+  const getIconName = (IconComponent: any): string => {
+    // Create reverse mapping to find icon name
+    for (const [name, component] of Object.entries(iconMap)) {
+      if (component === IconComponent) {
+        return name;
+      }
+    }
+    return 'LayoutDashboard'; // fallback
+  };
+  
   // Save quick menu to localStorage
   const updateQuickMenu = (items: any[]) => {
     setQuickMenuItems(items);
     // Save with icon names instead of component references
     const itemsToSave = items.map(item => ({
-      ...item,
-      iconName: item.icon.name,
-      icon: undefined
+      title: item.title,
+      url: item.url,
+      iconName: getIconName(item.icon)
     }));
     localStorage.setItem('quickMenuItems', JSON.stringify(itemsToSave));
   };
