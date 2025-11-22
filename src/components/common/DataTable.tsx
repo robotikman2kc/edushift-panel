@@ -356,7 +356,11 @@ export function DataTable({
 
   const handleExportPDF = (signatureDate?: Date) => {
     try {
-      const exportColumns = columns.map(col => ({ key: col.key, label: col.label }));
+      const exportColumns = columns.map(col => ({ 
+        key: col.key, 
+        label: col.label,
+        align: col.align 
+      }));
       
       // Use custom template for jurnal data
       let template = defaultTemplate;
