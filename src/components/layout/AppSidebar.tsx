@@ -265,19 +265,19 @@ export function AppSidebar() {
             >
               <SidebarGroup className="py-0">
                 <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="px-2 py-2 cursor-pointer hover:bg-sidebar-accent rounded-md transition-colors group mb-1">
+                  <SidebarGroupLabel className="px-3 py-2 cursor-pointer hover:bg-sidebar-accent/70 rounded-md transition-colors group mb-0.5 bg-sidebar-accent/30">
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <GroupIcon className="h-4 w-4 text-sidebar-foreground" />
+                      <div className="flex items-center gap-2.5">
+                        <GroupIcon className="h-4 w-4 text-primary" />
                         {!collapsed && (
-                          <span className="text-sm font-bold text-sidebar-foreground uppercase tracking-wide">
+                          <span className="text-sm font-semibold text-sidebar-foreground">
                             {group.title}
                           </span>
                         )}
                       </div>
                       {!collapsed && (
                         <ChevronDown
-                          className={`h-4 w-4 text-sidebar-foreground transition-transform duration-200 ${
+                          className={`h-3.5 w-3.5 text-sidebar-foreground/60 transition-transform duration-200 ${
                             isGroupOpen ? 'rotate-180' : ''
                           }`}
                         />
@@ -287,7 +287,7 @@ export function AppSidebar() {
                 </CollapsibleTrigger>
                 
                 <CollapsibleContent className="transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                  <SidebarGroupContent className="ml-2">
+                  <SidebarGroupContent className="ml-6 mt-1">
                     <SidebarMenu>
                       {group.items.map((item) => {
                         const ItemIcon = item.icon;
