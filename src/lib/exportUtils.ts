@@ -420,8 +420,8 @@ export const generatePDFBlob = (
       const pageWidth = doc.internal.pageSize.getWidth();
       const signatureLocation = template.signatureLocation || 'Jakarta';
       
-      if (title.includes('Jurnal') || title.includes('Agenda')) {
-        // Journal/Agenda reports: Two signatures side by side
+      if (title.includes('Jurnal')) {
+        // Journal reports: Two signatures side by side
         const leftColumnX = template.layout.margins.left;
         const rightColumnX = pageWidth - 80;
         
@@ -457,6 +457,26 @@ export const generatePDFBlob = (
         doc.text(`(${teacherName})`, rightColumnX, signatureStartY + 30);
         if (teacherNIP) {
           doc.text(`NIP: ${teacherNIP}`, rightColumnX, signatureStartY + 35);
+        }
+      } else if (title.includes('Agenda')) {
+        // Agenda reports: Single signature on the right (like attendance)
+        const signerName = template.teacherInfo?.name || 'Guru';
+        const signerPosition = template.teacherInfo?.jabatan || 'Guru';
+        const signerNIP = template.teacherInfo?.nip;
+        
+        // Use custom signature date if provided, otherwise use current date
+        const signatureDate = template.signatureDate 
+          ? formatDateIndonesia(new Date(template.signatureDate))
+          : formatDateIndonesia(new Date());
+        
+        const rightColumnX = pageWidth - 80;
+        doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
+        doc.text('Mengetahui,', rightColumnX, signatureStartY + 5);
+        doc.text(signerPosition, rightColumnX, signatureStartY + 10);
+        doc.text('', rightColumnX, signatureStartY + 25); // Space for signature
+        doc.text(`(${signerName})`, rightColumnX, signatureStartY + 30);
+        if (signerNIP) {
+          doc.text(`NIP: ${signerNIP}`, rightColumnX, signatureStartY + 35);
         }
       } else {
         // Attendance and Grade reports: Single signature on the right
