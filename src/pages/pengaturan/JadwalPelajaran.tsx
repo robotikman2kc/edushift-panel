@@ -80,6 +80,7 @@ export default function JadwalPelajaran() {
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
   const [showBreakSettingsDialog, setShowBreakSettingsDialog] = useState(false);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const [conflictingSchedules, setConflictingSchedules] = useState<Schedule[]>([]);
   const [minutesPerJP, setMinutesPerJP] = useState(45);
   
@@ -323,6 +324,33 @@ export default function JadwalPelajaran() {
     }
   };
 
+  
+  const handleDeleteAllSchedules = async () => {
+    try {
+      // Delete all schedules for current semester and year
+      const schedulesToDelete = schedules.map(s => s.id);
+      
+      for (const id of schedulesToDelete) {
+        await indexedDB.delete("jadwal_pelajaran", id);
+      }
+      
+      toast({
+        title: "Berhasil",
+        description: `${schedulesToDelete.length} jadwal berhasil dihapus`,
+      });
+      
+      setShowDeleteAllDialog(false);
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting all schedules:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus jadwal",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteSchedule = async (id: string) => {
     try {
       await indexedDB.delete("jadwal_pelajaran", id);
@@ -501,6 +529,15 @@ export default function JadwalPelajaran() {
               <SettingsIcon className="mr-2 h-4 w-4" />
               Jam Istirahat
             </Button>
+            {schedules.length > 0 && (
+              <Button 
+                onClick={() => setShowDeleteAllDialog(true)}
+                variant="destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Hapus Semua
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -690,6 +727,36 @@ export default function JadwalPelajaran() {
               Batal
             </Button>
             <Button onClick={handleAddSchedule}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <Dialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Semua Jadwal</DialogTitle>
+            <DialogDescription>
+              Anda akan menghapus semua jadwal untuk Semester {activeSemester}, Tahun Ajaran {activeTahunAjaran}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+            <p className="text-sm font-medium text-destructive mb-2">
+              ⚠️ Peringatan: Tindakan ini tidak dapat dibatalkan!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Total {schedules.length} jadwal akan dihapus secara permanen.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteAllDialog(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleDeleteAllSchedules} variant="destructive">
+              Ya, Hapus Semua
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
