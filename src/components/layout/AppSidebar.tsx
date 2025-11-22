@@ -179,16 +179,22 @@ export function AppSidebar() {
     );
   };
   
-  // Auto-open group when route changes
+  // Auto-open group when route changes - but only if not in quick menu
   useEffect(() => {
-    menuItems.forEach((group) => {
-      if (group.items.some((item) => currentPath === item.url)) {
-        if (!openGroups.includes(group.title)) {
-          setOpenGroups((prev) => [...prev, group.title]);
+    // Check if current path is in quick menu
+    const isInQuickMenu = quickMenuItems.some((item) => item.url === currentPath);
+    
+    // Only auto-open if the current route is NOT in quick menu
+    if (!isInQuickMenu) {
+      menuItems.forEach((group) => {
+        if (group.items.some((item) => currentPath === item.url)) {
+          if (!openGroups.includes(group.title)) {
+            setOpenGroups((prev) => [...prev, group.title]);
+          }
         }
-      }
-    });
-  }, [currentPath]);
+      });
+    }
+  }, [currentPath, quickMenuItems]);
 
   // Load profile from localStorage
   useEffect(() => {
