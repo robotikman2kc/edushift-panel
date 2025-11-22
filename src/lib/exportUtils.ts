@@ -156,6 +156,11 @@ export const generatePDFBlob = (
       const reportTitleWidth = doc.getTextWidth(template.reportTitle);
       doc.text(template.reportTitle, (pageWidth - reportTitleWidth) / 2, currentY);
       currentY += 5;
+      
+      // Add extra spacing for grade reports
+      if (title.includes('Nilai')) {
+        currentY += 8;
+      }
     }
 
     // Add month info for journal reports (before teacher info)
