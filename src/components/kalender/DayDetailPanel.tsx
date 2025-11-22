@@ -110,7 +110,7 @@ export function DayDetailPanel({
                   </div>
                   <div className="text-xs">
                     <span className="font-medium">Materi Terakhir: </span>
-                    <span className="line-clamp-2">{agenda.materi}</span>
+                    {agenda.materi}
                   </div>
                 </div>
               ))}
