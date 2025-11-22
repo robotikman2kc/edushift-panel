@@ -419,8 +419,8 @@ export default function JadwalPelajaran() {
       <Card>
         <CardContent className="pt-6">
           <div className="mb-6 flex gap-4 items-end">
-            <div className="flex-1 max-w-xs">
-              <Label>Semester</Label>
+            <div className="flex-1 max-w-xs space-y-2">
+              <Label className="block">Semester</Label>
               <Select value={activeSemester} onValueChange={async (value) => {
                 setActiveSemester(value);
                 await fetchData(activeTahunAjaran, value);
