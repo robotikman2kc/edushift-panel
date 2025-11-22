@@ -176,21 +176,7 @@ export const NoTaskWidget = () => {
   }
 
   if (noTaskStudents.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Siswa Belum Mengumpulkan
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6 text-muted-foreground">
-            <p className="text-sm">Semua siswa sudah mengumpulkan tugas</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
