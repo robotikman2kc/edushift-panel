@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran, getActiveSemester, setActiveSemester as setActiveAcademicSemester } from "@/lib/academicYearUtils";
@@ -423,13 +423,7 @@ export default function JadwalPelajaran() {
               <Label>Semester</Label>
               <Select value={activeSemester} onValueChange={async (value) => {
                 setActiveSemester(value);
-                await setActiveAcademicSemester(value);
-                setCalendarActiveSemester(value);
                 await fetchData(activeTahunAjaran, value);
-                toast({
-                  title: "Berhasil",
-                  description: `Semester ${value} berhasil diaktifkan untuk kalender`,
-                });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih semester" />
@@ -454,6 +448,28 @@ export default function JadwalPelajaran() {
                 </SelectContent>
               </Select>
             </div>
+            <Button 
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await setActiveAcademicSemester(activeSemester);
+                  setCalendarActiveSemester(activeSemester);
+                  toast({
+                    title: "Berhasil",
+                    description: `Semester ${activeSemester} berhasil diaktifkan untuk kalender`,
+                  });
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "Gagal mengaktifkan semester",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Aktifkan Semester
+            </Button>
           </div>
 
           <div className="flex gap-2 mb-6">
