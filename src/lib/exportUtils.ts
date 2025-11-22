@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { PDFTemplate, defaultTemplate } from './pdfTemplates';
+import { isHariLibur } from './hariLiburUtils';
 
 export interface ExportColumn {
   key: string;
@@ -267,6 +268,52 @@ export const generatePDFBlob = (
         fillColor: template.styling.secondaryColor
       },
       margin: template.layout.margins,
+      didDrawCell: (data) => {
+        // Color rows for national holidays in journal reports
+        if (title.includes('Jurnal') && data.section === 'body') {
+          const rowIndex = data.row.index;
+          const originalData = data[rowIndex];
+          
+          // Check if this row is a national holiday
+          let isHoliday = false;
+          
+          // Check by date (find tanggal column)
+          const tanggalColIndex = columns.findIndex(col => col.key === 'tanggal');
+          if (tanggalColIndex >= 0) {
+            const tanggalValue = originalData?.[tanggalColIndex];
+            if (tanggalValue) {
+              // Parse the date from the display format (DD/MM/YYYY)
+              const parts = tanggalValue.split('/');
+              if (parts.length === 3) {
+                const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                if (isHariLibur(date)) {
+                  isHoliday = true;
+                }
+              }
+            }
+          }
+          
+          // Check by category (jenis_kegiatan contains "Libur Nasional")
+          const jenisKegiatanColIndex = columns.findIndex(col => col.key === 'jenis_kegiatan');
+          if (jenisKegiatanColIndex >= 0) {
+            const jenisKegiatan = originalData?.[jenisKegiatanColIndex];
+            if (jenisKegiatan && jenisKegiatan.toLowerCase().includes('libur nasional')) {
+              isHoliday = true;
+            }
+          }
+          
+          // Apply yellow background to the cell if it's a holiday
+          if (isHoliday) {
+            doc.setFillColor(255, 237, 213); // Light amber color
+            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+            // Redraw the cell text
+            doc.setTextColor(0, 0, 0);
+            doc.text(data.cell.text[0] || '', data.cell.x + data.cell.padding('left'), data.cell.y + data.cell.height / 2, {
+              baseline: 'middle'
+            });
+          }
+        }
+      },
       didDrawPage: (data) => {
         // Track the final Y position after table
         tableEndY = data.cursor?.y || currentY;
