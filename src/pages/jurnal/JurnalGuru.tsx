@@ -867,6 +867,7 @@ const JurnalGuru = () => {
                 onDelete={handleDelete}
                 searchPlaceholder="Cari jurnal..."
                 title="Jurnal Guru"
+                formFields={[]}
                 additionalPDFInfo={{
                   bulan: `${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][parseInt(filterMonth)]} ${filterYear}`
                 }}
