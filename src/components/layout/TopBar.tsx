@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, Circle, Clock, Calendar, RotateCcw, AlertTriangle, Moon, Sun } from "lucide-react";
+import { User, Settings, Circle, Clock, Calendar, RotateCcw, AlertTriangle, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +32,35 @@ export function TopBar() {
   const [daysSinceBackup, setDaysSinceBackup] = useState(0);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [canGoForward, setCanGoForward] = useState(false);
+
+  // Track navigation history
+  useEffect(() => {
+    const checkNavigationState = () => {
+      setCanGoBack(window.history.length > 1);
+      // We can't reliably check forward history, so we'll track it manually
+    };
+    
+    checkNavigationState();
+    
+    // Listen for navigation events
+    window.addEventListener('popstate', checkNavigationState);
+    
+    return () => {
+      window.removeEventListener('popstate', checkNavigationState);
+    };
+  }, []);
+
+  const handleBack = () => {
+    if (canGoBack) {
+      navigate(-1);
+    }
+  };
+
+  const handleForward = () => {
+    navigate(1);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -202,6 +231,29 @@ export function TopBar() {
           {/* Left Section */}
           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
             <SidebarTrigger className="h-8 w-8 flex-shrink-0" />
+            
+            {/* Navigation Back/Forward Buttons */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                disabled={!canGoBack}
+                className="h-8 w-8 p-0"
+                title="Halaman sebelumnya"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleForward}
+                className="h-8 w-8 p-0"
+                title="Halaman berikutnya"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
             
             {/* Status & Time - Hidden on very small screens */}
             <div className="hidden sm:flex items-center gap-2 lg:gap-4 min-w-0">
