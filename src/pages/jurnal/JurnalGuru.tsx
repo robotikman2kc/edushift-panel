@@ -767,7 +767,7 @@ const JurnalGuru = () => {
                         placeholder="Pembinaan oleh siapa? (contoh: Kepala Sekolah)"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            const value = (e.target as HTMLInputElement).value;
+                            const value = (e.target as HTMLInputElement).value.trim();
                             if (value) {
                               setShowRapatDialog(false);
                               handleAddNew();
@@ -780,10 +780,11 @@ const JurnalGuru = () => {
                       <Button
                         onClick={() => {
                           const input = document.getElementById("rapat-pembinaan") as HTMLInputElement;
-                          if (input?.value) {
+                          const value = input?.value.trim();
+                          if (value) {
                             setShowRapatDialog(false);
                             handleAddNew();
-                            setTimeout(() => applyTemplate("rapat", "pembinaan", input.value), 100);
+                            setTimeout(() => applyTemplate("rapat", "pembinaan", value), 100);
                             input.value = "";
                           }
                         }}
@@ -812,7 +813,7 @@ const JurnalGuru = () => {
                         placeholder="Rapat apa? (contoh: Rapat Kenaikan Kelas)"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            const value = (e.target as HTMLInputElement).value;
+                            const value = (e.target as HTMLInputElement).value.trim();
                             if (value) {
                               setShowRapatDialog(false);
                               handleAddNew();
@@ -825,10 +826,11 @@ const JurnalGuru = () => {
                       <Button
                         onClick={() => {
                           const input = document.getElementById("rapat-biasa") as HTMLInputElement;
-                          if (input?.value) {
+                          const value = input?.value.trim();
+                          if (value) {
                             setShowRapatDialog(false);
                             handleAddNew();
-                            setTimeout(() => applyTemplate("rapat", "biasa", input.value), 100);
+                            setTimeout(() => applyTemplate("rapat", "biasa", value), 100);
                             input.value = "";
                           }
                         }}
