@@ -285,9 +285,10 @@ export const generatePDFBlob = (
             }
           }
           
-          // Also check by category (jenis_kegiatan contains "Libur Nasional")
+          // Also check by category (jenis_kegiatan contains "Libur Nasional" or "Cuti")
           if (originalItem.jenis_kegiatan && typeof originalItem.jenis_kegiatan === 'string') {
-            if (originalItem.jenis_kegiatan.toLowerCase().includes('libur nasional')) {
+            const lowerKegiatan = originalItem.jenis_kegiatan.toLowerCase();
+            if (lowerKegiatan.includes('libur nasional') || lowerKegiatan.includes('cuti')) {
               isHoliday = true;
             }
           }
