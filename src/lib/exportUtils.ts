@@ -268,49 +268,49 @@ export const generatePDFBlob = (
         fillColor: template.styling.secondaryColor
       },
       margin: template.layout.margins,
-      didDrawCell: (data) => {
+      didDrawCell: (cellData) => {
         // Color rows for national holidays in journal reports
-        if (title.includes('Jurnal') && data.section === 'body') {
-          const rowIndex = data.row.index;
-          const originalData = data[rowIndex];
+        if (title.includes('Jurnal') && cellData.section === 'body') {
+          const rowIndex = cellData.row.index;
+          const originalItem = data[rowIndex]; // Access original data array
           
           // Check if this row is a national holiday
           let isHoliday = false;
           
-          // Check by date (find tanggal column)
-          const tanggalColIndex = columns.findIndex(col => col.key === 'tanggal');
-          if (tanggalColIndex >= 0) {
-            const tanggalValue = originalData?.[tanggalColIndex];
-            if (tanggalValue) {
-              // Parse the date from the display format (DD/MM/YYYY)
-              const parts = tanggalValue.split('/');
-              if (parts.length === 3) {
-                const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                if (isHariLibur(date)) {
-                  isHoliday = true;
-                }
-              }
-            }
-          }
-          
-          // Check by category (jenis_kegiatan contains "Libur Nasional")
-          const jenisKegiatanColIndex = columns.findIndex(col => col.key === 'jenis_kegiatan');
-          if (jenisKegiatanColIndex >= 0) {
-            const jenisKegiatan = originalData?.[jenisKegiatanColIndex];
-            if (jenisKegiatan && jenisKegiatan.toLowerCase().includes('libur nasional')) {
+          // Check by date - look for _originalDate in the data
+          if (originalItem._originalDate) {
+            const date = new Date(originalItem._originalDate);
+            if (isHariLibur(date)) {
               isHoliday = true;
             }
           }
           
-          // Apply yellow background to the cell if it's a holiday
+          // Also check by category (jenis_kegiatan contains "Libur Nasional")
+          if (originalItem.jenis_kegiatan && typeof originalItem.jenis_kegiatan === 'string') {
+            if (originalItem.jenis_kegiatan.toLowerCase().includes('libur nasional')) {
+              isHoliday = true;
+            }
+          }
+          
+          // Apply yellow background to the entire row if it's a holiday
           if (isHoliday) {
-            doc.setFillColor(255, 237, 213); // Light amber color
-            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+            doc.setFillColor(255, 237, 213); // Light amber/yellow color
+            doc.rect(cellData.cell.x, cellData.cell.y, cellData.cell.width, cellData.cell.height, 'F');
+            
+            // Redraw the cell border
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.1);
+            doc.rect(cellData.cell.x, cellData.cell.y, cellData.cell.width, cellData.cell.height, 'S');
+            
             // Redraw the cell text
             doc.setTextColor(0, 0, 0);
-            doc.text(data.cell.text[0] || '', data.cell.x + data.cell.padding('left'), data.cell.y + data.cell.height / 2, {
-              baseline: 'middle'
-            });
+            doc.setFontSize(cellData.cell.styles.fontSize);
+            const textLines = cellData.cell.text;
+            if (textLines && textLines.length > 0) {
+              doc.text(textLines, cellData.cell.x + cellData.cell.padding('left'), cellData.cell.y + cellData.cell.height / 2, {
+                baseline: 'middle'
+              });
+            }
           }
         }
       },
