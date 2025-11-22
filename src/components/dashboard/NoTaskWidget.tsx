@@ -1,8 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertCircle, Search } from "lucide-react";
 import { indexedDB } from "@/lib/indexedDB";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 
@@ -24,6 +29,11 @@ export const NoTaskWidget = () => {
   const navigate = useNavigate();
   const [noTaskStudents, setNoTaskStudents] = useState<NoTaskStudent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+  const [selectedMapel, setSelectedMapel] = useState<string>("all");
+  const [selectedKategori, setSelectedKategori] = useState<string>("all");
 
   useEffect(() => {
     fetchNoTaskStudents();
@@ -71,10 +81,9 @@ export const NoTaskWidget = () => {
         };
       });
 
-      // Sort by date (newest first) and limit to 10
+      // Sort by date (newest first) - no limit anymore
       const sortedData = enrichedData
-        .sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime())
-        .slice(0, 10);
+        .sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
 
       setNoTaskStudents(sortedData);
     } catch (error) {
@@ -113,6 +122,43 @@ export const NoTaskWidget = () => {
     navigate("/penilaian/input-nilai");
   };
 
+  // Get unique values for filters
+  const uniqueKelas = useMemo(() => {
+    const kelasMap = new Map<string, string>();
+    noTaskStudents.forEach(s => {
+      kelasMap.set(s.kelas_id, s.kelas_nama);
+    });
+    return Array.from(kelasMap.entries()).map(([id, nama]) => ({ id, nama }));
+  }, [noTaskStudents]);
+
+  const uniqueMapel = useMemo(() => {
+    const mapelMap = new Map<string, string>();
+    noTaskStudents.forEach(s => {
+      mapelMap.set(s.mata_pelajaran_id, s.mata_pelajaran_nama);
+    });
+    return Array.from(mapelMap.entries()).map(([id, nama]) => ({ id, nama }));
+  }, [noTaskStudents]);
+
+  const uniqueKategori = useMemo(() => {
+    const kategoriMap = new Map<string, string>();
+    noTaskStudents.forEach(s => {
+      kategoriMap.set(s.kategori_id, s.kategori_nama);
+    });
+    return Array.from(kategoriMap.entries()).map(([id, nama]) => ({ id, nama }));
+  }, [noTaskStudents]);
+
+  // Filter students
+  const filteredStudents = useMemo(() => {
+    return noTaskStudents.filter(student => {
+      const matchSearch = student.siswa_nama.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchKelas = selectedKelas === "all" || student.kelas_id === selectedKelas;
+      const matchMapel = selectedMapel === "all" || student.mata_pelajaran_id === selectedMapel;
+      const matchKategori = selectedKategori === "all" || student.kategori_id === selectedKategori;
+      
+      return matchSearch && matchKelas && matchMapel && matchKategori;
+    });
+  }, [noTaskStudents, searchQuery, selectedKelas, selectedMapel, selectedKategori]);
+
   if (loading) {
     return (
       <Card>
@@ -148,37 +194,127 @@ export const NoTaskWidget = () => {
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-orange-500" />
-          Nilai Kosong
-          <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
-            {noTaskStudents.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {noTaskStudents.map((student, index) => (
-            <div 
-              key={`${student.siswa_id}-${index}`}
-              onClick={() => handleNavigateToInputNilai(student)}
-              className="flex items-center justify-between gap-2 p-2 rounded border bg-card hover:bg-muted/50 transition-colors text-xs cursor-pointer hover:shadow-sm"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{student.siswa_nama}</p>
-                <p className="text-muted-foreground truncate">
-                  {student.mata_pelajaran_nama} - {student.kategori_nama}
-                </p>
-              </div>
-              <Badge variant="outline" className="text-xs flex-shrink-0">
-                {student.kelas_nama}
+    <>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setIsDialogOpen(true)}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-orange-500" />
+            Nilai Kosong
+            <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
+              {noTaskStudents.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Ada {noTaskStudents.length} siswa yang belum mengumpulkan tugas
+          </p>
+          <div className="flex justify-end">
+            <Button variant="link" className="text-xs p-0 h-auto">
+              Lihat Detail →
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Siswa Belum Mengumpulkan
+              <Badge variant="destructive" className="text-xs">
+                {filteredStudents.length}
               </Badge>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari nama siswa..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <Select value={selectedKelas} onValueChange={setSelectedKelas}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kelas</SelectItem>
+                  {uniqueKelas.map(k => (
+                    <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedMapel} onValueChange={setSelectedMapel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Mapel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Mapel</SelectItem>
+                  {uniqueMapel.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedKategori} onValueChange={setSelectedKategori}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kategori</SelectItem>
+                  {uniqueKategori.map(k => (
+                    <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Student List */}
+            <ScrollArea className="h-[400px] pr-4">
+              {filteredStudents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">Tidak ada data yang sesuai dengan filter</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredStudents.map((student, index) => (
+                    <div
+                      key={`${student.siswa_id}-${index}`}
+                      onClick={() => {
+                        handleNavigateToInputNilai(student);
+                        setIsDialogOpen(false);
+                      }}
+                      className="p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{student.siswa_nama}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {student.mata_pelajaran_nama} - {student.kategori_nama}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
+                          {student.kelas_nama}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
