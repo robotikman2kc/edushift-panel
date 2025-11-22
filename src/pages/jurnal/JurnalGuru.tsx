@@ -578,7 +578,7 @@ const JurnalGuru = () => {
     }
   };
 
-  const saveQuickJurnal = async (template: string, subType?: string) => {
+  const saveQuickJurnal = async (template: string, subType?: string, customText?: string) => {
     try {
       let jenisKegiatanId = "";
       let uraian = "";
@@ -589,6 +589,18 @@ const JurnalGuru = () => {
         const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
         jenisKegiatanId = upacaraKegiatan?.id || jenisKegiatan[0]?.id || "";
         uraian = "Upacara Bendera Hari Senin";
+        satuan = "kali";
+      } else if (template === "rapat") {
+        const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
+        jenisKegiatanId = rapatKegiatan?.id || jenisKegiatan[0]?.id || "";
+        
+        if (subType === "pembinaan" && customText) {
+          uraian = `Pembinaan Oleh ${customText}`;
+        } else if (subType === "biasa" && customText) {
+          uraian = `Rapat ${customText}`;
+        } else {
+          uraian = "Rapat";
+        }
         satuan = "kali";
       }
 
@@ -770,8 +782,7 @@ const JurnalGuru = () => {
                             const value = (e.target as HTMLInputElement).value.trim();
                             if (value) {
                               setShowRapatDialog(false);
-                              handleAddNew();
-                              setTimeout(() => applyTemplate("rapat", "pembinaan", value), 100);
+                              saveQuickJurnal("rapat", "pembinaan", value);
                               (e.target as HTMLInputElement).value = "";
                             }
                           }
@@ -783,8 +794,7 @@ const JurnalGuru = () => {
                           const value = input?.value.trim();
                           if (value) {
                             setShowRapatDialog(false);
-                            handleAddNew();
-                            setTimeout(() => applyTemplate("rapat", "pembinaan", value), 100);
+                            saveQuickJurnal("rapat", "pembinaan", value);
                             input.value = "";
                           }
                         }}
@@ -816,8 +826,7 @@ const JurnalGuru = () => {
                             const value = (e.target as HTMLInputElement).value.trim();
                             if (value) {
                               setShowRapatDialog(false);
-                              handleAddNew();
-                              setTimeout(() => applyTemplate("rapat", "biasa", value), 100);
+                              saveQuickJurnal("rapat", "biasa", value);
                               (e.target as HTMLInputElement).value = "";
                             }
                           }
@@ -829,8 +838,7 @@ const JurnalGuru = () => {
                           const value = input?.value.trim();
                           if (value) {
                             setShowRapatDialog(false);
-                            handleAddNew();
-                            setTimeout(() => applyTemplate("rapat", "biasa", value), 100);
+                            saveQuickJurnal("rapat", "biasa", value);
                             input.value = "";
                           }
                         }}
