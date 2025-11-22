@@ -338,12 +338,28 @@ export const generatePDFBlob = (
             doc.setLineWidth(0.1);
             doc.rect(cellData.cell.x, cellData.cell.y, cellData.cell.width, cellData.cell.height, 'S');
             
-            // Redraw the cell text
+            // Redraw the cell text with proper alignment
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(cellData.cell.styles.fontSize);
             const textLines = cellData.cell.text;
+            
             if (textLines && textLines.length > 0) {
-              doc.text(textLines, cellData.cell.x + cellData.cell.padding('left'), cellData.cell.y + cellData.cell.height / 2, {
+              // Get alignment from columnStyles
+              const colIndex = cellData.column.index;
+              const alignment = columnStyles[colIndex]?.halign || 'left';
+              
+              let textX = cellData.cell.x + cellData.cell.padding('left');
+              
+              // Adjust X position based on alignment
+              if (alignment === 'center') {
+                const textWidth = doc.getTextWidth(textLines.join(' '));
+                textX = cellData.cell.x + (cellData.cell.width / 2) - (textWidth / 2);
+              } else if (alignment === 'right') {
+                const textWidth = doc.getTextWidth(textLines.join(' '));
+                textX = cellData.cell.x + cellData.cell.width - textWidth - cellData.cell.padding('right');
+              }
+              
+              doc.text(textLines, textX, cellData.cell.y + cellData.cell.height / 2, {
                 baseline: 'middle'
               });
             }
