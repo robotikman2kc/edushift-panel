@@ -227,7 +227,7 @@ export const generatePDFBlob = (
       }
     }
 
-    // Add additional info (kelas and bulan for attendance reports) - AFTER separator line
+    // Add additional info (kelas and bulan for attendance/agenda reports) - AFTER separator line
     console.log('Additional info received:', additionalInfo); // Debug log
     if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan) && !title.includes('Jurnal') && !title.includes('Nilai')) {
       console.log('Adding class and month info to PDF'); // Debug log
@@ -241,10 +241,10 @@ export const generatePDFBlob = (
       }
       if (additionalInfo.bulan) {
         console.log('Adding Bulan:', additionalInfo.bulan); // Debug log
-        doc.text(`Bulan: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
+        doc.text(`Periode: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
         currentY += 5;
       }
-      currentY += 6;
+      currentY += 3; // Reduced spacing before table for agenda
     } else {
       console.log('No additional info to add'); // Debug log
     }
