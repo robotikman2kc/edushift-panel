@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
+import { JurnalStatusWidget } from "@/components/dashboard/JurnalStatusWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -293,6 +294,9 @@ const Dashboard = () => {
           })}
         </div>
       )}
+
+      {/* Jurnal Status Widget */}
+      <JurnalStatusWidget />
 
       {/* Today's Schedule & PWA Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
