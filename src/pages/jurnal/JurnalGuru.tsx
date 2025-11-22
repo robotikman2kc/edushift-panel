@@ -145,7 +145,7 @@ const JurnalGuru = () => {
   useEffect(() => {
     fetchData();
     loadAvailableYears();
-    ensureLiburNasionalExists();
+    ensureDefaultKegiatanExists();
     autoFillHariLibur(); // Auto-create entries for holidays
     loadCustomTemplates();
   }, []);
@@ -180,9 +180,11 @@ const JurnalGuru = () => {
     return () => subscription.unsubscribe();
   }, [jurnalForm, jenisKegiatan, selectedJurnal]);
 
-  const ensureLiburNasionalExists = async () => {
+  const ensureDefaultKegiatanExists = async () => {
     try {
       const kegiatanData = await indexedDB.select("jenis_kegiatan");
+      
+      // Check for Libur Nasional
       const liburNasionalExists = kegiatanData.some(
         (k: any) => k.nama_kegiatan.toLowerCase() === "libur nasional"
       );
@@ -192,17 +194,33 @@ const JurnalGuru = () => {
           nama_kegiatan: "Libur Nasional",
           deskripsi: "Hari libur nasional dan cuti bersama",
         });
-        await fetchData(); // Refresh data to include the new jenis kegiatan
+      }
+      
+      // Check for Cuti
+      const cutiExists = kegiatanData.some(
+        (k: any) => k.nama_kegiatan.toLowerCase() === "cuti"
+      );
+      
+      if (!cutiExists) {
+        await indexedDB.insert("jenis_kegiatan", {
+          nama_kegiatan: "Cuti",
+          deskripsi: "Cuti pegawai/guru",
+        });
+      }
+      
+      // Refresh if we added anything
+      if (!liburNasionalExists || !cutiExists) {
+        await fetchData();
       }
     } catch (error) {
-      console.error("Error ensuring Libur Nasional exists:", error);
+      console.error("Error ensuring default kegiatan exists:", error);
     }
   };
 
   const autoFillHariLibur = async () => {
     try {
       // Wait for jenis kegiatan to load
-      await ensureLiburNasionalExists();
+      await ensureDefaultKegiatanExists();
       
       const kegiatanData = await indexedDB.select("jenis_kegiatan");
       const liburNasionalKegiatan = kegiatanData.find(
@@ -1261,10 +1279,11 @@ const JurnalGuru = () => {
                     }
                   }
                   
-                  // Also check if the category is "Libur Nasional"
+                  // Also check if the category is "Libur Nasional" or "Cuti"
                   const isLiburNasionalCategory = item.jenis_kegiatan?.toLowerCase().includes('libur nasional');
+                  const isCutiCategory = item.jenis_kegiatan?.toLowerCase().includes('cuti');
                   
-                  if (isHoliday || isLiburNasionalCategory) {
+                  if (isHoliday || isLiburNasionalCategory || isCutiCategory) {
                     return 'bg-amber-500/10 hover:bg-amber-500/20';
                   }
                   
