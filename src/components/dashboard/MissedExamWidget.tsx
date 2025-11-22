@@ -195,41 +195,41 @@ export function MissedExamWidget() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-destructive" />
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-destructive" />
           Siswa Belum Ulangan
-          <Badge variant="destructive" className="ml-auto">
+          <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
             {missedExamStudents.length}
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2">
         {missedExamStudents.map((student, index) => (
           <div
             key={index}
             onClick={() => handleNavigateToInputNilai(student)}
-            className="p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors"
+            className="p-2 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors"
           >
             <div className="flex items-start justify-between gap-2">
-              <div className="space-y-1 flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <p className="font-semibold text-sm truncate">{student.nama_siswa}</p>
-                  <Badge variant={getStatusBadgeVariant(student.status_kehadiran)} className="text-xs">
+              <div className="space-y-0.5 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                  <p className="font-semibold text-xs truncate">{student.nama_siswa}</p>
+                  <Badge variant={getStatusBadgeVariant(student.status_kehadiran)} className="text-[10px] px-1 py-0">
                     {student.status_kehadiran}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                  <span className="font-medium">{student.nama_mata_pelajaran}</span>
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
+                  <span className="font-medium truncate">{student.nama_mata_pelajaran}</span>
                   <span>•</span>
-                  <Calendar className="h-3 w-3" />
-                  <span>
+                  <Calendar className="h-2.5 w-2.5" />
+                  <span className="whitespace-nowrap">
                     {format(new Date(student.tanggal_ulangan), "dd MMM yyyy", { locale: localeId })}
                   </span>
                 </div>
               </div>
-              <Badge variant="outline" className="text-xs flex-shrink-0">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
                 {student.nama_kelas}
               </Badge>
             </div>
