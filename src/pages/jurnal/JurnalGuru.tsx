@@ -811,87 +811,80 @@ const JurnalGuru = () => {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Input Koreksi Cepat */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Input Koreksi Tugas/Soal
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Pilih mata pelajaran dan kelas untuk langsung menyimpan jurnal koreksi dengan volume "1 Paket"
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Mata Pelajaran</label>
-              <Select onValueChange={(value) => {
-                const mapelSelect = document.getElementById("quick-mapel") as any;
-                if (mapelSelect) mapelSelect.dataset.mapelId = value;
-              }}>
-                <SelectTrigger id="quick-mapel">
-                  <SelectValue placeholder="Pilih Mata Pelajaran" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mataPelajaran.map((mapel) => (
-                    <SelectItem key={mapel.id} value={mapel.id}>
-                      {mapel.nama_mata_pelajaran}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Kelas</label>
-              <Select onValueChange={(value) => {
-                const kelasSelect = document.getElementById("quick-kelas") as any;
-                if (kelasSelect) kelasSelect.dataset.kelasId = value;
-              }}>
-                <SelectTrigger id="quick-kelas">
-                  <SelectValue placeholder="Pilih Kelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {kelas.map((k) => (
-                    <SelectItem key={k.id} value={k.id}>
-                      {k.nama_kelas}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium invisible">Simpan</label>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  const mapelSelect = document.getElementById("quick-mapel") as any;
-                  const kelasSelect = document.getElementById("quick-kelas") as any;
-                  const mapelId = mapelSelect?.dataset.mapelId;
-                  const kelasId = kelasSelect?.dataset.kelasId;
-                  
-                  if (mapelId && kelasId) {
-                    saveKoreksiJurnal(mapelId, kelasId);
-                    // Reset selects
-                    mapelSelect.dataset.mapelId = "";
-                    kelasSelect.dataset.kelasId = "";
-                  } else {
-                    toast({
-                      title: "Error",
-                      description: "Pilih mata pelajaran dan kelas terlebih dahulu",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Simpan Jurnal
-              </Button>
-            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                  Koreksi Tugas/Soal
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Mengkoreksi Tugas/Soal</DialogTitle>
+                  <DialogDescription>
+                    Pilih mata pelajaran dan kelas (Volume: 1 Paket)
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Mata Pelajaran</label>
+                    <Select onValueChange={(value) => {
+                      const mapelSelect = document.getElementById("template-mapel") as any;
+                      if (mapelSelect) mapelSelect.dataset.mapelId = value;
+                    }}>
+                      <SelectTrigger id="template-mapel">
+                        <SelectValue placeholder="Pilih Mata Pelajaran" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mataPelajaran.map((mapel) => (
+                          <SelectItem key={mapel.id} value={mapel.id}>
+                            {mapel.nama_mata_pelajaran}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Kelas</label>
+                    <Select onValueChange={(value) => {
+                      const kelasSelect = document.getElementById("template-kelas") as any;
+                      if (kelasSelect) kelasSelect.dataset.kelasId = value;
+                    }}>
+                      <SelectTrigger id="template-kelas">
+                        <SelectValue placeholder="Pilih Kelas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {kelas.map((k) => (
+                          <SelectItem key={k.id} value={k.id}>
+                            {k.nama_kelas}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const mapelSelect = document.getElementById("template-mapel") as any;
+                      const kelasSelect = document.getElementById("template-kelas") as any;
+                      const mapelId = mapelSelect?.dataset.mapelId;
+                      const kelasId = kelasSelect?.dataset.kelasId;
+                      
+                      if (mapelId && kelasId) {
+                        saveKoreksiJurnal(mapelId, kelasId);
+                      } else {
+                        toast({
+                          title: "Error",
+                          description: "Pilih mata pelajaran dan kelas terlebih dahulu",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    Simpan Jurnal
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
