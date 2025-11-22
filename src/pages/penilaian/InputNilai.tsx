@@ -730,7 +730,7 @@ const InputNilai = () => {
                           <TableCell className="text-center">
                             {isNotSubmitted ? (
                               <Badge variant="secondary" className="text-xs">
-                                Belum Kumpul
+                                No Task
                               </Badge>
                             ) : grade ? (
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getGradeColor(grade)}`}>
@@ -752,7 +752,7 @@ const InputNilai = () => {
                                 htmlFor={`not-submitted-${student.id}`}
                                 className="text-xs cursor-pointer"
                               >
-                                Belum Kumpul
+                                No Task
                               </Label>
                             </div>
                           </TableCell>
