@@ -167,12 +167,22 @@ const Dashboard = () => {
       const today = days[selectedDate.getDay()];
       const todayDate = format(selectedDate, "yyyy-MM-dd");
       
-      // Filter schedules by active semester and academic year
-      const schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => 
-        s.hari === today && 
-        s.semester === activeSemester && 
-        s.tahun_ajaran === activeTahunAjaran
-      );
+      console.log('Fetching schedule for:', today, 'Active Semester:', activeSemester, 'Active Year:', activeTahunAjaran);
+      
+      // Get all schedules for today first
+      let schedules = await indexedDB.select("jadwal_pelajaran", (s: any) => s.hari === today);
+      
+      console.log('Total schedules for', today, ':', schedules.length);
+      
+      // Filter by semester and academic year if they exist in the schedule data
+      schedules = schedules.filter((s: any) => {
+        // If semester or tahun_ajaran fields don't exist, include the schedule
+        const semesterMatch = !s.semester || s.semester === activeSemester;
+        const tahunAjaranMatch = !s.tahun_ajaran || s.tahun_ajaran === activeTahunAjaran;
+        return semesterMatch && tahunAjaranMatch;
+      });
+      
+      console.log('Filtered schedules:', schedules.length);
       const timeSlots = await indexedDB.select("jam_pelajaran");
       const kelasData = await indexedDB.select("kelas");
       const mataPelajaranData = await indexedDB.select("mata_pelajaran");
