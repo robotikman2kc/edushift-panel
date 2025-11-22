@@ -372,7 +372,15 @@ const LaporanPenilaian = () => {
       const title = `Rekap Nilai - ${selectedKelasData?.nama_kelas} - ${selectedMapelData?.nama_mata_pelajaran} - Semester ${semester} - ${selectedTahunAjaran}`;
       let customTemplate = getCustomPDFTemplate('grade');
       
-      // Add signature date to template
+      // Add subject info and signature date to template
+      customTemplate = {
+        ...customTemplate,
+        teacherInfo: {
+          ...customTemplate.teacherInfo,
+          subject: selectedMapelData?.nama_mata_pelajaran || '-',
+        },
+      };
+      
       if (signatureDate) {
         customTemplate = {
           ...customTemplate,
