@@ -215,7 +215,16 @@ export const generatePDFBlob = (
         doc.text('Mata Pelajaran', template.layout.margins.left, infoY + 10);
         doc.text(':', template.layout.margins.left + labelWidth, infoY + 10);
         doc.text(template.teacherInfo.subject || '-', template.layout.margins.left + labelWidth + 3, infoY + 10);
-        currentY += 18;
+        
+        // Add Kelas info if available
+        if (additionalInfo?.kelas) {
+          doc.text('Kelas', template.layout.margins.left, infoY + 15);
+          doc.text(':', template.layout.margins.left + labelWidth, infoY + 15);
+          doc.text(additionalInfo.kelas, template.layout.margins.left + labelWidth + 3, infoY + 15);
+          currentY += 23;
+        } else {
+          currentY += 18;
+        }
       }
     }
 
