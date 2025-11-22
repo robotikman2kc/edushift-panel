@@ -87,9 +87,11 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchTodaySchedule();
+    if (kelasData.length > 0 && mataPelajaranData.length > 0) {
+      fetchTodaySchedule();
+    }
     fetchCalendarNotes();
-  }, [selectedDate]);
+  }, [selectedDate, kelasData, mataPelajaranData]);
 
   const handleInstall = async () => {
     await installApp();
