@@ -156,80 +156,221 @@ const RekapKehadiranEskul = () => {
     setLoading(true);
 
     try {
-      const startMonthName = monthOptions[parseInt(startMonth)].label;
-      const endMonthName = monthOptions[parseInt(endMonth)].label;
-      const periodText = startMonth === endMonth 
-        ? `${startMonthName} ${selectedYear}`
-        : `${startMonthName} - ${endMonthName} ${selectedYear}`;
+      const jsPDF = (await import('jspdf')).jsPDF;
+      const autoTable = (await import('jspdf-autotable')).default;
       
-      const totalMeetings = previewData[0]?._dates?.length || 0;
-
-      // Get unique dates from preview data
-      const uniqueDates = previewData[0]?._dates || [];
-      
-      const columns = [
-        { key: "nisn", label: "NISN" },
-        { key: "nama_siswa", label: "Nama Siswa" },
-        { key: "tingkat", label: "Tingkat" },
-        { key: "nama_kelas", label: "Kelas" },
-        // Add date columns
-        ...uniqueDates.map((date: string) => ({
-          key: date,
-          label: new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' }),
-          align: 'center' as const
-        })),
-        { key: "hadir", label: "H", align: 'center' as const },
-        { key: "sakit", label: "S", align: 'center' as const },
-        { key: "izin", label: "I", align: 'center' as const },
-        { key: "alpha", label: "A", align: 'center' as const },
-        { key: "total", label: "Total", align: 'center' as const },
-        { key: "persentase", label: "%", align: 'center' as const },
-      ];
-
       const template = getCustomPDFTemplate('attendance');
-      
-      // Update template without school header for eskul reports
-      const updatedTemplate = {
-        ...template,
-        header: undefined, // Remove school header
-        teacherInfo: {
-          name: eskul.pembimbing,
-          nip: "",
-          subject: eskul.nama_eskul,
-          jabatan: "Pembimbing Ekstrakurikuler",
-        },
-        signatureDate: signatureDate?.toISOString().split('T')[0],
-      };
+      const doc = new jsPDF({
+        orientation: template.layout.orientation,
+        unit: 'mm',
+        format: template.layout.pageSize,
+      });
 
-      const pdfBlob = await generatePDFBlob(
-        previewData,
-        columns,
-        `REKAP KEHADIRAN EKSTRAKURIKULER\n${eskul.nama_eskul.toUpperCase()}\nPeriode ${periodText}`,
-        updatedTemplate,
-        {
-          eskul: eskul.nama_eskul,
-          pembimbing: eskul.pembimbing,
-          periode: periodText,
-          totalPertemuan: `${totalMeetings} kali`
-        }
+      const year = parseInt(selectedYear);
+      const sMonth = parseInt(startMonth);
+      const eMonth = parseInt(endMonth);
+
+      // Get all active members
+      const anggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+        a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
       );
 
-      if (!pdfBlob) {
-        throw new Error('Failed to generate PDF');
+      let isFirstPage = true;
+
+      // Loop through each month in the range
+      for (let monthIndex = sMonth; monthIndex <= eMonth; monthIndex++) {
+        if (!isFirstPage) {
+          doc.addPage();
+        }
+        isFirstPage = false;
+
+        const monthName = monthOptions[monthIndex].label;
+        
+        // Get attendance for this specific month
+        const monthStartDate = new Date(year, monthIndex, 1);
+        const monthEndDate = new Date(year, monthIndex + 1, 0);
+        const monthStartDateStr = monthStartDate.toISOString().split('T')[0];
+        const monthEndDateStr = monthEndDate.toISOString().split('T')[0];
+
+        const kehadiran = localDB.select('kehadiran_eskul', (k: any) =>
+          k.ekstrakurikuler_id === eskul.id &&
+          k.tanggal >= monthStartDateStr &&
+          k.tanggal <= monthEndDateStr
+        );
+
+        // Get unique dates for this month
+        const uniqueDates = [...new Set(kehadiran.map((k: any) => k.tanggal))].sort();
+
+        // Calculate summary for each member for this month
+        const monthData = anggota.map((member: AnggotaEskul) => {
+          const memberAttendance = kehadiran.filter((k: any) => k.anggota_id === member.id);
+          
+          const hadir = memberAttendance.filter((k: any) => k.status_kehadiran === 'Hadir').length;
+          const sakit = memberAttendance.filter((k: any) => k.status_kehadiran === 'Sakit').length;
+          const izin = memberAttendance.filter((k: any) => k.status_kehadiran === 'Izin').length;
+          const alpha = memberAttendance.filter((k: any) => k.status_kehadiran === 'Alpha').length;
+          const total = memberAttendance.length;
+          const persentase = total > 0 ? ((hadir / total) * 100).toFixed(1) : "0.0";
+
+          // Create date-based attendance object
+          const dateAttendance: any = {};
+          uniqueDates.forEach(date => {
+            const record = memberAttendance.find((k: any) => k.tanggal === date);
+            const status = record ? record.status_kehadiran : '-';
+            const statusShort = status === 'Hadir' ? 'H' : status === 'Sakit' ? 'S' : status === 'Izin' ? 'I' : status === 'Alpha' ? 'A' : '-';
+            dateAttendance[date] = statusShort;
+          });
+
+          return {
+            nisn: member.nisn,
+            nama_siswa: member.nama_siswa,
+            tingkat: member.tingkat,
+            nama_kelas: member.nama_kelas,
+            ...dateAttendance,
+            hadir,
+            sakit,
+            izin,
+            alpha,
+            total,
+            persentase: `${persentase}%`,
+          };
+        });
+
+        // Create columns for this month
+        const columns = [
+          { key: "nisn", label: "NISN" },
+          { key: "nama_siswa", label: "Nama Siswa" },
+          { key: "tingkat", label: "Tingkat" },
+          { key: "nama_kelas", label: "Kelas" },
+          ...uniqueDates.map((date: string) => ({
+            key: date,
+            label: new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' }),
+          })),
+          { key: "hadir", label: "H" },
+          { key: "sakit", label: "S" },
+          { key: "izin", label: "I" },
+          { key: "alpha", label: "A" },
+          { key: "total", label: "Total" },
+          { key: "persentase", label: "%" },
+        ];
+
+        // Generate PDF content for this month
+        let currentY = template.layout.margins.top;
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFont(template.styling.fontFamily);
+
+        // Title
+        doc.setFontSize(template.styling.fontSize.title);
+        doc.setTextColor(0, 0, 0);
+        const reportTitle = `REKAP KEHADIRAN EKSTRAKURIKULER`;
+        const titleWidth = doc.getTextWidth(reportTitle);
+        doc.text(reportTitle, (pageWidth - titleWidth) / 2, currentY);
+        currentY += 6;
+
+        doc.setFontSize(template.styling.fontSize.subtitle);
+        const eskulName = eskul.nama_eskul.toUpperCase();
+        const eskulWidth = doc.getTextWidth(eskulName);
+        doc.text(eskulName, (pageWidth - eskulWidth) / 2, currentY);
+        currentY += 6;
+
+        const periodText = `Periode ${monthName} ${selectedYear}`;
+        const periodWidth = doc.getTextWidth(periodText);
+        doc.text(periodText, (pageWidth - periodWidth) / 2, currentY);
+        currentY += 10;
+
+        // Info section
+        doc.setFontSize(template.styling.fontSize.header);
+        const labelWidth = 30;
+
+        doc.text('Ekstrakurikuler', template.layout.margins.left, currentY);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY);
+        doc.text(eskul.nama_eskul, template.layout.margins.left + labelWidth + 3, currentY);
+        currentY += 5;
+
+        doc.text('Pembimbing', template.layout.margins.left, currentY);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY);
+        doc.text(eskul.pembimbing, template.layout.margins.left + labelWidth + 3, currentY);
+        currentY += 5;
+
+        doc.text('Periode', template.layout.margins.left, currentY);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY);
+        doc.text(`${monthName} ${selectedYear}`, template.layout.margins.left + labelWidth + 3, currentY);
+        currentY += 5;
+
+        doc.text('Total Pertemuan', template.layout.margins.left, currentY);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY);
+        doc.text(`${uniqueDates.length} kali`, template.layout.margins.left + labelWidth + 3, currentY);
+        currentY += 8;
+
+        // Table
+        const tableData = monthData.map(row => 
+          columns.map(col => row[col.key] || '-')
+        );
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [columns.map(col => col.label)],
+          body: tableData,
+          theme: 'grid',
+          styles: {
+            fontSize: 8,
+            cellPadding: 2,
+          },
+          headStyles: {
+            fillColor: template.styling.primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'center',
+          },
+          columnStyles: {
+            0: { halign: 'left' },
+            1: { halign: 'left' },
+            2: { halign: 'center' },
+            3: { halign: 'center' },
+          },
+          didDrawPage: (data: any) => {
+            // Add page numbers
+            const pageCount = doc.getNumberOfPages();
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(
+              `Halaman ${doc.getCurrentPageInfo().pageNumber} dari ${pageCount}`,
+              pageWidth / 2,
+              doc.internal.pageSize.getHeight() - 10,
+              { align: 'center' }
+            );
+
+            // Add signature if it's the last page of this month's report
+            if (template.footer?.signatureSection && signatureDate) {
+              const finalY = (data as any).cursor.y + 15;
+              const signatureX = pageWidth - template.layout.margins.right - 60;
+              
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              
+              const location = template.signatureLocation || 'Jakarta';
+              const dateStr = signatureDate.toLocaleDateString('id-ID', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              });
+              
+              doc.text(`${location}, ${dateStr}`, signatureX, finalY);
+              doc.text(template.teacherInfo?.jabatan || 'Pembimbing Ekstrakurikuler', signatureX, finalY + 5);
+              doc.text(template.teacherInfo?.name || eskul.pembimbing, signatureX, finalY + 25);
+            }
+          },
+        });
       }
 
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `rekap_kehadiran_${eskul.nama_eskul.toLowerCase().replace(/\s+/g, '_')}_${startMonthName.toLowerCase()}_${selectedYear}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // Save PDF
+      const fileName = `rekap_kehadiran_${eskul.nama_eskul.toLowerCase().replace(/\s+/g, '_')}_${monthOptions[sMonth].label.toLowerCase()}_${eMonth !== sMonth ? monthOptions[eMonth].label.toLowerCase() + '_' : ''}${selectedYear}.pdf`;
+      doc.save(fileName);
 
       toast({
         title: "Export Berhasil",
-        description: "Rekap kehadiran berhasil diekspor ke PDF",
+        description: `Rekap kehadiran ${eMonth - sMonth + 1} bulan berhasil diekspor ke PDF`,
       });
     } catch (error) {
       console.error("Error exporting PDF:", error);
