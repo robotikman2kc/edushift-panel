@@ -5,8 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { Calendar, BookOpen, Users, FileText, X, StickyNote, PartyPopper, Edit, Trash2 } from "lucide-react";
-import type { JadwalPelajaran, AgendaMengajar, Jurnal, CatatanKalender, HariLibur } from "@/lib/indexedDB";
+import { Calendar, BookOpen, Users, FileText, X, StickyNote, PartyPopper, Edit, Trash2, AlertCircle } from "lucide-react";
+import type { JadwalPelajaran, AgendaMengajar, Jurnal, CatatanKalender, HariLibur, PeriodeNonPembelajaran } from "@/lib/indexedDB";
 
 interface DayDetailPanelProps {
   selectedDate: Date | null;
@@ -16,6 +16,7 @@ interface DayDetailPanelProps {
   attendanceCount: number;
   notes?: CatatanKalender[];
   holiday?: HariLibur;
+  periode?: PeriodeNonPembelajaran;
   onClose: () => void;
   onEditNote?: (note: CatatanKalender) => void;
   onDeleteNote?: (noteId: string) => void;
@@ -29,6 +30,7 @@ export function DayDetailPanel({
   attendanceCount,
   notes = [],
   holiday,
+  periode,
   onClose,
   onEditNote,
   onDeleteNote,
@@ -62,6 +64,27 @@ export function DayDetailPanel({
                   {holiday.keterangan && (
                     <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">{holiday.keterangan}</p>
                   )}
+                </div>
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
+
+        {/* Periode Non-Pembelajaran */}
+        {periode && !holiday && (
+          <>
+            <div className="p-4 bg-orange-50 dark:bg-orange-950 border-2 border-orange-200 dark:border-orange-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-orange-600 dark:text-orange-400">{periode.nama}</h3>
+                  {periode.keterangan && (
+                    <p className="text-sm text-orange-600/80 dark:text-orange-400/80 mt-1">{periode.keterangan}</p>
+                  )}
+                  <p className="text-xs text-orange-600/60 dark:text-orange-400/60 mt-1">
+                    {format(new Date(periode.tanggal_mulai), "dd MMM", { locale: id })} - {format(new Date(periode.tanggal_selesai), "dd MMM yyyy", { locale: id })}
+                  </p>
                 </div>
               </div>
             </div>
