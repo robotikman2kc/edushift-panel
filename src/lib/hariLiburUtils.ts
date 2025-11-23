@@ -1,5 +1,6 @@
 import { hariLiburNasional } from "./hariLiburData";
 import { format } from "date-fns";
+import { isWorkday } from "./workdaySettings";
 
 export interface HariLibur {
   tanggal: string;
@@ -8,13 +9,12 @@ export interface HariLibur {
 }
 
 /**
- * Check if a given date is a weekday (Monday-Friday)
+ * Check if a given date is a weekday (Monday-Friday or Monday-Saturday based on settings)
  * @param date - Date to check
  * @returns True if weekday, false if weekend
  */
 export const isWeekday = (date: Date): boolean => {
-  const day = date.getDay();
-  return day >= 1 && day <= 5; // 1 = Monday, 5 = Friday
+  return isWorkday(date);
 };
 
 /**

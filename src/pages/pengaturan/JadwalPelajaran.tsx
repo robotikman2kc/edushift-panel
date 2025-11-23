@@ -28,10 +28,12 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran, getActiveSemester, setActiveSemester as setActiveAcademicSemester } from "@/lib/academicYearUtils";
+import { getWorkdaySettings, saveWorkdaySettings, getWorkdays } from "@/lib/workdaySettings";
 
 interface TimeSlot {
   id: string;
@@ -63,8 +65,6 @@ interface MataPelajaran {
   nama_mata_pelajaran: string;
 }
 
-const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
-
 export default function JadwalPelajaran() {
   const { toast } = useToast();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -75,12 +75,15 @@ export default function JadwalPelajaran() {
   const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   const [activeSemester, setActiveSemester] = useState("");
   const [calendarActiveSemester, setCalendarActiveSemester] = useState("");
+  const [workdays, setWorkdays] = useState<string[]>([]);
+  const [includeSaturday, setIncludeSaturday] = useState(false);
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTimeSettingsDialog, setShowTimeSettingsDialog] = useState(false);
   const [showBreakSettingsDialog, setShowBreakSettingsDialog] = useState(false);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  const [showWorkdaySettingsDialog, setShowWorkdaySettingsDialog] = useState(false);
   const [conflictingSchedules, setConflictingSchedules] = useState<Schedule[]>([]);
   const [minutesPerJP, setMinutesPerJP] = useState(45);
   
@@ -97,6 +100,11 @@ export default function JadwalPelajaran() {
   const [jumlahJP, setJumlahJP] = useState(1);
 
   useEffect(() => {
+    // Load workday settings
+    const settings = getWorkdaySettings();
+    setIncludeSaturday(settings.includeSaturday);
+    setWorkdays(getWorkdays());
+    
     const initData = async () => {
       const year = await getActiveTahunAjaran();
       const semester = await getActiveSemester();
@@ -533,6 +541,10 @@ export default function JadwalPelajaran() {
               <Plus className="mr-2 h-4 w-4" />
               Tambah Jadwal
             </Button>
+            <Button variant="outline" onClick={() => setShowWorkdaySettingsDialog(true)}>
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Hari Kerja ({includeSaturday ? '6' : '5'} hari)
+            </Button>
             <Button variant="outline" onClick={() => setShowTimeSettingsDialog(true)}>
               <SettingsIcon className="mr-2 h-4 w-4" />
               Pengaturan Waktu ({minutesPerJP} menit/JP)
@@ -564,7 +576,7 @@ export default function JadwalPelajaran() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-32">Jam</TableHead>
-                  {DAYS.map(day => (
+                  {workdays.map(day => (
                     <TableHead key={day} className="min-w-[200px]">{day}</TableHead>
                   ))}
                 </TableRow>
@@ -591,7 +603,7 @@ export default function JadwalPelajaran() {
                         </>
                       )}
                     </TableCell>
-                    {DAYS.map(day => {
+                    {workdays.map(day => {
                       if (slot.is_break) {
                         return (
                           <TableCell key={day} className="bg-orange-50 dark:bg-orange-950/20">
@@ -668,7 +680,7 @@ export default function JadwalPelajaran() {
                   <SelectValue placeholder="Pilih hari" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DAYS.map(day => (
+                  {workdays.map(day => (
                     <SelectItem key={day} value={day}>{day}</SelectItem>
                   ))}
                 </SelectContent>
@@ -912,6 +924,63 @@ export default function JadwalPelajaran() {
               Batal
             </Button>
             <Button onClick={handleSaveBreakSettings}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Workday Settings Dialog */}
+      <Dialog open={showWorkdaySettingsDialog} onOpenChange={setShowWorkdaySettingsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pengaturan Hari Kerja</DialogTitle>
+            <DialogDescription>
+              Atur apakah hari Sabtu termasuk hari kerja. Pengaturan ini akan mempengaruhi jadwal pelajaran, jurnal guru, dan kalender.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="saturday-workday" className="text-base">
+                  Sabtu sebagai Hari Kerja
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Aktifkan untuk sistem 6 hari kerja (termasuk Sabtu)
+                </p>
+              </div>
+              <Switch
+                id="saturday-workday"
+                checked={includeSaturday}
+                onCheckedChange={(checked) => {
+                  setIncludeSaturday(checked);
+                  saveWorkdaySettings({ includeSaturday: checked });
+                  setWorkdays(getWorkdays());
+                  toast({
+                    title: "Berhasil",
+                    description: checked 
+                      ? "Sabtu diaktifkan sebagai hari kerja (6 hari)" 
+                      : "Sabtu dinonaktifkan sebagai hari kerja (5 hari)",
+                  });
+                }}
+              />
+            </div>
+
+            <div className="rounded-lg border p-4 bg-muted/50">
+              <h4 className="text-sm font-medium mb-2">Hari Kerja Aktif:</h4>
+              <div className="flex flex-wrap gap-2">
+                {getWorkdays().map((day) => (
+                  <Badge key={day} variant="secondary">
+                    {day}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setShowWorkdaySettingsDialog(false)}>
+              Tutup
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
