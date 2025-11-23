@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,22 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { localDB, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function KelolaAnggota() {
-  const [anggota, setAnggota] = useState<AnggotaEskul[]>(
-    localDB.select('anggota_eskul')
-  );
-  const [ekstrakurikulers] = useState<Ekstrakurikuler[]>(
-    localDB.select('ekstrakurikuler', (e: Ekstrakurikuler) => e.status === 'aktif')
-  );
-  const [selectedEskul, setSelectedEskul] = useState<string>("");
+  const [anggota, setAnggota] = useState<AnggotaEskul[]>([]);
+  const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAnggota, setEditingAnggota] = useState<AnggotaEskul | null>(null);
   const [formData, setFormData] = useState({
-    ekstrakurikuler_id: "",
     nisn: "",
     nama_siswa: "",
     tingkat: "",
@@ -32,15 +27,32 @@ export default function KelolaAnggota() {
     status: "aktif"
   });
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = () => {
-    setAnggota(localDB.select('anggota_eskul'));
+    // Load eskul data
+    const eskuls = localDB.select('ekstrakurikuler');
+    if (eskuls.length > 0) {
+      const eskulData = eskuls[0];
+      setEskul(eskulData);
+      
+      // Load anggota for this eskul
+      const anggotaData = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+        a.ekstrakurikuler_id === eskulData.id
+      );
+      setAnggota(anggotaData);
+    } else {
+      setEskul(null);
+      setAnggota([]);
+    }
   };
 
   const handleOpenDialog = (anggota?: AnggotaEskul) => {
     if (anggota) {
       setEditingAnggota(anggota);
       setFormData({
-        ekstrakurikuler_id: anggota.ekstrakurikuler_id,
         nisn: anggota.nisn,
         nama_siswa: anggota.nama_siswa,
         tingkat: anggota.tingkat,
@@ -51,7 +63,6 @@ export default function KelolaAnggota() {
     } else {
       setEditingAnggota(null);
       setFormData({
-        ekstrakurikuler_id: selectedEskul,
         nisn: "",
         nama_siswa: "",
         tingkat: "",
@@ -64,13 +75,23 @@ export default function KelolaAnggota() {
   };
 
   const handleSubmit = () => {
-    if (!formData.ekstrakurikuler_id || !formData.nisn || !formData.nama_siswa || !formData.tingkat || !formData.nama_kelas) {
+    if (!eskul) {
+      toast.error("Pengaturan ekstrakurikuler belum dibuat");
+      return;
+    }
+
+    if (!formData.nisn || !formData.nama_siswa || !formData.tingkat || !formData.nama_kelas) {
       toast.error("Mohon lengkapi semua field yang wajib");
       return;
     }
 
+    const dataToSave = {
+      ...formData,
+      ekstrakurikuler_id: eskul.id
+    };
+
     if (editingAnggota) {
-      const result = localDB.update('anggota_eskul', editingAnggota.id, formData);
+      const result = localDB.update('anggota_eskul', editingAnggota.id, dataToSave);
       if (result.error) {
         toast.error("Gagal mengupdate anggota");
       } else {
@@ -79,7 +100,7 @@ export default function KelolaAnggota() {
         setDialogOpen(false);
       }
     } else {
-      const result = localDB.insert('anggota_eskul', formData);
+      const result = localDB.insert('anggota_eskul', dataToSave);
       if (result.error) {
         toast.error("Gagal menambahkan anggota");
       } else {
@@ -102,80 +123,48 @@ export default function KelolaAnggota() {
     }
   };
 
-  const getEskulName = (id: string) => {
-    const eskul = ekstrakurikulers.find(e => e.id === id);
-    return eskul ? eskul.nama_eskul : "-";
-  };
-
-  const filteredAnggota = selectedEskul 
-    ? anggota.filter(a => a.ekstrakurikuler_id === selectedEskul)
-    : anggota;
-
   const columns = [
-    {
-      key: "nisn",
-      label: "NISN"
-    },
-    {
-      key: "nama_siswa",
-      label: "Nama Siswa"
-    },
-    {
-      key: "tingkat",
-      label: "Tingkat"
-    },
-    {
-      key: "nama_kelas",
-      label: "Kelas"
-    },
-    {
-      key: "ekstrakurikuler",
-      label: "Ekstrakurikuler"
-    },
-    {
-      key: "tanggal_masuk",
-      label: "Tanggal Masuk"
-    },
-    {
-      key: "status",
-      label: "Status"
-    },
-    {
-      key: "actions",
-      label: "Aksi"
-    }
+    { key: "nisn", label: "NISN" },
+    { key: "nama_siswa", label: "Nama Siswa" },
+    { key: "tingkat", label: "Tingkat" },
+    { key: "nama_kelas", label: "Kelas" },
+    { key: "tanggal_masuk", label: "Tanggal Masuk" },
+    { key: "status", label: "Status" },
+    { key: "actions", label: "Aksi" }
   ];
+
+  if (!eskul) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Kelola Anggota Ekstrakurikuler"
+          description="Kelola data anggota ekstrakurikuler"
+        />
+        <Card className="p-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Silakan buat pengaturan ekstrakurikuler terlebih dahulu di menu "Kelola Ekstrakurikuler"
+            </AlertDescription>
+          </Alert>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Kelola Anggota Ekstrakurikuler"
+        title={`Kelola Anggota - ${eskul.nama_eskul}`}
         description="Kelola data anggota ekstrakurikuler"
       >
-        <Button onClick={() => handleOpenDialog()} disabled={!selectedEskul}>
+        <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
           Tambah Anggota
         </Button>
       </PageHeader>
 
       <Card className="p-6">
-        <div className="mb-4">
-          <Label htmlFor="filter-eskul">Filter Ekstrakurikuler</Label>
-          <Select value={selectedEskul} onValueChange={setSelectedEskul}>
-            <SelectTrigger className="max-w-xs">
-              <SelectValue placeholder="Semua Ekstrakurikuler" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Semua Ekstrakurikuler</SelectItem>
-              {ekstrakurikulers.map((eskul) => (
-                <SelectItem key={eskul.id} value={eskul.id}>
-                  {eskul.nama_eskul}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <Table>
           <TableHeader>
             <TableRow>
@@ -185,13 +174,12 @@ export default function KelolaAnggota() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAnggota.map((member) => (
+            {anggota.map((member) => (
               <TableRow key={member.id}>
                 <TableCell>{member.nisn}</TableCell>
                 <TableCell>{member.nama_siswa}</TableCell>
                 <TableCell>{member.tingkat}</TableCell>
                 <TableCell>{member.nama_kelas}</TableCell>
-                <TableCell>{getEskulName(member.ekstrakurikuler_id)}</TableCell>
                 <TableCell>{member.tanggal_masuk}</TableCell>
                 <TableCell>
                   <Badge variant={member.status === "aktif" ? "default" : "secondary"}>
@@ -220,6 +208,12 @@ export default function KelolaAnggota() {
             ))}
           </TableBody>
         </Table>
+
+        {anggota.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            Belum ada anggota yang terdaftar
+          </div>
+        )}
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -234,25 +228,6 @@ export default function KelolaAnggota() {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="ekstrakurikuler_id">Ekstrakurikuler *</Label>
-              <Select
-                value={formData.ekstrakurikuler_id}
-                onValueChange={(value) => setFormData({ ...formData, ekstrakurikuler_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih ekstrakurikuler" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ekstrakurikulers.map((eskul) => (
-                    <SelectItem key={eskul.id} value={eskul.id}>
-                      {eskul.nama_eskul}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="nisn">NISN *</Label>
