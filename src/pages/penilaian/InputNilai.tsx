@@ -25,12 +25,14 @@ const InputNilai = () => {
   const [classes, setClasses] = useState<Kelas[]>([]);
   const [subjects, setSubjects] = useState<MataPelajaran[]>([]);
   const [students, setStudents] = useState<Siswa[]>([]);
+  const [allCategories, setAllCategories] = useState<JenisPenilaian[]>([]);
   const [categories, setCategories] = useState<JenisPenilaian[]>([]);
   const [existingGrades, setExistingGrades] = useState<NilaiSiswa[]>([]);
   const [grades, setGrades] = useState<{[key: string]: string}>({});
   const [bobotMap, setBobotMap] = useState<{[key: string]: number}>({});
   const [bulkGrade, setBulkGrade] = useState("");
   const [notSubmitted, setNotSubmitted] = useState<{[key: string]: boolean}>({});
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   
   // Dialog states for adding new category
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -172,8 +174,40 @@ const InputNilai = () => {
     if (selectedClass) {
       loadStudents();
       loadBobotForClass();
+      loadExcludedCategories();
     }
-  }, [selectedClass, categories]);
+  }, [selectedClass, allCategories]);
+
+  // Load excluded categories for selected class and filter
+  const loadExcludedCategories = async () => {
+    if (!selectedClass) {
+      setCategories(allCategories);
+      return;
+    }
+    
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const excludedKey = `excluded_categories_${selectedClass}`;
+      const excludedData = settings.find((s: any) => s.key === excludedKey);
+      
+      if (excludedData && excludedData.value) {
+        const excludedIds = JSON.parse(excludedData.value);
+        console.log('Excluded categories for class:', excludedIds);
+        setExcludedCategories(excludedIds);
+        
+        // Filter out excluded categories
+        const filteredCategories = allCategories.filter(cat => !excludedIds.includes(cat.id));
+        console.log('Categories after filtering exclusions:', filteredCategories);
+        setCategories(filteredCategories);
+      } else {
+        setExcludedCategories([]);
+        setCategories(allCategories);
+      }
+    } catch (error) {
+      console.error("Error loading excluded categories:", error);
+      setCategories(allCategories);
+    }
+  };
 
   // Load existing grades when filters change
   useEffect(() => {
@@ -198,6 +232,7 @@ const InputNilai = () => {
       
       setClasses(kelasData);
       setSubjects(mataPelajaranData);
+      setAllCategories(jenisPenilaianData);
       setCategories(jenisPenilaianData);
     } catch (error) {
       toast({
