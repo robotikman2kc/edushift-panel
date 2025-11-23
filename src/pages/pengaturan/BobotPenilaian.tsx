@@ -1020,7 +1020,7 @@ export default function BobotPenilaian() {
                 </AlertDescription>
               </Alert>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-max" style={{ gridAutoFlow: 'column' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-3 gap-4" style={{ gridAutoFlow: 'column' }}>
                 {(['A', 'B', 'C', 'D', 'E'] as const).map((grade) => (
                   <div
                     key={grade}
