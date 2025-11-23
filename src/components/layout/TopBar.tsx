@@ -116,11 +116,8 @@ export function TopBar() {
         try {
           const parsed = JSON.parse(savedProfile);
           
-          console.log('TopBar loading profile:', parsed);
-          
           // IMPORTANT: Clean up invalid blob:// URLs from localStorage
           if (parsed.avatar_url && parsed.avatar_url.startsWith('blob:')) {
-            console.log('⚠️ Found invalid blob URL in localStorage, removing:', parsed.avatar_url);
             parsed.avatar_url = '';
             localStorage.setItem('userProfile', JSON.stringify(parsed));
             setUserProfile(parsed);
@@ -129,7 +126,6 @@ export function TopBar() {
           
           // Selalu load avatar dari OPFS jika menggunakan opfs://
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
-            console.log('TopBar loading avatar from OPFS:', parsed.avatar_url);
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
               // Cleanup old blob URL
@@ -139,7 +135,6 @@ export function TopBar() {
               
               // Create new blob URL
               const newBlobUrl = URL.createObjectURL(file);
-              console.log('TopBar avatar blob URL created:', newBlobUrl);
               setAvatarBlobUrl(newBlobUrl);
               setUserProfile(parsed);
             } else if (typeof file === 'string') {
@@ -186,7 +181,6 @@ export function TopBar() {
     return () => {
       // Cleanup blob URL on unmount
       if (avatarBlobUrl) {
-        console.log('TopBar cleaning up blob URL:', avatarBlobUrl);
         URL.revokeObjectURL(avatarBlobUrl);
       }
       window.removeEventListener('storage', handleStorageChange);
@@ -406,10 +400,7 @@ export function TopBar() {
                   <Avatar className="h-8 w-8 border-2 border-primary">
                     <AvatarImage 
                       src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url}
-                      onError={(e) => {
-                        console.log('TopBar avatar failed to load, using fallback');
-                        e.currentTarget.src = '';
-                      }}
+                      onError={(e) => e.currentTarget.src = ''}
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
@@ -422,10 +413,7 @@ export function TopBar() {
                   <Avatar className="h-8 w-8 border-2 border-primary">
                     <AvatarImage 
                       src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url}
-                      onError={(e) => {
-                        console.log('TopBar dropdown avatar failed to load, using fallback');
-                        e.currentTarget.src = '';
-                      }}
+                      onError={(e) => e.currentTarget.src = ''}
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
