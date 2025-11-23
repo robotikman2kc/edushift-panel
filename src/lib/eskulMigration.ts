@@ -63,15 +63,22 @@ export async function isEskulMigrationNeeded(): Promise<boolean> {
   try {
     // Check if there's data in localStorage but not in IndexedDB
     const localEskuls = localDB.select('ekstrakurikuler');
+    console.log('LocalStorage eskuls:', localEskuls);
+    
     if (localEskuls.length === 0) {
+      console.log('No data in localStorage to migrate');
       return false; // No data to migrate
     }
     
     await indexedDB.initDB();
     const indexedEskuls = await indexedDB.select('ekstrakurikuler');
+    console.log('IndexedDB eskuls:', indexedEskuls);
+    
+    const needsMigration = localEskuls.length > 0 && indexedEskuls.length === 0;
+    console.log('Migration needed?', needsMigration);
     
     // If localStorage has data but IndexedDB doesn't, migration is needed
-    return localEskuls.length > 0 && indexedEskuls.length === 0;
+    return needsMigration;
   } catch (error) {
     console.error('Error checking migration status:', error);
     return false;
