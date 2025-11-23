@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { localDB, Ekstrakurikuler } from "@/lib/localDB";
-import { Save } from "lucide-react";
+import { Save, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 const HARI_OPTIONS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 
 export default function KelolaEkstrakurikuler() {
+  const navigate = useNavigate();
   const [eskulId, setEskulId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nama_eskul: "",
@@ -73,10 +75,21 @@ export default function KelolaEkstrakurikuler() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Pengaturan Ekstrakurikuler"
-        description="Kelola pengaturan ekstrakurikuler sekolah"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="Pengaturan Ekstrakurikuler"
+          description="Kelola pengaturan ekstrakurikuler sekolah"
+        />
+        {eskulId && (
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/ekstrakurikuler/rekap-kehadiran')}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Rekap Kehadiran
+          </Button>
+        )}
+      </div>
 
       <Card className="p-6">
         <div className="grid gap-6 max-w-2xl">

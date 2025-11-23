@@ -666,10 +666,6 @@ export function DataTable({
                 <SelectItem value="comfortable">Comfortable</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
-            </Button>
             <Button 
               variant="outline" 
               size="sm"

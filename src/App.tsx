@@ -58,6 +58,7 @@ import LaporanJurnalGuru from "./pages/laporan/LaporanJurnalGuru";
 import KelolaEkstrakurikuler from "./pages/ekstrakurikuler/KelolaEkstrakurikuler";
 import KelolaAnggota from "./pages/ekstrakurikuler/KelolaAnggota";
 import KehadiranEskul from "./pages/ekstrakurikuler/KehadiranEskul";
+import RekapKehadiranEskul from "./pages/ekstrakurikuler/RekapKehadiranEskul";
 
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -150,6 +151,12 @@ const App = () => {
                   <Route path="/laporan/kehadiran" element={<LaporanKehadiran />} />
                   <Route path="/laporan/penilaian" element={<LaporanPenilaian />} />
                   <Route path="/laporan/jurnal-guru" element={<LaporanJurnalGuru />} />
+
+                  {/* Ekstrakurikuler Routes */}
+                  <Route path="/ekstrakurikuler/kelola" element={<KelolaEkstrakurikuler />} />
+                  <Route path="/ekstrakurikuler/anggota" element={<KelolaAnggota />} />
+                  <Route path="/ekstrakurikuler/kehadiran" element={<KehadiranEskul />} />
+                  <Route path="/ekstrakurikuler/rekap-kehadiran" element={<RekapKehadiranEskul />} />
 
                   {/* Akun Routes */}
                   <Route path="/akun/profil" element={<Profil />} />
