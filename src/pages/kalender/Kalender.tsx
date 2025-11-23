@@ -110,18 +110,18 @@ export default function Kalender() {
         (h) => h.tanggal >= monthStartStr && h.tanggal <= monthEndStr
       );
       
-      // Filter periode non pembelajaran yang overlap dengan bulan ini
-      const filteredPeriode = (periode as PeriodeNonPembelajaran[]).filter(
-        (p) => p.tanggal_selesai >= monthStartStr && p.tanggal_mulai <= monthEndStr
+      // Tampilkan semua periode (tidak difilter per bulan karena bisa lintas bulan)
+      // Sort by tanggal_mulai
+      const sortedPeriode = (periode as PeriodeNonPembelajaran[]).sort((a, b) => 
+        new Date(a.tanggal_mulai).getTime() - new Date(b.tanggal_mulai).getTime()
       );
 
       console.log('Total periode di database:', periode.length);
-      console.log('Periode setelah filter:', filteredPeriode.length);
-      console.log('Detail periode:', filteredPeriode);
+      console.log('Semua periode (sorted):', sortedPeriode);
 
       setCalendarNotes(filteredNotes);
       setHariLibur(filteredHolidays);
-      setPeriodeNonPembelajaran(filteredPeriode);
+      setPeriodeNonPembelajaran(sortedPeriode);
 
       // Enrich schedules dengan nama
       const enrichedSchedules = (schedules as JadwalPelajaran[]).map((schedule) => {
