@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { localDB, KehadiranEskul, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
+import { eskulDB } from "@/lib/eskulDB";
+import { KehadiranEskul, AnggotaEskul, Ekstrakurikuler } from "@/lib/indexedDB";
 import { Save, Calendar, CheckCheck, Clock, UserX, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -49,8 +50,8 @@ export default function KehadiranEskulPage() {
     setFilteredAnggota(filtered);
   }, [anggotaEskul, selectedTingkat, selectedKelas]);
 
-  const loadEskulData = () => {
-    const eskuls = localDB.select('ekstrakurikuler');
+  const loadEskulData = async () => {
+    const eskuls = await eskulDB.select('ekstrakurikuler');
     if (eskuls.length > 0) {
       setEskul(eskuls[0]);
     } else {
@@ -58,19 +59,19 @@ export default function KehadiranEskulPage() {
     }
   };
 
-  const fetchAnggotaAndAttendance = () => {
+  const fetchAnggotaAndAttendance = async () => {
     if (!eskul) return;
 
     setLoading(true);
     
     // Load anggota aktif
-    const anggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+    const anggota = await eskulDB.select('anggota_eskul', (a: AnggotaEskul) => 
       a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
     );
     setAnggotaEskul(anggota);
 
     // Load existing attendance for selected date
-    const existingData = localDB.select('kehadiran_eskul', (k: KehadiranEskul) => 
+    const existingData = await eskulDB.select('kehadiran_eskul', (k: KehadiranEskul) => 
       k.ekstrakurikuler_id === eskul.id && k.tanggal === selectedDate
     );
 
@@ -136,7 +137,7 @@ export default function KehadiranEskulPage() {
 
       // Insert new records
       for (const record of toInsert) {
-        const result = localDB.insert("kehadiran_eskul", {
+        const result = await eskulDB.insert("kehadiran_eskul", {
           anggota_id: record.anggota_id,
           ekstrakurikuler_id: record.ekstrakurikuler_id,
           tanggal: record.tanggal,
@@ -148,7 +149,7 @@ export default function KehadiranEskulPage() {
 
       // Update existing records
       for (const record of toUpdate) {
-        const result = localDB.update("kehadiran_eskul", record.id!, {
+        const result = await eskulDB.update("kehadiran_eskul", record.id!, {
           status_kehadiran: record.status_kehadiran,
           keterangan: record.keterangan,
         });
@@ -158,7 +159,7 @@ export default function KehadiranEskulPage() {
       toast.success("Data kehadiran berhasil disimpan");
 
       // Refresh data to show updated attendance
-      fetchAnggotaAndAttendance();
+      await fetchAnggotaAndAttendance();
     } catch (error) {
       console.error("Error saving attendance:", error);
       toast.error("Gagal menyimpan data kehadiran");

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { localDB, Ekstrakurikuler, AnggotaEskul } from "@/lib/localDB";
+import { eskulDB } from "@/lib/eskulDB";
+import { Ekstrakurikuler, AnggotaEskul } from "@/lib/indexedDB";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,15 +79,15 @@ const RekapKehadiranEskul = () => {
     }));
   }, [startMonth, endMonth, selectedYear]);
 
-  const loadData = () => {
-    const eskuls = localDB.select('ekstrakurikuler');
+  const loadData = async () => {
+    const eskuls = await eskulDB.select('ekstrakurikuler');
     if (eskuls.length > 0) {
       setEskul(eskuls[0]);
     }
   };
 
-  const loadAvailableYears = () => {
-    const allKehadiran = localDB.select("kehadiran_eskul");
+  const loadAvailableYears = async () => {
+    const allKehadiran = await eskulDB.select("kehadiran_eskul");
     const years = [...new Set(allKehadiran.map((k: any) => new Date(k.tanggal).getFullYear()))];
     
     const currentYear = new Date().getFullYear();
@@ -100,7 +101,7 @@ const RekapKehadiranEskul = () => {
     setAvailableYears(years.sort((a, b) => a - b));
   };
 
-  const loadPreviewData = () => {
+  const loadPreviewData = async () => {
     if (!eskul) return;
 
     const year = parseInt(selectedYear);
@@ -108,7 +109,7 @@ const RekapKehadiranEskul = () => {
     const eMonth = parseInt(endMonth);
 
     // Get all active members
-    const anggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+    const anggota = await eskulDB.select('anggota_eskul', (a: AnggotaEskul) => 
       a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
     );
 
@@ -118,7 +119,7 @@ const RekapKehadiranEskul = () => {
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const kehadiran = localDB.select('kehadiran_eskul', (k: any) =>
+    const kehadiran = await eskulDB.select('kehadiran_eskul', (k: any) =>
       k.ekstrakurikuler_id === eskul.id &&
       k.tanggal >= startDateStr &&
       k.tanggal <= endDateStr
@@ -164,7 +165,7 @@ const RekapKehadiranEskul = () => {
     setPreviewData(summary);
   };
 
-  const checkEmptyMonths = () => {
+  const checkEmptyMonths = async () => {
     if (!eskul) return [];
 
     const year = parseInt(selectedYear);
@@ -178,7 +179,7 @@ const RekapKehadiranEskul = () => {
       const monthStartDateStr = monthStartDate.toISOString().split('T')[0];
       const monthEndDateStr = monthEndDate.toISOString().split('T')[0];
 
-      const kehadiran = localDB.select('kehadiran_eskul', (k: any) =>
+      const kehadiran = await eskulDB.select('kehadiran_eskul', (k: any) =>
         k.ekstrakurikuler_id === eskul.id &&
         k.tanggal >= monthStartDateStr &&
         k.tanggal <= monthEndDateStr
@@ -192,8 +193,8 @@ const RekapKehadiranEskul = () => {
     return empty;
   };
 
-  const handleExportClick = () => {
-    const empty = checkEmptyMonths();
+  const handleExportClick = async () => {
+    const empty = await checkEmptyMonths();
     if (empty.length > 0) {
       setEmptyMonths(empty);
       setShowEmptyMonthsDialog(true);
@@ -244,7 +245,7 @@ const RekapKehadiranEskul = () => {
       const eMonth = parseInt(endMonth);
 
       // Get all active members
-      const anggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+      const anggota = await eskulDB.select('anggota_eskul', (a: AnggotaEskul) => 
         a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
       );
 
@@ -261,7 +262,7 @@ const RekapKehadiranEskul = () => {
         const monthStartDateStr = monthStartDate.toISOString().split('T')[0];
         const monthEndDateStr = monthEndDate.toISOString().split('T')[0];
 
-        const kehadiran = localDB.select('kehadiran_eskul', (k: any) =>
+        const kehadiran = await eskulDB.select('kehadiran_eskul', (k: any) =>
           k.ekstrakurikuler_id === eskul.id &&
           k.tanggal >= monthStartDateStr &&
           k.tanggal <= monthEndDateStr
