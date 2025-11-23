@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { localDB, Ekstrakurikuler, AnggotaEskul } from "@/lib/localDB";
+import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ interface NilaiEskul {
 
 const InputNilaiEskul = () => {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
-  const [activeTahunAjaran, setActiveTahunAjaran] = useState<any>(null);
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState<string>("");
   const [selectedSemester, setSelectedSemester] = useState<string>("1");
   const [selectedKelas, setSelectedKelas] = useState<string>("all");
   const [anggotaList, setAnggotaList] = useState<any[]>([]);
@@ -51,34 +52,15 @@ const InputNilaiEskul = () => {
     }
   };
 
-  const loadActiveTahunAjaran = () => {
-    // Get active academic year from settings
-    const settings = localDB.select('pengaturan');
-    console.log('Settings:', settings);
-    
-    if (settings.length > 0 && settings[0].tahun_ajaran_id) {
-      const tahunAjaranId = settings[0].tahun_ajaran_id;
-      console.log('Tahun Ajaran ID from settings:', tahunAjaranId);
-      const tahunAjaranData = localDB.selectById('tahun_ajaran', tahunAjaranId);
-      console.log('Tahun Ajaran Data:', tahunAjaranData);
-      if (tahunAjaranData) {
-        setActiveTahunAjaran(tahunAjaranData);
-        return;
-      }
-    }
-    
-    // Fallback: get first active tahun ajaran
-    const allTahunAjaran = localDB.select('tahun_ajaran');
-    console.log('All Tahun Ajaran:', allTahunAjaran);
-    
-    const tahunAjaranList = localDB.select('tahun_ajaran', (ta: any) => {
-      console.log('Checking tahun ajaran:', ta, 'status:', ta.status);
-      return ta.status === 'aktif';
-    });
-    console.log('Active Tahun Ajaran List:', tahunAjaranList);
-    
-    if (tahunAjaranList.length > 0) {
-      setActiveTahunAjaran(tahunAjaranList[0]);
+  const loadActiveTahunAjaran = async () => {
+    try {
+      const tahunAjaran = await getActiveTahunAjaran();
+      setActiveTahunAjaran(tahunAjaran);
+    } catch (error) {
+      console.error('Error loading active tahun ajaran:', error);
+      // Fallback to current year if error
+      const currentYear = new Date().getFullYear();
+      setActiveTahunAjaran(`${currentYear}/${currentYear + 1}`);
     }
   };
 
@@ -99,7 +81,7 @@ const InputNilaiEskul = () => {
     // Load existing grades
     const nilaiData = localDB.select('nilai_eskul', (n: NilaiEskul) =>
       n.ekstrakurikuler_id === eskul.id &&
-      n.tahun_ajaran_id === activeTahunAjaran.id &&
+      n.tahun_ajaran_id === activeTahunAjaran &&
       n.semester === selectedSemester
     );
 
@@ -144,14 +126,14 @@ const InputNilaiEskul = () => {
         const existingGrade = localDB.select('nilai_eskul', (n: NilaiEskul) =>
           n.anggota_id === anggota.id &&
           n.ekstrakurikuler_id === eskul.id &&
-          n.tahun_ajaran_id === activeTahunAjaran.id &&
+          n.tahun_ajaran_id === activeTahunAjaran &&
           n.semester === selectedSemester
         );
 
         const nilaiData: Partial<NilaiEskul> = {
           anggota_id: anggota.id,
           ekstrakurikuler_id: eskul.id,
-          tahun_ajaran_id: activeTahunAjaran.id,
+          tahun_ajaran_id: activeTahunAjaran,
           semester: selectedSemester,
           nilai: grade,
         };
@@ -251,7 +233,7 @@ const InputNilaiEskul = () => {
 
       doc.text('Tahun Ajaran', template.layout.margins.left, currentY);
       doc.text(':', template.layout.margins.left + labelWidth, currentY);
-      doc.text(activeTahunAjaran?.nama_tahun_ajaran || '-', template.layout.margins.left + labelWidth + 3, currentY);
+      doc.text(activeTahunAjaran || '-', template.layout.margins.left + labelWidth + 3, currentY);
       currentY += 5;
 
       doc.text('Semester', template.layout.margins.left, currentY);
@@ -322,7 +304,7 @@ const InputNilaiEskul = () => {
         },
       });
 
-      const fileName = `nilai_${eskul.nama_eskul.toLowerCase().replace(/\s+/g, '_')}_semester_${selectedSemester}_${activeTahunAjaran?.nama_tahun_ajaran.replace(/\//g, '_')}.pdf`;
+      const fileName = `nilai_${eskul.nama_eskul.toLowerCase().replace(/\s+/g, '_')}_semester_${selectedSemester}_${activeTahunAjaran?.replace(/\//g, '_')}.pdf`;
       doc.save(fileName);
 
       toast({
@@ -388,7 +370,7 @@ const InputNilaiEskul = () => {
               <Label>Tahun Ajaran</Label>
               <div className="p-2 bg-muted rounded-md">
                 <p className="text-sm font-medium">
-                  {activeTahunAjaran?.nama_tahun_ajaran || 'Belum ada tahun ajaran aktif'}
+                  {activeTahunAjaran || 'Memuat...'}
                 </p>
               </div>
             </div>
