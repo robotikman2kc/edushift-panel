@@ -11,6 +11,32 @@ export interface CleanupItem {
 export function analyzeLocalStorage(): CleanupItem[] {
   const items: CleanupItem[] = [];
   
+  // Keys that are actively used and should NOT be removed
+  const activeKeys = [
+    'localdb_users',
+    'localdb_guru',
+    'localdb_mata_pelajaran',
+    'localdb_kelas',
+    'localdb_siswa',
+    'localdb_jenis_kegiatan',
+    'localdb_jurnal',
+    'localdb_kehadiran',
+    'localdb_jadwal_pelajaran',
+    'localdb_jam_pelajaran',
+    'localdb_pengaturan',
+    'localdb_tahun_ajaran',
+    'localdb_nilai',
+    'localdb_kategori_nilai',
+    'pdfFormatSettings',
+    'theme',
+    'userProfile',
+    'quickMenuItems',
+    'notificationSettings',
+    'lastBackupDate',
+    'selectedDate',
+    'authSession',
+  ];
+  
   // Keys that are no longer used (moved to IndexedDB)
   const deprecatedKeys = [
     'localdb_ekstrakurikuler',
@@ -36,8 +62,13 @@ export function analyzeLocalStorage(): CleanupItem[] {
     let shouldRemove = false;
     let reason = '';
 
+    // Check if it's actively used - should NOT remove
+    if (activeKeys.includes(key)) {
+      shouldRemove = false;
+      reason = 'Data aktif digunakan';
+    }
     // Check if it's a deprecated key
-    if (deprecatedKeys.includes(key)) {
+    else if (deprecatedKeys.includes(key)) {
       shouldRemove = true;
       reason = 'Data sudah dipindahkan ke IndexedDB';
     }
@@ -50,6 +81,16 @@ export function analyzeLocalStorage(): CleanupItem[] {
     else if (value === '[]' || value === '{}' || value === '') {
       shouldRemove = true;
       reason = 'Data kosong';
+    }
+    // Keys with table_sort_ prefix are for table sorting state
+    else if (key.startsWith('table_sort_')) {
+      shouldRemove = false;
+      reason = 'Pengaturan sorting tabel';
+    }
+    // Unknown keys - suggest removal with warning
+    else {
+      shouldRemove = true;
+      reason = 'Data tidak dikenal (periksa dulu sebelum hapus)';
     }
 
     items.push({
@@ -84,26 +125,36 @@ function getKeyDescription(key: string): string {
     'needsMigration': 'Flag perlu migrasi',
     
     // Active data (should keep)
-    'localdb_users': 'Data pengguna',
-    'localdb_guru': 'Data guru',
-    'localdb_mata_pelajaran': 'Data mata pelajaran',
-    'localdb_kelas': 'Data kelas',
-    'localdb_siswa': 'Data siswa',
-    'localdb_jenis_kegiatan': 'Jenis kegiatan jurnal',
-    'localdb_jurnal': 'Jurnal guru',
-    'localdb_kehadiran': 'Kehadiran siswa',
-    'localdb_jadwal_pelajaran': 'Jadwal pelajaran',
-    'localdb_jam_pelajaran': 'Jam pelajaran',
-    'localdb_pengaturan': 'Pengaturan aplikasi',
-    'localdb_tahun_ajaran': 'Tahun ajaran',
-    'pdfFormatSettings': 'Pengaturan format PDF',
-    'theme': 'Tema aplikasi',
-    'userProfile': 'Profil user aktif',
-    'quickMenuItems': 'Menu cepat',
-    'notificationSettings': 'Pengaturan notifikasi',
+    'localdb_users': 'Data pengguna (AKTIF)',
+    'localdb_guru': 'Data guru (AKTIF)',
+    'localdb_mata_pelajaran': 'Data mata pelajaran (AKTIF)',
+    'localdb_kelas': 'Data kelas (AKTIF)',
+    'localdb_siswa': 'Data siswa (AKTIF)',
+    'localdb_jenis_kegiatan': 'Jenis kegiatan jurnal (AKTIF)',
+    'localdb_jurnal': 'Jurnal guru (AKTIF)',
+    'localdb_kehadiran': 'Kehadiran siswa (AKTIF)',
+    'localdb_jadwal_pelajaran': 'Jadwal pelajaran (AKTIF)',
+    'localdb_jam_pelajaran': 'Jam pelajaran (AKTIF)',
+    'localdb_pengaturan': 'Pengaturan aplikasi (AKTIF)',
+    'localdb_tahun_ajaran': 'Tahun ajaran (AKTIF)',
+    'localdb_nilai': 'Data nilai siswa (AKTIF)',
+    'localdb_kategori_nilai': 'Kategori penilaian (AKTIF)',
+    'pdfFormatSettings': 'Pengaturan format PDF (AKTIF)',
+    'theme': 'Tema aplikasi (AKTIF)',
+    'userProfile': 'Profil user aktif (AKTIF)',
+    'quickMenuItems': 'Menu cepat (AKTIF)',
+    'notificationSettings': 'Pengaturan notifikasi (AKTIF)',
+    'lastBackupDate': 'Tanggal backup terakhir (AKTIF)',
+    'selectedDate': 'Tanggal terpilih (AKTIF)',
+    'authSession': 'Sesi autentikasi (AKTIF)',
   };
 
-  return descriptions[key] || 'Data tidak dikenal';
+  // Check for table_sort_ prefix
+  if (key.startsWith('table_sort_')) {
+    return `Pengaturan sorting: ${key.replace('table_sort_', '')}`;
+  }
+  
+  return descriptions[key] || 'Data tidak dikenal (periksa sebelum hapus)';
 }
 
 export function cleanupOldData(keysToRemove: string[]): number {
