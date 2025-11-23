@@ -56,6 +56,8 @@ export function analyzeLocalStorage(): CleanupItem[] {
     'localdb_catatan_kalender',
     'localdb_hari_libur',
     'localdb_activity_log',
+    'localauth_users',
+    'localauth_session',
   ];
 
   // Keys that might be old/unused
@@ -155,6 +157,8 @@ function getKeyDescription(key: string): string {
     'localdb_catatan_kalender': 'Catatan kalender (sudah di IndexedDB)',
     'localdb_hari_libur': 'Hari libur (sudah di IndexedDB)',
     'localdb_activity_log': 'Log aktivitas (sudah di IndexedDB)',
+    'localauth_users': 'Data autentikasi lokal (tidak digunakan)',
+    'localauth_session': 'Sesi autentikasi lokal (tidak digunakan)',
     
     // Old/migration related
     'localdb_backup': 'Backup lama (tidak terpakai)',
