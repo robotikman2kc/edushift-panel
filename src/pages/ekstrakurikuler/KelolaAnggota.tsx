@@ -261,9 +261,9 @@ export default function KelolaAnggota() {
                     <SelectValue placeholder="Pilih tingkat" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="11">11</SelectItem>
-                    <SelectItem value="12">12</SelectItem>
+                    <SelectItem value="X">X</SelectItem>
+                    <SelectItem value="XI">XI</SelectItem>
+                    <SelectItem value="XII">XII</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
