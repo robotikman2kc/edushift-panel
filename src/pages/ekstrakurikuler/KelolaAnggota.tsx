@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/common/DataTable";
 import { eskulDB } from "@/lib/eskulDB";
 import { AnggotaEskul, Ekstrakurikuler } from "@/lib/indexedDB";
-import { AlertCircle, ArrowUp, UserX, UserCheck } from "lucide-react";
+import { AlertCircle, ArrowUp, UserX, UserCheck, RefreshCw } from "lucide-react";
+import { migrateEskulData } from "@/lib/eskulMigration";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export default function KelolaAnggota() {
   const [selectedAnggota, setSelectedAnggota] = useState<AnggotaEskul[]>([]);
   const [showToggleStatusDialog, setShowToggleStatusDialog] = useState(false);
   const [selectedAnggotaForToggle, setSelectedAnggotaForToggle] = useState<AnggotaEskul | null>(null);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -324,6 +326,27 @@ export default function KelolaAnggota() {
     }
   };
 
+  const handleMigrateData = async () => {
+    setIsMigrating(true);
+    try {
+      console.log('Manually triggering migration...');
+      const result = await migrateEskulData();
+      console.log('Migration result:', result);
+      
+      if (result.success) {
+        toast.success("Data berhasil dimigrasikan dari localStorage ke IndexedDB");
+        await loadData();
+      } else {
+        toast.error("Gagal migrasi data: " + result.error);
+      }
+    } catch (error: any) {
+      toast.error("Gagal migrasi data: " + error.message);
+      console.error('Migration error:', error);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   // Format data untuk tampilan tabel dengan action buttons
   const formattedAnggota = anggota.map((item, index) => ({
     ...item,
@@ -380,6 +403,15 @@ export default function KelolaAnggota() {
 
       <Card className="p-4">
         <div className="flex gap-2">
+          <Button 
+            onClick={handleMigrateData}
+            variant="outline"
+            disabled={isMigrating}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isMigrating ? 'animate-spin' : ''}`} />
+            {isMigrating ? 'Migrasi...' : 'Migrasi Data dari LocalStorage'}
+          </Button>
+          
           <Button 
             onClick={handleNaikKelas}
             variant="default"
