@@ -31,7 +31,9 @@ import {
   Trash2,
   Trophy,
   UserPlus,
-  ClipboardCheck
+  ClipboardCheck,
+  ChevronsDown,
+  ChevronsUp
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -225,6 +227,14 @@ export function AppSidebar() {
         : [...prev, title]
     );
   };
+
+  const collapseAll = () => {
+    setOpenGroups([]);
+  };
+
+  const expandAll = () => {
+    setOpenGroups(menuItems.map(g => g.title));
+  };
   
   // Auto-open group when route changes - but only if not in quick menu
   useEffect(() => {
@@ -322,20 +332,42 @@ export function AppSidebar() {
         </div>
         
         {!collapsed && (
-          <div className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg">
-            <Avatar className="h-8 w-8 border-2 border-primary">
-              <AvatarImage src={userProfile?.avatar_url} />
-              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-sidebar-foreground">
-                {userProfile?.nama || 'Admin'}
-              </span>
-              <span className="text-xs text-sidebar-foreground/70">Administrator</span>
+          <>
+            <div className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg">
+              <Avatar className="h-8 w-8 border-2 border-primary">
+                <AvatarImage src={userProfile?.avatar_url} />
+                <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                  {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-medium text-sidebar-foreground">
+                  {userProfile?.nama || 'Admin'}
+                </span>
+                <span className="text-xs text-sidebar-foreground/70">Administrator</span>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-sidebar-accent"
+                  onClick={collapseAll}
+                  title="Tutup semua menu"
+                >
+                  <ChevronsUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-sidebar-accent"
+                  onClick={expandAll}
+                  title="Buka semua menu"
+                >
+                  <ChevronsDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </SidebarHeader>
 
