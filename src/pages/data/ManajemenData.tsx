@@ -222,10 +222,10 @@ const ManajemenData = () => {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <div className="grid grid-cols-[1fr,auto,auto] gap-2 p-2 text-xs font-medium bg-muted/50">
+            <div className="grid grid-cols-[1fr,80px,60px] gap-2 p-2 text-xs font-medium bg-muted/50">
               <div>Kategori</div>
-              <div className="text-center w-16">Jumlah</div>
-              <div className="w-20 text-center">Aksi</div>
+              <div className="text-center">Jumlah</div>
+              <div className="text-center">Aksi</div>
             </div>
             
             {loading ? (
@@ -242,20 +242,20 @@ const ManajemenData = () => {
                   return (
                     <div 
                       key={dataType.key} 
-                      className="grid grid-cols-[1fr,auto,auto] gap-2 p-2 items-center hover:bg-muted/30 transition-colors text-sm"
+                      className="grid grid-cols-[1fr,80px,60px] gap-2 p-2 items-center hover:bg-muted/30 transition-colors text-sm"
                     >
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{dataType.title}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium truncate">{dataType.title}</span>
                       </div>
                       
-                      <div className="text-center w-16">
+                      <div className="flex justify-center">
                         <Badge variant="secondary" className="text-xs">
                           {dataType.count}
                         </Badge>
                       </div>
                       
-                      <div className="w-20 flex justify-center">
+                      <div className="flex justify-center items-center">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
