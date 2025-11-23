@@ -52,7 +52,8 @@ export default function KelolaAnggota() {
     { key: "tingkat", label: "Tingkat", sortable: true },
     { key: "nama_kelas", label: "Kelas", sortable: true },
     { key: "tanggal_masuk", label: "Tanggal Masuk", sortable: true },
-    { key: "status", label: "Status", sortable: false }
+    { key: "status", label: "Status", sortable: false },
+    { key: "aksi", label: "Aksi", sortable: false }
   ];
 
   const formFields = [
@@ -286,7 +287,7 @@ export default function KelolaAnggota() {
   const formattedAnggota = anggota.map((item, index) => ({
     ...item,
     no: index + 1,
-    customActions: (
+    aksi: (
       <Button
         size="sm"
         variant={item.status === 'aktif' ? 'destructive' : 'default'}
