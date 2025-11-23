@@ -151,7 +151,42 @@ export interface HariLibur extends BaseRecord {
   keterangan?: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur';
+export interface Ekstrakurikuler extends BaseRecord {
+  nama_eskul: string;
+  pembimbing: string;
+  hari_pertemuan: string;
+  jam_pertemuan: string;
+  deskripsi?: string;
+  status: string;
+}
+
+export interface AnggotaEskul extends BaseRecord {
+  ekstrakurikuler_id: string;
+  nisn: string;
+  nama_siswa: string;
+  tingkat: string;
+  nama_kelas: string;
+  tanggal_masuk: string;
+  status: string;
+}
+
+export interface KehadiranEskul extends BaseRecord {
+  ekstrakurikuler_id: string;
+  anggota_id: string;
+  tanggal: string;
+  status_kehadiran: string;
+  keterangan?: string;
+}
+
+export interface NilaiEskul extends BaseRecord {
+  anggota_id: string;
+  ekstrakurikuler_id: string;
+  tahun_ajaran_id: string;
+  semester: string;
+  nilai: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul';
 
 // Generate UUID function
 function generateId(): string {
@@ -165,7 +200,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 6;
+  private dbVersion = 7;
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -183,7 +218,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { localDB, Ekstrakurikuler } from "@/lib/localDB";
+import { eskulDB } from "@/lib/eskulDB";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,8 +27,8 @@ export default function KelolaEkstrakurikuler() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const eskuls = localDB.select('ekstrakurikuler');
+  const loadData = async () => {
+    const eskuls = await eskulDB.select('ekstrakurikuler');
     if (eskuls.length > 0) {
       const eskul = eskuls[0];
       setEskulId(eskul.id);
@@ -43,7 +43,7 @@ export default function KelolaEkstrakurikuler() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.nama_eskul || !formData.pembimbing || !formData.hari_pertemuan || !formData.jam_pertemuan) {
       toast.error("Mohon lengkapi semua field yang wajib");
       return;
@@ -51,7 +51,7 @@ export default function KelolaEkstrakurikuler() {
 
     if (eskulId) {
       // Update existing
-      const result = localDB.update('ekstrakurikuler', eskulId, formData);
+      const result = await eskulDB.update('ekstrakurikuler', eskulId, formData);
       if (result.error) {
         toast.error("Gagal mengupdate pengaturan ekstrakurikuler");
       } else {
@@ -59,7 +59,7 @@ export default function KelolaEkstrakurikuler() {
       }
     } else {
       // Create new
-      const result = localDB.insert('ekstrakurikuler', formData);
+      const result = await eskulDB.insert('ekstrakurikuler', formData);
       if (result.error) {
         toast.error("Gagal menyimpan pengaturan ekstrakurikuler");
       } else {
