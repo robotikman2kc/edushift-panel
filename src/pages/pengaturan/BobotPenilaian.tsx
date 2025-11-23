@@ -502,11 +502,22 @@ export default function BobotPenilaian() {
   };
 
   const handleGradeThresholdChange = (grade: keyof GradeThreshold, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setGradeThresholds(prev => ({
-      ...prev,
-      [grade]: numValue
-    }));
+    // Allow empty string or valid number
+    if (value === '') {
+      setGradeThresholds(prev => ({
+        ...prev,
+        [grade]: 0
+      }));
+      return;
+    }
+    
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setGradeThresholds(prev => ({
+        ...prev,
+        [grade]: numValue
+      }));
+    }
   };
 
   const handleSaveGradeSettings = async () => {
@@ -1026,15 +1037,14 @@ export default function BobotPenilaian() {
                     </Label>
                     <Input
                       id={`${grade}-threshold`}
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={gradeThresholds[grade]}
                       onChange={(e) =>
                         handleGradeThresholdChange(grade, e.target.value)
                       }
                       disabled={grade === 'E'}
+                      placeholder="0"
                     />
                   </div>
                   <div className="w-32 text-right">
