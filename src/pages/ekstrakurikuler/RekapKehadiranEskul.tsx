@@ -186,9 +186,10 @@ const RekapKehadiranEskul = () => {
 
       const template = getCustomPDFTemplate('attendance');
       
-      // Update template with signature info
+      // Update template without school header for eskul reports
       const updatedTemplate = {
         ...template,
+        header: undefined, // Remove school header
         teacherInfo: {
           name: eskul.pembimbing,
           nip: "",
