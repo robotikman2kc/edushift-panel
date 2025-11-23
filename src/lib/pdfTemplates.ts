@@ -43,7 +43,8 @@ export interface PDFTemplate {
     name: string;
     nip: string;
     subject: string;
-    jabatan: string;
+    jabatan_sekolah: string;
+    jabatan_kepegawaian: string;
     satuan_kerja?: string;
     kepala_sekolah_nama?: string;
     kepala_sekolah_nip?: string;
