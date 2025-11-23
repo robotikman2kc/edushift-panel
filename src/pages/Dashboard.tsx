@@ -371,7 +371,7 @@ const Dashboard = () => {
               <div className="p-4 rounded-lg border bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
                 <div className="flex items-start gap-3">
                   <CalendarOff className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-yellow-900 dark:text-yellow-100 mb-1">
                       {currentPeriode.nama}
                     </p>
@@ -379,22 +379,22 @@ const Dashboard = () => {
                       {format(new Date(currentPeriode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(currentPeriode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
                     </p>
                     {currentPeriode.keterangan && (
-                      <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-2">
+                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
                         {currentPeriode.keterangan}
                       </p>
                     )}
-                    {currentPeriode.jenis !== 'libur' && (
-                      <Button 
-                        onClick={() => navigate('/jurnal/jurnal-guru')} 
-                        size="sm"
-                        variant="outline"
-                        className="mt-2 h-7 text-xs bg-background hover:bg-muted"
-                      >
-                        <FileText className="h-3 w-3 mr-1.5" />
-                        Isi Jurnal Guru
-                      </Button>
-                    )}
                   </div>
+                  {currentPeriode.jenis !== 'libur' && (
+                    <Button 
+                      onClick={() => navigate('/jurnal/jurnal-guru')} 
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs bg-background hover:bg-muted flex-shrink-0"
+                    >
+                      <FileText className="h-3 w-3 mr-1.5" />
+                      Isi Jurnal Guru
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : todaySchedule.length === 0 ? (
