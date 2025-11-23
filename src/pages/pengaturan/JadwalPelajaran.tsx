@@ -33,7 +33,7 @@ import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2, CalendarDays } fr
 import { useToast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran, getActiveSemester, setActiveSemester as setActiveAcademicSemester } from "@/lib/academicYearUtils";
-import { getWorkdaySettings, saveWorkdaySettings, getWorkdays } from "@/lib/workdaySettings";
+import { getWorkdaySettings, saveWorkdaySettings, getWorkdays, initializeWorkdaySettings } from "@/lib/workdaySettings";
 
 interface TimeSlot {
   id: string;
@@ -101,9 +101,14 @@ export default function JadwalPelajaran() {
 
   useEffect(() => {
     // Load workday settings
-    const settings = getWorkdaySettings();
-    setIncludeSaturday(settings.includeSaturday);
-    setWorkdays(getWorkdays());
+    const loadSettings = async () => {
+      await initializeWorkdaySettings(); // Initialize and migrate if needed
+      const settings = await getWorkdaySettings();
+      setIncludeSaturday(settings.includeSaturday);
+      setWorkdays(getWorkdays());
+    };
+    
+    loadSettings();
     
     const initData = async () => {
       const year = await getActiveTahunAjaran();
@@ -951,9 +956,9 @@ export default function JadwalPelajaran() {
               <Switch
                 id="saturday-workday"
                 checked={includeSaturday}
-                onCheckedChange={(checked) => {
+                onCheckedChange={async (checked) => {
                   setIncludeSaturday(checked);
-                  saveWorkdaySettings({ includeSaturday: checked });
+                  await saveWorkdaySettings({ includeSaturday: checked });
                   setWorkdays(getWorkdays());
                   toast({
                     title: "Berhasil",
