@@ -240,73 +240,73 @@ const ManajemenData = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader 
         title="Manajemen Data" 
         description="Kelola dan hapus data sistem secara massal"
       />
 
-      <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
+      <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800 py-2">
         <AlertTriangle className="h-4 w-4 text-yellow-600" />
-        <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+        <AlertDescription className="text-yellow-800 dark:text-yellow-200 text-sm">
           <strong>Peringatan:</strong> Fitur ini akan menghapus SEMUA data pada kategori yang dipilih. 
           Tindakan ini tidak dapat dibatalkan. Pastikan untuk melakukan backup terlebih dahulu.
         </AlertDescription>
       </Alert>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {dataTypes.map((dataType) => {
           const Icon = dataType.icon;
           const isDeleting = deleting === dataType.key;
           
           return (
-            <Card key={dataType.key} className={`border-2 ${getColorClasses(dataType.color)}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <Icon className={`h-6 w-6 ${getIconColor(dataType.color)}`} />
+            <Card key={dataType.key} className={`border ${getColorClasses(dataType.color)}`}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Icon className={`h-5 w-5 ${getIconColor(dataType.color)}`} />
                   {dataType.title}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   {dataType.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-white/50 dark:bg-black/20 rounded-lg">
-                    {loading ? (
-                      <div className="h-8 bg-muted animate-pulse rounded" />
-                    ) : (
-                      <>
-                        <p className={`text-3xl font-bold ${getIconColor(dataType.color)}`}>
-                          {dataType.count}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Total record tersimpan
-                        </p>
-                      </>
-                    )}
-                  </div>
+              <CardContent className="space-y-3">
+                <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                  {loading ? (
+                    <div className="h-6 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <>
+                      <p className={`text-2xl font-bold ${getIconColor(dataType.color)}`}>
+                        {dataType.count}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Total record
+                      </p>
+                    </>
+                  )}
+                </div>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        className="w-full"
-                        disabled={isDeleting || dataType.count === 0}
-                      >
-                        {isDeleting ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                            Menghapus...
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Hapus Semua Data
-                          </>
-                        )}
-                      </Button>
-                    </AlertDialogTrigger>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="w-full"
+                      disabled={isDeleting || dataType.count === 0}
+                    >
+                      {isDeleting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2" />
+                          Menghapus...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-3 w-3 mr-2" />
+                          Hapus
+                        </>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
@@ -336,7 +336,6 @@ const ManajemenData = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </div>
               </CardContent>
             </Card>
           );
@@ -344,19 +343,19 @@ const ManajemenData = () => {
       </div>
 
       {/* Year-based data management */}
-      <Card className="border-2 border-destructive/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <Trash className="h-6 w-6 text-destructive" />
+      <Card className="border border-destructive/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Trash className="h-5 w-5 text-destructive" />
             Hapus Data Per Tahun Ajaran
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Hapus semua data terkait tahun ajaran tertentu untuk efisiensi memori
           </CardDescription>
         </CardHeader>
         <CardContent>
           {yearDataStats.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+            <p className="text-xs text-muted-foreground text-center py-3">
               Tidak ada data tahun ajaran
             </p>
           ) : (
@@ -368,13 +367,13 @@ const ManajemenData = () => {
                 return (
                   <div 
                     key={yearStat.tahunAjaran}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
                   >
-                    <div className="space-y-1">
-                      <h4 className="font-semibold">{yearStat.tahunAjaran}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {totalData} total data (Kelas: {yearStat.totalKelas}, Siswa: {yearStat.totalSiswa}, 
-                        Nilai: {yearStat.totalNilai}, Kehadiran: {yearStat.totalKehadiran})
+                    <div className="space-y-0.5">
+                      <h4 className="font-semibold text-sm">{yearStat.tahunAjaran}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        {totalData} data (Kelas: {yearStat.totalKelas}, Siswa: {yearStat.totalSiswa}, 
+                        Nilai: {yearStat.totalNilai}, Hadir: {yearStat.totalKehadiran})
                       </p>
                     </div>
                     <Button
@@ -383,7 +382,7 @@ const ManajemenData = () => {
                       onClick={() => handleDeleteYearClick(yearStat)}
                       disabled={totalData === 0}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-3 w-3 mr-1" />
                       Hapus
                     </Button>
                   </div>
