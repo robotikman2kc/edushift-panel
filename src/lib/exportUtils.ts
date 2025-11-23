@@ -94,7 +94,7 @@ export const generatePDFBlob = (
   columns: ExportColumn[],
   title: string = 'Data Export',
   template: PDFTemplate = defaultTemplate,
-  additionalInfo?: { kelas?: string; bulan?: string }
+  additionalInfo?: { kelas?: string; bulan?: string; eskul?: string; pembimbing?: string; periode?: string; totalPertemuan?: string }
 ): Blob | null => {
   try {
     console.log('Exporting PDF with template:', template); // Debug log
@@ -228,22 +228,56 @@ export const generatePDFBlob = (
 
     // Add additional info (kelas and bulan for attendance/agenda reports) - AFTER separator line
     console.log('Additional info received:', additionalInfo); // Debug log
-    if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan) && !title.includes('Jurnal') && !title.includes('Nilai')) {
+    if (additionalInfo && (additionalInfo.kelas || additionalInfo.bulan || additionalInfo.eskul) && !title.includes('Jurnal') && !title.includes('Nilai')) {
       console.log('Adding class and month info to PDF'); // Debug log
       doc.setFontSize(template.styling.fontSize.header);
       doc.setTextColor(0, 0, 0);
       const infoY = currentY;
-      if (additionalInfo.kelas) {
-        console.log('Adding Kelas:', additionalInfo.kelas); // Debug log
-        doc.text(`Kelas: ${additionalInfo.kelas}`, template.layout.margins.left, infoY);
+      const labelWidth = 30; // Fixed width for labels to align colons
+      
+      // For extracurricular reports, show eskul info
+      if (additionalInfo.eskul) {
+        doc.text('Ekstrakurikuler', template.layout.margins.left, currentY);
+        doc.text(':', template.layout.margins.left + labelWidth, currentY);
+        doc.text(additionalInfo.eskul, template.layout.margins.left + labelWidth + 3, currentY);
         currentY += 5;
+        
+        if (additionalInfo.pembimbing) {
+          doc.text('Pembimbing', template.layout.margins.left, currentY);
+          doc.text(':', template.layout.margins.left + labelWidth, currentY);
+          doc.text(additionalInfo.pembimbing, template.layout.margins.left + labelWidth + 3, currentY);
+          currentY += 5;
+        }
+        
+        if (additionalInfo.periode) {
+          doc.text('Periode', template.layout.margins.left, currentY);
+          doc.text(':', template.layout.margins.left + labelWidth, currentY);
+          doc.text(additionalInfo.periode, template.layout.margins.left + labelWidth + 3, currentY);
+          currentY += 5;
+        }
+        
+        if (additionalInfo.totalPertemuan) {
+          doc.text('Total Pertemuan', template.layout.margins.left, currentY);
+          doc.text(':', template.layout.margins.left + labelWidth, currentY);
+          doc.text(additionalInfo.totalPertemuan, template.layout.margins.left + labelWidth + 3, currentY);
+          currentY += 5;
+        }
+        
+        currentY += 3; // Add spacing before table
+      } else {
+        // For regular attendance/agenda reports
+        if (additionalInfo.kelas) {
+          console.log('Adding Kelas:', additionalInfo.kelas); // Debug log
+          doc.text(`Kelas: ${additionalInfo.kelas}`, template.layout.margins.left, infoY);
+          currentY += 5;
+        }
+        if (additionalInfo.bulan) {
+          console.log('Adding Bulan:', additionalInfo.bulan); // Debug log
+          doc.text(`Periode: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
+          currentY += 5;
+        }
+        currentY += 0.25; // Very minimal spacing before table for agenda
       }
-      if (additionalInfo.bulan) {
-        console.log('Adding Bulan:', additionalInfo.bulan); // Debug log
-        doc.text(`Periode: ${additionalInfo.bulan}`, template.layout.margins.left, currentY);
-        currentY += 5;
-      }
-      currentY += 0.25; // Very minimal spacing before table for agenda
     } else {
       console.log('No additional info to add'); // Debug log
     }
