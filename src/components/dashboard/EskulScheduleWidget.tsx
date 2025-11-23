@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { localDB, Ekstrakurikuler } from "@/lib/localDB";
+import { eskulDB } from "@/lib/eskulDB";
+import { Ekstrakurikuler } from "@/lib/indexedDB";
 import { Users, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -19,12 +20,12 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
     loadTodayEskul();
   }, [selectedDate]);
 
-  const loadTodayEskul = () => {
+  const loadTodayEskul = async () => {
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const today = days[selectedDate.getDay()];
 
     // Get ekstrakurikuler that meet today
-    const eskuls = localDB.select('ekstrakurikuler', (e: Ekstrakurikuler) => 
+    const eskuls = await eskulDB.select('ekstrakurikuler', (e: Ekstrakurikuler) => 
       e.hari_pertemuan === today && e.status === 'aktif'
     );
 

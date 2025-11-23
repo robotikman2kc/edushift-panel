@@ -21,6 +21,11 @@ export function analyzeLocalStorage(): CleanupItem[] {
     'lastBackupDate',
     'selectedDate',
     'authSession',
+    'auth_users',
+    'auth_session', 
+    'auth_currentUser',
+    'sidebarState',
+    'userPreferences',
   ];
   
   // Keys that are no longer used (ALL moved to IndexedDB)
