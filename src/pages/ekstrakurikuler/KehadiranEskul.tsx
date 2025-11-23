@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { localDB, KehadiranEskul, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
@@ -13,11 +14,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function KehadiranEskulPage() {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
   const [anggotaEskul, setAnggotaEskul] = useState<AnggotaEskul[]>([]);
+  const [filteredAnggota, setFilteredAnggota] = useState<AnggotaEskul[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedTingkat, setSelectedTingkat] = useState<string>("");
+  const [selectedKelas, setSelectedKelas] = useState<string>("");
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [keaktifan, setKeaktifan] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: KehadiranEskul}>({});
   const [loading, setLoading] = useState(false);
+
+  const tingkatOptions = ["X", "XI", "XII"];
 
   useEffect(() => {
     loadEskulData();
@@ -28,6 +34,21 @@ export default function KehadiranEskulPage() {
       fetchAnggotaAndAttendance();
     }
   }, [eskul, selectedDate]);
+
+  // Filter anggota berdasarkan tingkat dan kelas
+  useEffect(() => {
+    let filtered = [...anggotaEskul];
+    
+    if (selectedTingkat) {
+      filtered = filtered.filter(a => a.tingkat === selectedTingkat);
+    }
+    
+    if (selectedKelas) {
+      filtered = filtered.filter(a => a.nama_kelas === selectedKelas);
+    }
+    
+    setFilteredAnggota(filtered);
+  }, [anggotaEskul, selectedTingkat, selectedKelas]);
 
   const loadEskulData = () => {
     const eskuls = localDB.select('ekstrakurikuler');
@@ -89,11 +110,14 @@ export default function KehadiranEskulPage() {
 
   const handleMarkAllHadir = () => {
     const newAttendance: {[key: string]: string} = {};
-    anggotaEskul.forEach(anggota => {
+    filteredAnggota.forEach(anggota => {
       newAttendance[anggota.id] = 'Hadir';
     });
-    setAttendance(newAttendance);
-    toast.success("Semua anggota ditandai hadir");
+    setAttendance(prev => ({
+      ...prev,
+      ...newAttendance
+    }));
+    toast.success("Semua anggota yang ditampilkan ditandai hadir");
   };
 
   const handleSave = async () => {
@@ -160,17 +184,28 @@ export default function KehadiranEskulPage() {
   };
 
   const getAttendanceStats = () => {
-    const statuses = Object.values(attendance);
+    const statuses = Object.entries(attendance)
+      .filter(([anggotaId]) => filteredAnggota.some(a => a.id === anggotaId))
+      .map(([, status]) => status);
+    
     return {
       hadir: statuses.filter(s => s === 'Hadir').length,
       sakit: statuses.filter(s => s === 'Sakit').length,
       izin: statuses.filter(s => s === 'Izin').length,
       alpha: statuses.filter(s => s === 'Alpha').length,
-      total: anggotaEskul.length,
+      total: filteredAnggota.length,
     };
   };
 
   const stats = getAttendanceStats();
+
+  // Get unique kelas names from anggota
+  const kelasOptions = selectedTingkat
+    ? [...new Set(anggotaEskul
+        .filter(a => a.tingkat === selectedTingkat)
+        .map(a => a.nama_kelas))]
+        .sort()
+    : [...new Set(anggotaEskul.map(a => a.nama_kelas))].sort();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -228,8 +263,45 @@ export default function KehadiranEskulPage() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md text-sm"
+                className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tingkat">Filter Tingkat</Label>
+              <Select value={selectedTingkat} onValueChange={(value) => {
+                setSelectedTingkat(value);
+                setSelectedKelas(""); // Reset kelas saat tingkat berubah
+              }}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Semua Tingkat" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="">Semua Tingkat</SelectItem>
+                  {tingkatOptions.map((tingkat) => (
+                    <SelectItem key={tingkat} value={tingkat}>
+                      {tingkat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kelas">Filter Kelas</Label>
+              <Select value={selectedKelas} onValueChange={setSelectedKelas}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Semua Kelas" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="">Semua Kelas</SelectItem>
+                  {kelasOptions.map((kelas) => (
+                    <SelectItem key={kelas} value={kelas}>
+                      {kelas}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -237,7 +309,7 @@ export default function KehadiranEskulPage() {
                 onClick={handleMarkAllHadir}
                 className="w-full" 
                 variant="outline"
-                disabled={anggotaEskul.length === 0}
+                disabled={filteredAnggota.length === 0}
               >
                 <CheckCheck className="mr-2 h-4 w-4" />
                 Tandai Semua Hadir
@@ -253,13 +325,17 @@ export default function KehadiranEskulPage() {
               </Button>
             </div>
 
-            {anggotaEskul.length > 0 && (
+            {filteredAnggota.length > 0 && (
               <>
                 <div className="pt-4 border-t">
                   <h3 className="font-medium mb-2">Informasi Eskul</h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Anggota:</span>
+                      <span className="font-medium">{anggotaEskul.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ditampilkan:</span>
                       <span className="font-medium">{stats.total}</span>
                     </div>
                     <div className="flex justify-between">
@@ -313,10 +389,14 @@ export default function KehadiranEskulPage() {
                   <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
                   <p className="text-muted-foreground">Memuat data anggota...</p>
                 </div>
-              ) : anggotaEskul.length === 0 ? (
+              ) : filteredAnggota.length === 0 ? (
                 <div className="text-center py-8">
                   <UserX className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Belum ada anggota aktif yang terdaftar</p>
+                  <p className="text-muted-foreground">
+                    {anggotaEskul.length === 0 
+                      ? "Belum ada anggota aktif yang terdaftar"
+                      : "Tidak ada anggota yang sesuai dengan filter"}
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -333,7 +413,7 @@ export default function KehadiranEskulPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {anggotaEskul.map((anggota, index) => (
+                    {filteredAnggota.map((anggota, index) => (
                       <TableRow key={anggota.id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium">{anggota.nisn}</TableCell>
