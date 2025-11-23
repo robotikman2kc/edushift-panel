@@ -71,6 +71,15 @@ export default function BobotPenilaian() {
     status: "Aktif",
   });
 
+  // Grade settings states
+  const [gradeSettings, setGradeSettings] = useState({
+    A: { min: 85, max: 100 },
+    B: { min: 70, max: 84 },
+    C: { min: 55, max: 69 },
+    D: { min: 40, max: 54 },
+    E: { min: 0, max: 39 },
+  });
+
   const tingkatOptions = [
     { value: "X", label: "Kelas X" },
     { value: "XI", label: "Kelas XI" },
@@ -83,6 +92,7 @@ export default function BobotPenilaian() {
       setActiveTahunAjaran(year);
       await loadData(year);
       await loadLastSelectedFilters();
+      await loadGradeSettings();
     };
     initData();
   }, []);
@@ -473,6 +483,100 @@ export default function BobotPenilaian() {
     }
   };
 
+  // Grade settings functions
+  const loadGradeSettings = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const gradeSetting = settings.find((s: any) => s.key === "grade_settings");
+      
+      if (gradeSetting?.value) {
+        setGradeSettings(JSON.parse(gradeSetting.value));
+      }
+    } catch (error) {
+      console.error("Error loading grade settings:", error);
+    }
+  };
+
+  const handleGradeChange = (grade: string, field: 'min' | 'max', value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setGradeSettings(prev => ({
+      ...prev,
+      [grade]: {
+        ...prev[grade as keyof typeof prev],
+        [field]: numValue
+      }
+    }));
+  };
+
+  const handleSaveGradeSettings = async () => {
+    // Validation: check overlapping ranges
+    const grades = ['A', 'B', 'C', 'D', 'E'];
+    for (let i = 0; i < grades.length; i++) {
+      const grade = grades[i];
+      const settings = gradeSettings[grade as keyof typeof gradeSettings];
+      
+      if (settings.min > settings.max) {
+        toast({
+          title: "Validasi Gagal",
+          description: `Grade ${grade}: Nilai minimum tidak boleh lebih besar dari maksimum`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (settings.min < 0 || settings.max > 100) {
+        toast({
+          title: "Validasi Gagal",
+          description: `Grade ${grade}: Nilai harus antara 0-100`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "grade_settings");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, {
+          value: JSON.stringify(gradeSettings),
+        });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "grade_settings",
+          value: JSON.stringify(gradeSettings),
+        });
+      }
+
+      toast({
+        title: "Berhasil",
+        description: "Pengaturan grade berhasil disimpan",
+      });
+    } catch (error) {
+      console.error("Error saving grade settings:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan pengaturan grade",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResetGradeSettings = () => {
+    setGradeSettings({
+      A: { min: 85, max: 100 },
+      B: { min: 70, max: 84 },
+      C: { min: 55, max: 69 },
+      D: { min: 40, max: 54 },
+      E: { min: 0, max: 39 },
+    });
+    toast({
+      title: "Reset",
+      description: "Pengaturan grade direset ke default",
+    });
+  };
+
   const handleReset = () => {
     if (selectedClass) {
       loadBobotForClass(selectedClass);
@@ -499,9 +603,10 @@ export default function BobotPenilaian() {
       />
 
       <Tabs defaultValue="bobot" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="bobot">Pengaturan Bobot</TabsTrigger>
           <TabsTrigger value="kategori">Kategori Penilaian</TabsTrigger>
+          <TabsTrigger value="grade">Pengaturan Grade</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Pengaturan Bobot */}
@@ -910,6 +1015,92 @@ export default function BobotPenilaian() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </TabsContent>
+
+        {/* Tab 3: Pengaturan Grade */}
+        <TabsContent value="grade" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pengaturan Grade Nilai</CardTitle>
+              <CardDescription>
+                Atur rentang nilai untuk setiap grade (berlaku untuk semua kelas)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {(['A', 'B', 'C', 'D', 'E'] as const).map((grade) => (
+                <div
+                  key={grade}
+                  className="flex items-center gap-4 p-4 border rounded-lg"
+                >
+                  <div className="w-16">
+                    <div className="text-2xl font-bold text-primary">
+                      {grade}
+                    </div>
+                  </div>
+                  <div className="flex-1 grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`${grade}-min`}>Nilai Minimum</Label>
+                      <Input
+                        id={`${grade}-min`}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={gradeSettings[grade].min}
+                        onChange={(e) =>
+                          handleGradeChange(grade, 'min', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`${grade}-max`}>Nilai Maksimum</Label>
+                      <Input
+                        id={`${grade}-max`}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={gradeSettings[grade].max}
+                        onChange={(e) =>
+                          handleGradeChange(grade, 'max', e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {gradeSettings[grade].min} - {gradeSettings[grade].max}
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex gap-3 pt-4 border-t">
+                <Button onClick={handleSaveGradeSettings} className="flex-1">
+                  <Save className="h-4 w-4 mr-2" />
+                  Simpan Pengaturan
+                </Button>
+                <Button
+                  onClick={handleResetGradeSettings}
+                  variant="outline"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reset ke Default
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Info Card untuk Grade */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>• Pengaturan grade berlaku untuk semua kelas</p>
+              <p>• Nilai minimum tidak boleh lebih besar dari nilai maksimum</p>
+              <p>• Pastikan rentang nilai tidak tumpang tindih antar grade</p>
+              <p>• Nilai default: A (85-100), B (70-84), C (55-69), D (40-54), E (0-39)</p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
