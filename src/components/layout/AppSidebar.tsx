@@ -147,6 +147,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState<string | null>(null);
   const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   
   // Icon mapping for localStorage restoration
@@ -255,8 +256,6 @@ export function AppSidebar() {
 
   // Load profile from localStorage
   useEffect(() => {
-    let blobUrl: string | null = null;
-
     const loadProfile = async () => {
       const savedProfile = localStorage.getItem('userProfile');
       if (savedProfile) {
@@ -270,20 +269,33 @@ export function AppSidebar() {
             console.log('AppSidebar loading avatar from OPFS:', parsed.avatar_url);
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
-              // Buat blob URL sendiri untuk kontrol cleanup
-              blobUrl = URL.createObjectURL(file);
-              console.log('AppSidebar avatar blob URL created:', blobUrl);
-              setUserProfile({ ...parsed, avatar_url: blobUrl });
+              // Cleanup old blob URL before creating new one
+              if (avatarBlobUrl) {
+                URL.revokeObjectURL(avatarBlobUrl);
+              }
+              
+              // Create new blob URL and store in state
+              const newBlobUrl = URL.createObjectURL(file);
+              console.log('AppSidebar avatar blob URL created:', newBlobUrl);
+              setAvatarBlobUrl(newBlobUrl);
+              setUserProfile(parsed); // Keep original opfs:// path in profile
             } else if (typeof file === 'string') {
               // base64 fallback
+              setAvatarBlobUrl(null);
               setUserProfile({ ...parsed, avatar_url: file });
             } else {
               console.error('AppSidebar failed to load avatar from OPFS');
+              setAvatarBlobUrl(null);
               setUserProfile({ ...parsed, avatar_url: '' });
             }
             return;
           }
           
+          // Non-OPFS URL - cleanup blob URL if exists
+          if (avatarBlobUrl) {
+            URL.revokeObjectURL(avatarBlobUrl);
+            setAvatarBlobUrl(null);
+          }
           setUserProfile(parsed);
         } catch (error) {
           console.error('Error loading profile:', error);
@@ -310,14 +322,14 @@ export function AppSidebar() {
 
     return () => {
       // Cleanup blob URL saat component unmount
-      if (blobUrl) {
-        console.log('AppSidebar cleaning up blob URL:', blobUrl);
-        URL.revokeObjectURL(blobUrl);
+      if (avatarBlobUrl) {
+        console.log('AppSidebar cleaning up blob URL:', avatarBlobUrl);
+        URL.revokeObjectURL(avatarBlobUrl);
       }
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, []);
+  }, [avatarBlobUrl]);
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
@@ -347,7 +359,9 @@ export function AppSidebar() {
           <>
             <div className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg">
               <Avatar className="h-8 w-8 border-2 border-primary">
-                <AvatarImage src={userProfile?.avatar_url} />
+                <AvatarImage 
+                  src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url} 
+                />
                 <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
                   {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
                 </AvatarFallback>
