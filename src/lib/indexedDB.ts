@@ -151,6 +151,14 @@ export interface HariLibur extends BaseRecord {
   keterangan?: string;
 }
 
+export interface PeriodeNonPembelajaran extends BaseRecord {
+  tanggal_mulai: string;
+  tanggal_selesai: string;
+  nama: string;
+  keterangan?: string;
+  jenis: 'ujian' | 'libur' | 'kegiatan' | 'lainnya';
+}
+
 export interface Ekstrakurikuler extends BaseRecord {
   nama_eskul: string;
   pembimbing: string;
@@ -186,7 +194,7 @@ export interface NilaiEskul extends BaseRecord {
   nilai: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul';
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'periode_non_pembelajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul';
 
 // Generate UUID function
 function generateId(): string {
@@ -200,7 +208,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 7;
+  private dbVersion = 8;
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -218,7 +226,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'periode_non_pembelajaran', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {
@@ -442,7 +450,8 @@ class IndexedDBManager {
       'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 
       'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 
       'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur',
-      'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'
+      'periode_non_pembelajaran', 'ekstrakurikuler', 'anggota_eskul', 
+      'kehadiran_eskul', 'nilai_eskul'
     ];
     const exportData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
     

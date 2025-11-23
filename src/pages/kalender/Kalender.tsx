@@ -6,10 +6,11 @@ import { CalendarGrid } from "@/components/kalender/CalendarGrid";
 import { CalendarHeader } from "@/components/kalender/CalendarHeader";
 import { DayDetailPanel } from "@/components/kalender/DayDetailPanel";
 import { CalendarNoteDialog } from "@/components/kalender/CalendarNoteDialog";
-import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender, type HariLibur } from "@/lib/indexedDB";
+import { PeriodeNonPembelajaranDialog } from "@/components/kalender/PeriodeNonPembelajaranDialog";
+import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender, type HariLibur, type PeriodeNonPembelajaran } from "@/lib/indexedDB";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus, RefreshCw, CalendarOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { syncHolidaysForYears } from "@/lib/googleCalendar";
 import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
@@ -36,6 +37,9 @@ export default function Kalender() {
   const [editingNote, setEditingNote] = useState<{ id: string; catatan: string; warna?: string } | null>(null);
   const [calendarNotes, setCalendarNotes] = useState<CatatanKalender[]>([]);
   const [hariLibur, setHariLibur] = useState<HariLibur[]>([]);
+  const [isPeriodeDialogOpen, setIsPeriodeDialogOpen] = useState(false);
+  const [editingPeriode, setEditingPeriode] = useState<PeriodeNonPembelajaran | null>(null);
+  const [periodeNonPembelajaran, setPeriodeNonPembelajaran] = useState<PeriodeNonPembelajaran[]>([]);
   
   const [allSchedules, setAllSchedules] = useState<Array<JadwalPelajaran & { kelas_name?: string; mata_pelajaran_name?: string; jam_mulai?: string; jam_selesai?: string }>>([]);
   const [allAgendas, setAllAgendas] = useState<Array<AgendaMengajar & { kelas_name?: string; mata_pelajaran_name?: string }>>([]);
@@ -70,7 +74,7 @@ export default function Kalender() {
       setActiveSemester(semester);
 
       // Fetch all data
-      const [schedules, agendas, journals, attendance, jamPelajaran, kelasList, mataPelajaranList, notes, holidays] = await Promise.all([
+      const [schedules, agendas, journals, attendance, jamPelajaran, kelasList, mataPelajaranList, notes, holidays, periode] = await Promise.all([
         indexedDB.select("jadwal_pelajaran", (jadwal: any) => 
           jadwal.tahun_ajaran === tahunAjaran && jadwal.semester === semester
         ),
@@ -82,6 +86,7 @@ export default function Kalender() {
         indexedDB.select("mata_pelajaran"),
         indexedDB.select("catatan_kalender"),
         indexedDB.select("hari_libur"),
+        indexedDB.select("periode_non_pembelajaran"),
       ]);
 
       // Filter data untuk bulan ini
@@ -103,9 +108,15 @@ export default function Kalender() {
       const filteredHolidays = (holidays as HariLibur[]).filter(
         (h) => h.tanggal >= monthStartStr && h.tanggal <= monthEndStr
       );
+      
+      // Filter periode non pembelajaran yang overlap dengan bulan ini
+      const filteredPeriode = (periode as PeriodeNonPembelajaran[]).filter(
+        (p) => p.tanggal_selesai >= monthStartStr && p.tanggal_mulai <= monthEndStr
+      );
 
       setCalendarNotes(filteredNotes);
       setHariLibur(filteredHolidays);
+      setPeriodeNonPembelajaran(filteredPeriode);
 
       // Enrich schedules dengan nama
       const enrichedSchedules = (schedules as JadwalPelajaran[]).map((schedule) => {
@@ -383,6 +394,72 @@ export default function Kalender() {
     }
   };
 
+  const handleAddPeriode = () => {
+    setEditingPeriode(null);
+    setIsPeriodeDialogOpen(true);
+  };
+
+  const handleEditPeriode = (periode: PeriodeNonPembelajaran) => {
+    setEditingPeriode(periode);
+    setIsPeriodeDialogOpen(true);
+  };
+
+  const handleSavePeriode = async (periodeData: any) => {
+    try {
+      if (periodeData.id) {
+        // Update existing periode
+        await indexedDB.update("periode_non_pembelajaran", periodeData.id, periodeData);
+        toast({
+          title: "Periode Diperbarui",
+          description: "Periode non-pembelajaran berhasil diperbarui",
+        });
+      } else {
+        // Create new periode
+        const result = await indexedDB.insert("periode_non_pembelajaran", periodeData);
+        
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        toast({
+          title: "Periode Ditambahkan",
+          description: "Periode non-pembelajaran berhasil ditambahkan",
+        });
+      }
+
+      setEditingPeriode(null);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan periode",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePeriode = async () => {
+    if (!editingPeriode) return;
+
+    try {
+      await indexedDB.delete("periode_non_pembelajaran", editingPeriode.id);
+      
+      toast({
+        title: "Periode Dihapus",
+        description: "Periode non-pembelajaran berhasil dihapus",
+      });
+
+      setEditingPeriode(null);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal menghapus periode",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSaveNote = async (catatan: string, warna: string, noteId?: string) => {
     if (!selectedDate) return;
 
@@ -458,10 +535,16 @@ export default function Kalender() {
         title="Kalender"
         description={`Lihat jadwal mengajar, agenda, kehadiran, dan jurnal - Tahun Ajaran ${activeTahunAjaran} Semester ${activeSemester}`}
       >
-        <Button onClick={handleSyncHolidays} size="sm" variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Sinkron Libur
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleAddPeriode} size="sm" variant="outline">
+            <CalendarOff className="h-4 w-4 mr-2" />
+            Atur Periode
+          </Button>
+          <Button onClick={handleSyncHolidays} size="sm" variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Sinkron Libur
+          </Button>
+        </div>
       </PageHeader>
 
       {/* Legend */}
@@ -549,6 +632,14 @@ export default function Kalender() {
         onDelete={handleDeleteNote}
         selectedDate={selectedDate}
         editingNote={editingNote}
+      />
+
+      <PeriodeNonPembelajaranDialog
+        open={isPeriodeDialogOpen}
+        onOpenChange={setIsPeriodeDialogOpen}
+        onSave={handleSavePeriode}
+        onDelete={handleDeletePeriode}
+        editingPeriode={editingPeriode}
       />
     </div>
   );

@@ -27,7 +27,8 @@ import {
   CheckCircle2,
   XCircle,
   Info,
-  CalendarDays
+  CalendarDays,
+  CalendarOff
 } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +59,7 @@ const Dashboard = () => {
   const [loadingSchedule, setLoadingSchedule] = useState(true);
   const [calendarNotes, setCalendarNotes] = useState<any[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
+  const [currentPeriode, setCurrentPeriode] = useState<any>(null);
 
   // Use cached data for static entities
   const { data: siswaData, loading: loadingSiswa } = useStaticDataCache('siswa', 'siswa');
@@ -92,6 +94,7 @@ const Dashboard = () => {
       fetchTodaySchedule();
     }
     fetchCalendarNotes();
+    checkPeriodeNonPembelajaran();
   }, [selectedDate, kelasData, mataPelajaranData]);
 
   const handleInstall = async () => {
@@ -147,6 +150,22 @@ const Dashboard = () => {
       console.error("Error fetching calendar notes:", error);
     } finally {
       setLoadingNotes(false);
+    }
+  };
+
+  const checkPeriodeNonPembelajaran = async () => {
+    try {
+      const todayDate = format(selectedDate, "yyyy-MM-dd");
+      
+      // Check if today falls within any non-teaching period
+      const allPeriode = await indexedDB.select("periode_non_pembelajaran");
+      const activePeriode = allPeriode.find((p: any) => 
+        todayDate >= p.tanggal_mulai && todayDate <= p.tanggal_selesai
+      );
+      
+      setCurrentPeriode(activePeriode || null);
+    } catch (error) {
+      console.error("Error checking periode non pembelajaran:", error);
     }
   };
 
@@ -347,6 +366,25 @@ const Dashboard = () => {
           <CardContent>
             {loadingSchedule ? (
               <LoadingSkeleton type="schedule" count={3} />
+            ) : currentPeriode ? (
+              <div className="p-4 rounded-lg border bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-start gap-3">
+                  <CalendarOff className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-yellow-900 dark:text-yellow-100 mb-1">
+                      {currentPeriode.nama}
+                    </p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2">
+                      {format(new Date(currentPeriode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(currentPeriode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
+                    </p>
+                    {currentPeriode.keterangan && (
+                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                        {currentPeriode.keterangan}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : todaySchedule.length === 0 ? (
               <EmptyState
                 icon={CalendarDays}
