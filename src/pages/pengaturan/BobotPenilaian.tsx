@@ -1064,26 +1064,6 @@ export default function BobotPenilaian() {
                 </div>
               ))}
 
-              {/* Preview with example */}
-              <Card className="bg-muted/50">
-                <CardHeader>
-                  <CardTitle className="text-base">Preview Konversi</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-5 gap-2 text-sm">
-                    {[84.6, 85, 70, 55, 40, 39.9].map((score) => (
-                      <div key={score} className="text-center p-2 bg-background rounded border">
-                        <div className="font-medium">{score}</div>
-                        <div className="text-xs text-muted-foreground">→</div>
-                        <div className="text-lg font-bold text-primary">
-                          {getLetterGrade(score, gradeThresholds)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
               <div className="flex gap-3 pt-4 border-t">
                 <Button onClick={handleSaveGradeSettings} className="flex-1">
                   <Save className="h-4 w-4 mr-2" />
