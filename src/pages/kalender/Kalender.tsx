@@ -564,6 +564,18 @@ export default function Kalender() {
     : 0;
   const selectedDayNotes = selectedDateKey ? calendarNotes.filter((n) => n.tanggal === selectedDateKey) : [];
   const selectedDayHoliday = selectedDateKey ? hariLibur.find((h) => h.tanggal === selectedDateKey) : undefined;
+  
+  // Find periode that includes selected date (only for weekdays)
+  const selectedDayPeriode = selectedDate && selectedDateKey ? (() => {
+    const dayOfWeek = selectedDate.getDay();
+    // Only show for weekdays (1 = Monday to 5 = Friday)
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      return periodeNonPembelajaran.find(p => 
+        selectedDateKey >= p.tanggal_mulai && selectedDateKey <= p.tanggal_selesai
+      );
+    }
+    return undefined;
+  })() : undefined;
 
   if (loading) {
     return (
@@ -711,6 +723,7 @@ export default function Kalender() {
             attendanceCount={selectedDayAttendanceCount}
             notes={selectedDayNotes}
             holiday={selectedDayHoliday}
+            periode={selectedDayPeriode}
             onClose={() => setSelectedDate(null)}
             onEditNote={handleEditNote}
             onDeleteNote={handleDeleteNote}
