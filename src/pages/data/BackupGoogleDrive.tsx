@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 const BackupGoogleDrive = () => {
   const [webhookUrl, setWebhookUrl] = useState("");
   const [backupInterval, setBackupInterval] = useState("7"); // days
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(true);
   const [lastBackup, setLastBackup] = useState<Date | null>(null);
   const [nextBackup, setNextBackup] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +33,7 @@ const BackupGoogleDrive = () => {
     const settings = await googleDriveBackup.getSettings();
     setWebhookUrl(settings.webhookUrl || "");
     setBackupInterval(settings.intervalDays.toString());
+    setAutoBackupEnabled(settings.autoBackupEnabled);
     setLastBackup(settings.lastBackupDate);
     
     if (settings.lastBackupDate) {
@@ -67,6 +70,7 @@ const BackupGoogleDrive = () => {
       await googleDriveBackup.saveSettings({
         webhookUrl: webhookUrl.trim(),
         intervalDays: parseInt(backupInterval),
+        autoBackupEnabled: autoBackupEnabled,
       });
 
       toast({
@@ -228,6 +232,20 @@ const BackupGoogleDrive = () => {
                 </Select>
               </div>
 
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label htmlFor="auto-backup">Auto Backup</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {autoBackupEnabled ? 'Backup otomatis aktif' : 'Backup otomatis nonaktif'}
+                  </p>
+                </div>
+                <Switch
+                  id="auto-backup"
+                  checked={autoBackupEnabled}
+                  onCheckedChange={setAutoBackupEnabled}
+                />
+              </div>
+
               <div className="flex gap-2">
                 <Button onClick={handleSave} disabled={isSaving}>
                   {isSaving ? (
@@ -286,11 +304,20 @@ const BackupGoogleDrive = () => {
                 </div>
               </div>
 
-              {webhookUrl && (
+              {webhookUrl && autoBackupEnabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
                     Backup otomatis aktif. Aplikasi akan otomatis backup saat online dan sudah waktunya.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {webhookUrl && !autoBackupEnabled && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Backup otomatis dimatikan. Anda perlu melakukan backup manual.
                   </AlertDescription>
                 </Alert>
               )}
