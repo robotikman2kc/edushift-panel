@@ -23,6 +23,8 @@ export default function KelolaAnggota() {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
   const [showNaikKelasDialog, setShowNaikKelasDialog] = useState(false);
   const [selectedAnggota, setSelectedAnggota] = useState<AnggotaEskul[]>([]);
+  const [showToggleStatusDialog, setShowToggleStatusDialog] = useState(false);
+  const [selectedAnggotaForToggle, setSelectedAnggotaForToggle] = useState<AnggotaEskul | null>(null);
 
   useEffect(() => {
     loadData();
@@ -47,6 +49,7 @@ export default function KelolaAnggota() {
   };
 
   const columns = [
+    { key: "no", label: "No", sortable: false },
     { key: "nisn", label: "NISN", sortable: true },
     { key: "nama_siswa", label: "Nama Siswa", sortable: true },
     { key: "tingkat", label: "Tingkat", sortable: true },
@@ -197,9 +200,16 @@ export default function KelolaAnggota() {
     }
   };
 
-  const handleToggleStatus = (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'aktif' ? 'non-aktif' : 'aktif';
-    const result = localDB.update('anggota_eskul', id, { status: newStatus });
+  const openToggleStatusDialog = (anggotaItem: AnggotaEskul) => {
+    setSelectedAnggotaForToggle(anggotaItem);
+    setShowToggleStatusDialog(true);
+  };
+
+  const handleToggleStatus = () => {
+    if (!selectedAnggotaForToggle) return;
+    
+    const newStatus = selectedAnggotaForToggle.status === 'aktif' ? 'non-aktif' : 'aktif';
+    const result = localDB.update('anggota_eskul', selectedAnggotaForToggle.id, { status: newStatus });
     
     if (result.error) {
       toast.error("Gagal mengubah status anggota");
@@ -207,6 +217,9 @@ export default function KelolaAnggota() {
       toast.success(`Anggota berhasil ${newStatus === 'aktif' ? 'diaktifkan' : 'dinonaktifkan'}`);
       loadData();
     }
+    
+    setShowToggleStatusDialog(false);
+    setSelectedAnggotaForToggle(null);
   };
 
   const handleImport = async (data: Record<string, string>[]) => {
@@ -291,7 +304,7 @@ export default function KelolaAnggota() {
       <Button
         size="sm"
         variant={item.status === 'aktif' ? 'destructive' : 'default'}
-        onClick={() => handleToggleStatus(item.id, item.status)}
+        onClick={() => openToggleStatusDialog(item)}
       >
         {item.status === 'aktif' ? (
           <>
@@ -384,6 +397,32 @@ export default function KelolaAnggota() {
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={confirmNaikKelas}>
               Ya, Naik Kelas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showToggleStatusDialog} onOpenChange={setShowToggleStatusDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Ubah Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedAnggotaForToggle && (
+                <>
+                  Apakah Anda yakin ingin {selectedAnggotaForToggle.status === 'aktif' ? 'menonaktifkan' : 'mengaktifkan'} anggota berikut?
+                  <div className="mt-3 p-3 bg-muted rounded-lg">
+                    <p className="font-medium">{selectedAnggotaForToggle.nama_siswa}</p>
+                    <p className="text-sm text-muted-foreground">NISN: {selectedAnggotaForToggle.nisn}</p>
+                    <p className="text-sm text-muted-foreground">Kelas: {selectedAnggotaForToggle.tingkat} {selectedAnggotaForToggle.nama_kelas}</p>
+                  </div>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleToggleStatus}>
+              Ya, {selectedAnggotaForToggle?.status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
