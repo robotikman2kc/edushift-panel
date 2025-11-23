@@ -12,6 +12,7 @@ import { PDFDocument } from "pdf-lib";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { hariLiburNasional } from "@/lib/hariLiburData";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Kelas {
   id: string;
@@ -63,6 +64,8 @@ const LaporanKehadiran = () => {
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   const [pendingExport, setPendingExport] = useState(false);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [emptyMonths, setEmptyMonths] = useState<string[]>([]);
+  const [showEmptyMonthsDialog, setShowEmptyMonthsDialog] = useState(false);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -322,7 +325,36 @@ const LaporanKehadiran = () => {
     return { exportData, exportColumns, monthLabel: monthOptions[month].label, signatureDate };
   };
 
-  const handleExportClick = () => {
+  const checkEmptyMonths = async () => {
+    if (!selectedKelas || !selectedMataPelajaran) return [];
+
+    const start = parseInt(startMonth);
+    const end = parseInt(endMonth);
+    const year = parseInt(selectedYear);
+    const empty: string[] = [];
+
+    for (let month = start; month <= end; month++) {
+      const monthStartDate = new Date(year, month, 1);
+      const monthEndDate = new Date(year, month + 1, 0);
+      const monthStartDateStr = monthStartDate.toISOString().split('T')[0];
+      const monthEndDateStr = monthEndDate.toISOString().split('T')[0];
+
+      const attendanceData = await indexedDB.select("kehadiran", record =>
+        record.kelas_id === selectedKelas &&
+        record.mata_pelajaran_id === selectedMataPelajaran &&
+        record.tanggal >= monthStartDateStr &&
+        record.tanggal <= monthEndDateStr
+      );
+
+      if (attendanceData.length === 0) {
+        empty.push(monthOptions[month].label);
+      }
+    }
+
+    return empty;
+  };
+
+  const handleExportClick = async () => {
     if (!selectedKelas || !selectedMataPelajaran) {
       toast({
         title: "Validasi Gagal",
@@ -344,7 +376,20 @@ const LaporanKehadiran = () => {
       return;
     }
 
-    // Show dialog for last month's signature date
+    // Check for empty months
+    const empty = await checkEmptyMonths();
+    if (empty.length > 0) {
+      setEmptyMonths(empty);
+      setShowEmptyMonthsDialog(true);
+    } else {
+      // Show dialog for last month's signature date
+      setPendingExport(true);
+      setIsExportDateDialogOpen(true);
+    }
+  };
+
+  const handleConfirmExport = () => {
+    setShowEmptyMonthsDialog(false);
     setPendingExport(true);
     setIsExportDateDialogOpen(true);
   };
@@ -362,9 +407,30 @@ const LaporanKehadiran = () => {
 
       // Create merged PDF document
       const mergedPdf = await PDFDocument.create();
+      let exportedMonths = 0;
 
-      // Generate PDF for each month and merge
+      // Generate PDF for each month and merge (skip empty months)
       for (let month = start; month <= end; month++) {
+        // Check if month has data
+        const monthStartDate = new Date(parseInt(selectedYear), month, 1);
+        const monthEndDate = new Date(parseInt(selectedYear), month + 1, 0);
+        const monthStartDateStr = monthStartDate.toISOString().split('T')[0];
+        const monthEndDateStr = monthEndDate.toISOString().split('T')[0];
+
+        const monthAttendanceData = await indexedDB.select("kehadiran", record =>
+          record.kelas_id === selectedKelas &&
+          record.mata_pelajaran_id === selectedMataPelajaran &&
+          record.tanggal >= monthStartDateStr &&
+          record.tanggal <= monthEndDateStr
+        );
+
+        // Skip month if no data
+        if (monthAttendanceData.length === 0) {
+          continue;
+        }
+
+        exportedMonths++;
+
         // For last month, use user-selected date; for others, use last working day
         let signatureDate: Date | undefined;
         if (month === end && lastMonthSignatureDate) {
@@ -415,6 +481,16 @@ const LaporanKehadiran = () => {
         }
       }
 
+      // Check if any months were exported
+      if (exportedMonths === 0) {
+        toast({
+          title: "Tidak ada data",
+          description: "Tidak ada data kehadiran untuk periode yang dipilih",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Save the merged PDF
       const pdfBytes = await mergedPdf.save();
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
@@ -435,7 +511,7 @@ const LaporanKehadiran = () => {
 
       toast({
         title: "Export Berhasil",
-        description: `Laporan kehadiran ${startMonthLabel} - ${endMonthLabel} ${selectedYear} berhasil diekspor`,
+        description: `Laporan kehadiran ${exportedMonths} bulan berhasil diekspor${emptyMonths.length > 0 ? ` (${emptyMonths.length} bulan dilewati karena tidak ada data)` : ''}`,
       });
     } catch (error) {
       console.error("Error exporting multi-month report:", error);
@@ -609,6 +685,34 @@ const LaporanKehadiran = () => {
         title="Pilih Tanggal Tanda Tangan"
         description={`Pilih tanggal tanda tangan untuk bulan ${endMonth ? monthOptions[parseInt(endMonth)].label : ''} (bulan terakhir). Bulan lainnya akan menggunakan hari kerja terakhir di bulan tersebut.`}
       />
+
+      <AlertDialog open={showEmptyMonthsDialog} onOpenChange={setShowEmptyMonthsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Peringatan: Bulan Kosong</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-2">
+                <p>Ditemukan {emptyMonths.length} bulan tanpa data kehadiran:</p>
+                <ul className="list-disc list-inside pl-4">
+                  {emptyMonths.map((month) => (
+                    <li key={month}>{month}</li>
+                  ))}
+                </ul>
+                <p className="mt-4 font-semibold">
+                  Jika Anda melanjutkan export, hanya bulan yang memiliki data yang akan dicetak dalam PDF.
+                </p>
+                <p>Apakah Anda yakin ingin melanjutkan?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmExport}>
+              Ya, Lanjutkan Export
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
