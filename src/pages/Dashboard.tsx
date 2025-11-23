@@ -368,23 +368,40 @@ const Dashboard = () => {
             {loadingSchedule ? (
               <LoadingSkeleton type="schedule" count={3} />
             ) : currentPeriode ? (
-              <div className="p-4 rounded-lg border bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
-                <div className="flex items-start gap-3">
-                  <CalendarOff className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm text-yellow-900 dark:text-yellow-100 mb-1">
-                      {currentPeriode.nama}
-                    </p>
-                    <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2">
-                      {format(new Date(currentPeriode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(currentPeriode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
-                    </p>
-                    {currentPeriode.keterangan && (
-                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                        {currentPeriode.keterangan}
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg border bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-start gap-3">
+                    <CalendarOff className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-yellow-900 dark:text-yellow-100 mb-1">
+                        {currentPeriode.nama}
                       </p>
-                    )}
+                      <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2">
+                        {format(new Date(currentPeriode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(currentPeriode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
+                      </p>
+                      {currentPeriode.keterangan && (
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                          {currentPeriode.keterangan}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
+                
+                {/* Show button to fill journal if periode is not Libur Semester */}
+                {currentPeriode.jenis !== 'libur' && (
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => navigate('/jurnal/agenda-mengajar')} 
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <FileText className="h-3.5 w-3.5 mr-1.5" />
+                      Isi Jurnal Guru
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : todaySchedule.length === 0 ? (
               // Check if it's weekend (not a workday)
