@@ -360,7 +360,11 @@ export function AppSidebar() {
             <div className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg">
               <Avatar className="h-8 w-8 border-2 border-primary">
                 <AvatarImage 
-                  src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url} 
+                  src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url}
+                  onError={(e) => {
+                    console.log('Avatar image failed to load, using fallback');
+                    e.currentTarget.src = '';
+                  }}
                 />
                 <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
                   {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}
