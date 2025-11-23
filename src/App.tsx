@@ -151,12 +151,12 @@ const App = () => {
                   <Route path="/laporan/kehadiran" element={<LaporanKehadiran />} />
                   <Route path="/laporan/penilaian" element={<LaporanPenilaian />} />
                   <Route path="/laporan/jurnal-guru" element={<LaporanJurnalGuru />} />
+                  <Route path="/laporan/ekstrakurikuler" element={<RekapKehadiranEskul />} />
 
                   {/* Ekstrakurikuler Routes */}
                   <Route path="/ekstrakurikuler/kelola" element={<KelolaEkstrakurikuler />} />
                   <Route path="/ekstrakurikuler/anggota" element={<KelolaAnggota />} />
                   <Route path="/ekstrakurikuler/kehadiran" element={<KehadiranEskul />} />
-                  <Route path="/ekstrakurikuler/rekap-kehadiran" element={<RekapKehadiranEskul />} />
 
                   {/* Akun Routes */}
                   <Route path="/akun/profil" element={<Profil />} />
