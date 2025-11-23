@@ -483,7 +483,7 @@ export function AppSidebar() {
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
                 
-                <CollapsibleContent className="transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                   <SidebarGroupContent className="ml-6 mt-1">
                     <SidebarMenu>
                       {group.items.map((item) => {
