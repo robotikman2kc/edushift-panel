@@ -38,13 +38,28 @@ const Profil = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     loadProfile();
+    
+    // Cleanup blob URL saat component unmount
+    return () => {
+      if (avatarBlobUrl) {
+        console.log('Profil cleaning up blob URL:', avatarBlobUrl);
+        URL.revokeObjectURL(avatarBlobUrl);
+      }
+    };
   }, []);
 
   const loadProfile = async () => {
+    // Cleanup old blob URL jika ada
+    if (avatarBlobUrl) {
+      URL.revokeObjectURL(avatarBlobUrl);
+      setAvatarBlobUrl(null);
+    }
+
     const savedProfile = localStorage.getItem('userProfile');
     if (savedProfile) {
       try {
@@ -54,13 +69,18 @@ const Profil = () => {
         if (parsed.avatar_url) {
           if (parsed.avatar_url.startsWith('opfs://')) {
             console.log('Loading avatar from OPFS:', parsed.avatar_url);
-            const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
-            if (opfsUrl) {
-              console.log('Avatar loaded successfully:', opfsUrl);
-              setProfile({ ...parsed, avatar_url: opfsUrl });
+            const file = await opfsStorage.getFile(parsed.avatar_url);
+            if (file && file instanceof Blob) {
+              // Buat blob URL baru
+              const newBlobUrl = URL.createObjectURL(file);
+              setAvatarBlobUrl(newBlobUrl);
+              console.log('Avatar blob URL created:', newBlobUrl);
+              setProfile({ ...parsed, avatar_url: newBlobUrl });
+            } else if (typeof file === 'string') {
+              // base64 fallback
+              setProfile({ ...parsed, avatar_url: file });
             } else {
               console.error('Failed to load avatar from OPFS');
-              // Set profile without avatar if OPFS fails
               setProfile({ ...parsed, avatar_url: '' });
             }
             return;
@@ -76,9 +96,11 @@ const Profil = () => {
               parsed.avatar_url = migratedPath;
               localStorage.setItem('userProfile', JSON.stringify(parsed));
               
-              const opfsUrl = await opfsStorage.getFile(migratedPath);
-              if (opfsUrl) {
-                setProfile({ ...parsed, avatar_url: opfsUrl });
+              const file = await opfsStorage.getFile(migratedPath);
+              if (file && file instanceof Blob) {
+                const newBlobUrl = URL.createObjectURL(file);
+                setAvatarBlobUrl(newBlobUrl);
+                setProfile({ ...parsed, avatar_url: newBlobUrl });
                 return;
               }
             }
@@ -164,15 +186,19 @@ const Profil = () => {
       
       console.log('Profile saved to localStorage:', updatedProfile);
       
-      // Untuk preview, load blob URL dari OPFS
-      const previewUrl = avatarPath.startsWith('opfs://') 
-        ? await opfsStorage.getFile(avatarPath)
-        : avatarPath;
+      // Cleanup old blob URL
+      if (avatarBlobUrl) {
+        URL.revokeObjectURL(avatarBlobUrl);
+      }
       
-      console.log('Preview URL generated:', previewUrl);
+      // Untuk preview, buat blob URL baru dari file
+      const newBlobUrl = URL.createObjectURL(file);
+      setAvatarBlobUrl(newBlobUrl);
+      
+      console.log('Preview blob URL created:', newBlobUrl);
       
       // Update state dengan preview URL untuk display
-      setProfile({ ...profile, avatar_url: previewUrl || '' });
+      setProfile({ ...profile, avatar_url: newBlobUrl });
       
       // Trigger custom event to update other components
       window.dispatchEvent(new Event('profileUpdated'));

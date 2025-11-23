@@ -78,9 +78,9 @@ class OPFSManager {
   /**
    * Ambil file dari OPFS
    * @param path - Path file yang disimpan
-   * @returns Blob URL yang bisa digunakan di img src
+   * @returns File object (bukan blob URL untuk menghindari memory leak)
    */
-  async getFile(path: string): Promise<string | null> {
+  async getFile(path: string): Promise<File | Blob | string | null> {
     // Jika path adalah base64, return langsung (backward compatibility)
     if (path.startsWith('data:')) {
       return path;
@@ -110,8 +110,8 @@ class OPFSManager {
       const fileHandle = await currentDir.getFileHandle(fileName);
       const file = await fileHandle.getFile();
       
-      // Buat blob URL
-      return URL.createObjectURL(file);
+      // Return File object, biarkan komponen membuat blob URL sendiri
+      return file;
     } catch (error) {
       console.error('Failed to get file from OPFS:', error);
       return null;
