@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { JurnalStatusWidget } from "@/components/dashboard/JurnalStatusWidget";
 import { NoTaskWidget } from "@/components/dashboard/NoTaskWidget";
 import { MissedExamWidget } from "@/components/dashboard/MissedExamWidget";
+import { EskulScheduleWidget } from "@/components/dashboard/EskulScheduleWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -484,6 +485,9 @@ const Dashboard = () => {
         <div className="lg:col-span-1 space-y-4">
           {/* Missed Exam Widget */}
           <MissedExamWidget />
+          
+          {/* Ekstrakurikuler Schedule Widget */}
+          <EskulScheduleWidget selectedDate={selectedDate} />
           
           {/* No Task Widget */}
           <NoTaskWidget />
