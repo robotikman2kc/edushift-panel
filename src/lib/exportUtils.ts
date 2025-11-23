@@ -200,7 +200,7 @@ export const generatePDFBlob = (
         
         doc.text('Jabatan', template.layout.margins.left, currentY + 10);
         doc.text(':', template.layout.margins.left + labelWidth, currentY + 10);
-        doc.text(template.teacherInfo.jabatan || '-', template.layout.margins.left + labelWidth + 3, currentY + 10);
+        doc.text(template.teacherInfo.jabatan_kepegawaian || '-', template.layout.margins.left + labelWidth + 3, currentY + 10);
         
         doc.text('Satuan Kerja', template.layout.margins.left, currentY + 15);
         doc.text(':', template.layout.margins.left + labelWidth, currentY + 15);
@@ -474,7 +474,7 @@ export const generatePDFBlob = (
         // Right side: Pegawai Yang Dinilai (Teacher) - WITH DATE
         const teacherName = template.teacherInfo?.name || 'Guru';
         const teacherNIP = template.teacherInfo?.nip;
-        const teacherJabatan = template.teacherInfo?.jabatan;
+        const teacherJabatan = template.teacherInfo?.jabatan_sekolah;
         
         // Use custom signature date if provided, otherwise use current date
         const signatureDate = template.signatureDate 
@@ -494,7 +494,7 @@ export const generatePDFBlob = (
       } else if (title.includes('Agenda')) {
         // Agenda reports: Single signature on the right (like attendance)
         const signerName = template.teacherInfo?.name || 'Guru';
-        const signerPosition = template.teacherInfo?.jabatan || 'Guru';
+        const signerPosition = template.teacherInfo?.jabatan_sekolah || 'Guru';
         const signerNIP = template.teacherInfo?.nip;
         
         // Use custom signature date if provided, otherwise use current date
@@ -514,7 +514,7 @@ export const generatePDFBlob = (
       } else {
         // Attendance and Grade reports: Single signature on the right
         const signerName = template.teacherInfo?.name || 'Guru';
-        const signerPosition = template.teacherInfo?.jabatan || 'Guru';
+        const signerPosition = template.teacherInfo?.jabatan_sekolah || 'Guru';
         const signerNIP = template.teacherInfo?.nip;
         
         // Use custom signature date if provided, otherwise use current date

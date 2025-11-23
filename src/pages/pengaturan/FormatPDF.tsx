@@ -25,7 +25,8 @@ interface PDFFormatSettings {
     name: string;
     nip: string;
     subject: string;
-    jabatan: string;
+    jabatan_sekolah: string;
+    jabatan_kepegawaian: string;
     satuan_kerja: string;
     kepala_sekolah_nama: string;
     kepala_sekolah_nip: string;
@@ -82,7 +83,8 @@ const FormatPDF: React.FC = () => {
             name: parsedSettings.defaultTeacher?.name || '',
             nip: parsedSettings.defaultTeacher?.nip || '',
             subject: parsedSettings.defaultTeacher?.subject || '',
-            jabatan: parsedSettings.defaultTeacher?.jabatan || '',
+            jabatan_sekolah: parsedSettings.defaultTeacher?.jabatan_sekolah || '',
+            jabatan_kepegawaian: parsedSettings.defaultTeacher?.jabatan_kepegawaian || '',
             satuan_kerja: parsedSettings.defaultTeacher?.satuan_kerja || '',
             kepala_sekolah_nama: parsedSettings.defaultTeacher?.kepala_sekolah_nama || '',
             kepala_sekolah_nip: parsedSettings.defaultTeacher?.kepala_sekolah_nip || '',
@@ -133,7 +135,8 @@ const FormatPDF: React.FC = () => {
         name: '',
         nip: '',
         subject: '',
-        jabatan: '',
+        jabatan_sekolah: '',
+        jabatan_kepegawaian: '',
         satuan_kerja: '',
         kepala_sekolah_nama: '',
         kepala_sekolah_nip: '',
@@ -536,18 +539,39 @@ const FormatPDF: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-position">Jabatan</Label>
+                  <Label htmlFor="teacher-jabatan-sekolah">Jabatan Sekolah</Label>
                   <Input
-                    id="teacher-position"
-                    placeholder="Misal: Kepala Sekolah, Wali Kelas, dll"
-                    value={settings.defaultTeacher.jabatan}
+                    id="teacher-jabatan-sekolah"
+                    placeholder="Contoh: Guru Mata Pelajaran"
+                    value={settings.defaultTeacher.jabatan_sekolah}
                     onChange={(e) =>
                       setSettings(prev => ({
                         ...prev,
-                        defaultTeacher: { ...prev.defaultTeacher, jabatan: e.target.value },
+                        defaultTeacher: { ...prev.defaultTeacher, jabatan_sekolah: e.target.value },
                       }))
                     }
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Digunakan untuk tanda tangan di PDF
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-jabatan-kepegawaian">Jabatan Kepegawaian</Label>
+                  <Input
+                    id="teacher-jabatan-kepegawaian"
+                    placeholder="Contoh: Guru Ahli Pertama"
+                    value={settings.defaultTeacher.jabatan_kepegawaian}
+                    onChange={(e) =>
+                      setSettings(prev => ({
+                        ...prev,
+                        defaultTeacher: { ...prev.defaultTeacher, jabatan_kepegawaian: e.target.value },
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Digunakan untuk informasi di atas tabel laporan jurnal
+                  </p>
                 </div>
 
                 <div className="space-y-2">
