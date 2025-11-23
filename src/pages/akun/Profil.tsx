@@ -71,11 +71,12 @@ const Profil = () => {
             console.log('Loading avatar from OPFS:', parsed.avatar_url);
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
-              // Buat blob URL baru
+              // Buat blob URL baru untuk preview
               const newBlobUrl = URL.createObjectURL(file);
               setAvatarBlobUrl(newBlobUrl);
               console.log('Avatar blob URL created:', newBlobUrl);
-              setProfile({ ...parsed, avatar_url: newBlobUrl });
+              // Keep opfs:// path in profile state
+              setProfile(parsed);
             } else if (typeof file === 'string') {
               // base64 fallback
               setProfile({ ...parsed, avatar_url: file });
@@ -100,7 +101,7 @@ const Profil = () => {
               if (file && file instanceof Blob) {
                 const newBlobUrl = URL.createObjectURL(file);
                 setAvatarBlobUrl(newBlobUrl);
-                setProfile({ ...parsed, avatar_url: newBlobUrl });
+                setProfile(parsed);
                 return;
               }
             }
@@ -180,8 +181,9 @@ const Profil = () => {
       
       console.log('Avatar saved to OPFS:', avatarPath);
       
-      // PENTING: Simpan OPFS path (bukan blob URL) ke localStorage
+      // PENTING: Simpan OPFS path (bukan blob URL) ke profile state DAN localStorage
       const updatedProfile = { ...profile, avatar_url: avatarPath };
+      setProfile(updatedProfile);
       localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
       
       console.log('Profile saved to localStorage:', updatedProfile);
@@ -196,9 +198,6 @@ const Profil = () => {
       setAvatarBlobUrl(newBlobUrl);
       
       console.log('Preview blob URL created:', newBlobUrl);
-      
-      // Update state dengan preview URL untuk display
-      setProfile({ ...profile, avatar_url: newBlobUrl });
       
       // Trigger custom event to update other components
       window.dispatchEvent(new Event('profileUpdated'));
@@ -249,7 +248,10 @@ const Profil = () => {
             {/* Avatar Section */}
             <div className="flex items-center gap-4 p-4 border rounded-lg">
               <Avatar className="h-20 w-20 border-2 border-primary">
-                <AvatarImage src={profile.avatar_url} alt={profile.nama} />
+                <AvatarImage 
+                  src={profile.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : profile.avatar_url} 
+                  alt={profile.nama} 
+                />
                 <AvatarFallback className="text-lg">
                   {profile.nama ? profile.nama.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
                 </AvatarFallback>
