@@ -37,6 +37,7 @@ import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { getActiveTahunAjaran, getActiveSemester } from "@/lib/academicYearUtils";
 import { useStaticDataCache } from "@/hooks/useDataCache";
+import { isWorkday } from "@/lib/workdaySettings";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -386,8 +387,8 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : todaySchedule.length === 0 ? (
-              // Check if it's weekend (Saturday=6 or Sunday=0)
-              selectedDate.getDay() === 0 || selectedDate.getDay() === 6 ? (
+              // Check if it's weekend (not a workday)
+              !isWorkday(selectedDate) ? (
                 <div className="flex items-center justify-center py-8 text-muted-foreground">
                   <div className="text-center">
                     <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />

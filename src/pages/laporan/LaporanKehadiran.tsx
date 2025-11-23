@@ -11,6 +11,7 @@ import { getCustomPDFTemplate, generatePDFBlob } from "@/lib/exportUtils";
 import { PDFDocument } from "pdf-lib";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { hariLiburNasional } from "@/lib/hariLiburData";
+import { isWeekday } from "@/lib/hariLiburUtils";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -197,16 +198,15 @@ const LaporanKehadiran = () => {
     let currentDate = new Date(lastDay);
     
     while (true) {
-      const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
       const dateStr = currentDate.toISOString().split('T')[0];
       
-      // Check if it's a weekday (Monday-Friday)
-      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      // Check if it's a weekday using utility function
+      const isWorkingDay = isWeekday(currentDate);
       
       // Check if it's not a national holiday
       const isHoliday = hariLiburNasional.some(h => h.tanggal === dateStr);
       
-      if (isWeekday && !isHoliday) {
+      if (isWorkingDay && !isHoliday) {
         return currentDate;
       }
       

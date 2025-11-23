@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { isHariLiburKerja, generateHolidayTemplate, isHariLibur, isPeriodeNonPembelajaran, generatePeriodeTemplate } from "@/lib/hariLiburUtils";
+import { isHariLiburKerja, generateHolidayTemplate, isHariLibur, isPeriodeNonPembelajaran, generatePeriodeTemplate, isWeekday } from "@/lib/hariLiburUtils";
 import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -454,9 +454,8 @@ const JurnalGuru = () => {
         while (currentDate <= endDate) {
           // Only process dates that are today or in the past
           if (currentDate <= today) {
-            const dayOfWeek = currentDate.getDay();
-            // Only weekdays (1 = Monday to 5 = Friday)
-            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            // Check if it's a weekday using the utility function
+            if (isWeekday(currentDate)) {
               const dateStr = format(currentDate, "yyyy-MM-dd");
               
               // Skip if already has entry OR if it's a national holiday (priority)

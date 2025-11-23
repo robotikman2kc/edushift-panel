@@ -8,6 +8,7 @@ import { DayDetailPanel } from "@/components/kalender/DayDetailPanel";
 import { CalendarNoteDialog } from "@/components/kalender/CalendarNoteDialog";
 import { PeriodeNonPembelajaranDialog } from "@/components/kalender/PeriodeNonPembelajaranDialog";
 import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender, type HariLibur, type PeriodeNonPembelajaran } from "@/lib/indexedDB";
+import { isWeekday } from "@/lib/hariLiburUtils";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -284,9 +285,8 @@ export default function Kalender() {
         // Iterate through each day in the periode
         let currentDate = new Date(startDate);
         while (currentDate <= endDate) {
-          const dayOfWeek = currentDate.getDay();
-          // Only mark weekdays (1 = Monday to 5 = Friday)
-          if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+          // Only mark weekdays using the utility function
+          if (isWeekday(currentDate)) {
             const dateKey = format(currentDate, "yyyy-MM-dd");
             const existing = dataMap.get(dateKey) || {
               date: dateKey,
@@ -569,9 +569,8 @@ export default function Kalender() {
   
   // Find all periodes that include selected date (only for weekdays)
   const selectedDayPeriodes = selectedDate && selectedDateKey ? (() => {
-    const dayOfWeek = selectedDate.getDay();
-    // Only show for weekdays (1 = Monday to 5 = Friday)
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+    // Only show for weekdays using utility function
+    if (isWeekday(selectedDate)) {
       return periodeNonPembelajaran.filter(p => 
         selectedDateKey >= p.tanggal_mulai && selectedDateKey <= p.tanggal_selesai
       );
