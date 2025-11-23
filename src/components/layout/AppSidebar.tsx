@@ -26,7 +26,8 @@ import {
   CalendarClock,
   ChevronDown,
   Star,
-  Sparkles
+  Sparkles,
+  Tags
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -62,6 +63,7 @@ const menuItems = [
       { title: "Daftar Siswa", url: "/pengaturan/siswa", icon: Users },
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
       { title: "Jadwal Pelajaran", url: "/pengaturan/jadwal-pelajaran", icon: CalendarDays },
+      { title: "Kategori Penilaian", url: "/pengaturan/kategori-penilaian", icon: Tags },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Tahun Ajaran", url: "/pengaturan/tahun-ajaran", icon: CalendarClock },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
@@ -135,7 +137,7 @@ export function AppSidebar() {
     LayoutDashboard, CalendarDays, UserCheck, GraduationCap, Users, BookOpen,
     TrendingUp, CalendarClock, FileText, Bell, FileInput, BarChart3, CalendarCheck,
     Calendar, ClipboardList, FileBarChart, BookText, Database, Download, Cloud,
-    HardDrive, User, HelpCircle
+    HardDrive, User, HelpCircle, Tags
   };
   
   // Get all available menu items for quick menu
