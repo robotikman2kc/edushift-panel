@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { localDB, Ekstrakurikuler } from "@/lib/localDB";
@@ -11,6 +12,7 @@ interface EskulScheduleWidgetProps {
 }
 
 export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) {
+  const navigate = useNavigate();
   const [todayEskul, setTodayEskul] = useState<Ekstrakurikuler[]>([]);
 
   useEffect(() => {
@@ -46,7 +48,8 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
           {todayEskul.map((eskul, index) => (
             <div 
               key={index}
-              className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200"
+              className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:shadow-md"
+              onClick={() => navigate('/ekstrakurikuler/kehadiran')}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
