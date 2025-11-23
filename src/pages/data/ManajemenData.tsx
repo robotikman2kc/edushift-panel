@@ -19,7 +19,6 @@ interface DataStats {
   kehadiran: number;
   jenis_kegiatan: number;
   jurnal: number;
-  users: number;
   nilai_siswa: number;
   jenis_penilaian: number;
   jadwal_pelajaran: number;
@@ -42,7 +41,6 @@ const ManajemenData = () => {
     kehadiran: 0,
     jenis_kegiatan: 0,
     jurnal: 0,
-    users: 0,
     nilai_siswa: 0,
     jenis_penilaian: 0,
     jadwal_pelajaran: 0,
@@ -65,7 +63,6 @@ const ManajemenData = () => {
   // Fetch data statistics
   const fetchStats = async () => {
     try {
-      const usersData = JSON.parse(localStorage.getItem('users') || '[]');
       const guruCount = await indexedDB.count('guru');
       const kelasCount = await indexedDB.count('kelas');
       const mataPelajaranCount = await indexedDB.count('mata_pelajaran');
@@ -93,7 +90,6 @@ const ManajemenData = () => {
         kehadiran: kehadiranCount,
         jenis_kegiatan: jenisKegiatanCount,
         jurnal: jurnalCount,
-        users: usersData.length,
         nilai_siswa: nilaiSiswaCount,
         jenis_penilaian: jenisPenilaianCount,
         jadwal_pelajaran: jadwalPelajaranCount,
@@ -160,13 +156,9 @@ const ManajemenData = () => {
   const deleteAllData = async (tableName: string, displayName: string) => {
     setDeleting(tableName);
     try {
-      if (tableName === 'users') {
-        localStorage.setItem('users', JSON.stringify([]));
-      } else {
-        const result = await indexedDB.clear(tableName as any);
-        if (result.error) {
-          throw new Error(result.error);
-        }
+      const result = await indexedDB.clear(tableName as any);
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       toast({
@@ -188,7 +180,6 @@ const ManajemenData = () => {
   };
 
   const dataTypes = [
-    { key: 'users', title: 'User', icon: Users, count: stats.users },
     { key: 'guru', title: 'Guru', icon: Users, count: stats.guru },
     { key: 'mata_pelajaran', title: 'Mata Pelajaran', icon: BookOpen, count: stats.mata_pelajaran },
     { key: 'kelas', title: 'Kelas', icon: School, count: stats.kelas },
@@ -243,7 +234,7 @@ const ManajemenData = () => {
                 <p className="text-sm">Memuat data...</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y max-h-[400px] overflow-y-auto">
                 {dataTypes.map((dataType) => {
                   const Icon = dataType.icon;
                   const isDeleting = deleting === dataType.key;
