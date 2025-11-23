@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Save, AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
+import { Save, AlertCircle, CheckCircle2, RefreshCw, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import type { Kelas, JenisPenilaian } from "@/lib/indexedDB";
@@ -13,6 +13,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { saveBobotForKelas } from "@/lib/bobotUtils";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BobotKategori {
   kategori_id: string;
@@ -36,9 +46,12 @@ export default function BobotPenilaian() {
   const [filteredClasses, setFilteredClasses] = useState<Kelas[]>([]);
   const [categories, setCategories] = useState<JenisPenilaian[]>([]);
   const [bobotValues, setBobotValues] = useState<{ [key: string]: number }>({});
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [totalBobot, setTotalBobot] = useState(0);
   const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string>("");
 
   const tingkatOptions = [
     { value: "X", label: "Kelas X" },
@@ -114,7 +127,17 @@ export default function BobotPenilaian() {
       // Load saved bobot from pengaturan table
       const savedBobot = await indexedDB.select("pengaturan");
       const bobotKey = `bobot_penilaian_${kelasId}`;
+      const excludedKey = `excluded_categories_${kelasId}`;
+      
       const bobotData = savedBobot.find((s: any) => s.key === bobotKey);
+      const excludedData = savedBobot.find((s: any) => s.key === excludedKey);
+
+      // Load excluded categories
+      if (excludedData && excludedData.value) {
+        setExcludedCategories(JSON.parse(excludedData.value));
+      } else {
+        setExcludedCategories([]);
+      }
 
       if (bobotData && bobotData.value) {
         const parsedBobot = JSON.parse(bobotData.value);
@@ -135,6 +158,7 @@ export default function BobotPenilaian() {
         defaultBobot[cat.id] = cat.bobot || 0;
       });
       setBobotValues(defaultBobot);
+      setExcludedCategories([]);
     }
   };
 
@@ -170,6 +194,22 @@ export default function BobotPenilaian() {
       // Save custom bobot for this kelas
       await saveBobotForKelas(selectedClass, bobotValues);
 
+      // Save excluded categories
+      const excludedKey = `excluded_categories_${selectedClass}`;
+      const existing = await indexedDB.select("pengaturan");
+      const existingExcluded = existing.find((s: any) => s.key === excludedKey);
+
+      if (existingExcluded) {
+        await indexedDB.update("pengaturan", existingExcluded.id, {
+          value: JSON.stringify(excludedCategories),
+        });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: excludedKey,
+          value: JSON.stringify(excludedCategories),
+        });
+      }
+
       toast({
         title: "Berhasil",
         description: "Bobot penilaian berhasil disimpan dan akan digunakan untuk kelas ini",
@@ -184,6 +224,49 @@ export default function BobotPenilaian() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    setCategoryToDelete(categoryId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCategory = () => {
+    // Add to excluded list
+    setExcludedCategories((prev) => [...prev, categoryToDelete]);
+    
+    // Set bobot to 0
+    setBobotValues((prev) => ({
+      ...prev,
+      [categoryToDelete]: 0,
+    }));
+
+    setIsDeleteDialogOpen(false);
+    setCategoryToDelete("");
+    
+    toast({
+      title: "Berhasil",
+      description: "Kategori berhasil dihapus dari kelas ini",
+    });
+  };
+
+  const handleRestoreCategory = (categoryId: string) => {
+    // Remove from excluded list
+    setExcludedCategories((prev) => prev.filter((id) => id !== categoryId));
+    
+    // Restore default bobot
+    const category = categories.find((c) => c.id === categoryId);
+    if (category) {
+      setBobotValues((prev) => ({
+        ...prev,
+        [categoryId]: category.bobot || 0,
+      }));
+    }
+
+    toast({
+      title: "Berhasil",
+      description: "Kategori berhasil dipulihkan",
+    });
   };
 
   const handleReset = () => {
@@ -319,37 +402,70 @@ export default function BobotPenilaian() {
                 ) : (
                   <>
                     <div className="space-y-4">
-                      {categories.map((category) => (
-                        <div
-                          key={category.id}
-                          className="flex items-start gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <Label className="text-base font-medium">
-                              {category.nama_kategori}
-                            </Label>
-                            {category.deskripsi && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {category.deskripsi}
-                              </p>
+                      {categories.map((category) => {
+                        const isExcluded = excludedCategories.includes(category.id);
+                        
+                        return (
+                          <div
+                            key={category.id}
+                            className={`flex items-start gap-4 p-4 border rounded-lg transition-colors ${
+                              isExcluded 
+                                ? "bg-muted/50 opacity-60" 
+                                : "hover:bg-accent/50"
+                            }`}
+                          >
+                            <div className="flex-1">
+                              <Label className="text-base font-medium">
+                                {category.nama_kategori}
+                                {isExcluded && (
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    (Tidak digunakan)
+                                  </span>
+                                )}
+                              </Label>
+                              {category.deskripsi && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {category.deskripsi}
+                                </p>
+                              )}
+                            </div>
+                            {isExcluded ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRestoreCategory(category.id)}
+                              >
+                                Pulihkan
+                              </Button>
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    value={bobotValues[category.id] || 0}
+                                    onChange={(e) =>
+                                      handleBobotChange(category.id, e.target.value)
+                                    }
+                                    className="w-24 text-right"
+                                  />
+                                  <span className="text-sm font-medium">%</span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteCategory(category.id)}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="0.01"
-                              value={bobotValues[category.id] || 0}
-                              onChange={(e) =>
-                                handleBobotChange(category.id, e.target.value)
-                              }
-                              className="w-24 text-right"
-                            />
-                            <span className="text-sm font-medium">%</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className="flex gap-3 pt-4 border-t">
@@ -387,9 +503,31 @@ export default function BobotPenilaian() {
           <p>• Total bobot dari semua kategori penilaian harus tepat 100%</p>
           <p>• Setiap kelas dapat memiliki pengaturan bobot yang berbeda</p>
           <p>• Bobot digunakan untuk menghitung nilai akhir siswa berdasarkan kategori penilaian</p>
+          <p>• Kategori yang dihapus tidak akan ditampilkan di kelas ini dan bobotnya otomatis menjadi 0%</p>
+          <p>• Kategori yang dihapus dapat dipulihkan kembali dengan tombol "Pulihkan"</p>
           <p>• Pastikan untuk menyimpan perubahan sebelum berpindah ke kelas lain</p>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Kategori dari Kelas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus kategori ini dari kelas{" "}
+              {selectedClassName}? Kategori akan disembunyikan dan bobotnya akan menjadi 0%.
+              Anda dapat memulihkannya kembali nanti jika diperlukan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteCategory}>
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
