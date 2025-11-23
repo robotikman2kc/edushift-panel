@@ -10,6 +10,7 @@ import { FileText, AlertCircle } from "lucide-react";
 import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const RekapKehadiranEskul = () => {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
@@ -19,6 +20,8 @@ const RekapKehadiranEskul = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [emptyMonths, setEmptyMonths] = useState<string[]>([]);
+  const [showEmptyMonthsDialog, setShowEmptyMonthsDialog] = useState(false);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [previewData, setPreviewData] = useState<any[]>([]);
 
@@ -134,6 +137,49 @@ const RekapKehadiranEskul = () => {
     setPreviewData(summary);
   };
 
+  const checkEmptyMonths = () => {
+    if (!eskul) return [];
+
+    const year = parseInt(selectedYear);
+    const sMonth = parseInt(startMonth);
+    const eMonth = parseInt(endMonth);
+    const empty: string[] = [];
+
+    for (let monthIndex = sMonth; monthIndex <= eMonth; monthIndex++) {
+      const monthStartDate = new Date(year, monthIndex, 1);
+      const monthEndDate = new Date(year, monthIndex + 1, 0);
+      const monthStartDateStr = monthStartDate.toISOString().split('T')[0];
+      const monthEndDateStr = monthEndDate.toISOString().split('T')[0];
+
+      const kehadiran = localDB.select('kehadiran_eskul', (k: any) =>
+        k.ekstrakurikuler_id === eskul.id &&
+        k.tanggal >= monthStartDateStr &&
+        k.tanggal <= monthEndDateStr
+      );
+
+      if (kehadiran.length === 0) {
+        empty.push(monthOptions[monthIndex].label);
+      }
+    }
+
+    return empty;
+  };
+
+  const handleExportClick = () => {
+    const empty = checkEmptyMonths();
+    if (empty.length > 0) {
+      setEmptyMonths(empty);
+      setShowEmptyMonthsDialog(true);
+    } else {
+      setIsExportDateDialogOpen(true);
+    }
+  };
+
+  const handleConfirmExport = () => {
+    setShowEmptyMonthsDialog(false);
+    setIsExportDateDialogOpen(true);
+  };
+
   const handleExportPDF = async (signatureDate?: Date) => {
     if (!eskul) {
       toast({
@@ -176,14 +222,10 @@ const RekapKehadiranEskul = () => {
       );
 
       let isFirstPage = true;
+      let exportedMonths = 0;
 
       // Loop through each month in the range
       for (let monthIndex = sMonth; monthIndex <= eMonth; monthIndex++) {
-        if (!isFirstPage) {
-          doc.addPage();
-        }
-        isFirstPage = false;
-
         const monthName = monthOptions[monthIndex].label;
         
         // Get attendance for this specific month
@@ -197,6 +239,18 @@ const RekapKehadiranEskul = () => {
           k.tanggal >= monthStartDateStr &&
           k.tanggal <= monthEndDateStr
         );
+
+        // Skip this month if no data
+        if (kehadiran.length === 0) {
+          continue;
+        }
+
+        if (!isFirstPage) {
+          doc.addPage();
+        }
+        isFirstPage = false;
+        exportedMonths++;
+
 
         // Get unique dates for this month
         const uniqueDates = [...new Set(kehadiran.map((k: any) => k.tanggal))].sort();
@@ -365,7 +419,18 @@ const RekapKehadiranEskul = () => {
               doc.text(`${location}, ${dateStr}`, signatureX, finalY);
               doc.text('Pembimbing Ekstrakurikuler', signatureX, finalY + 5);
               doc.text(eskul.pembimbing, signatureX, finalY + 25);
-            }
+      }
+
+      // Check if any months were actually exported
+      if (exportedMonths === 0) {
+        toast({
+          title: "Tidak ada data",
+          description: "Tidak ada data kehadiran untuk periode yang dipilih",
+          variant: "destructive",
+        });
+        return;
+      }
+
           },
         });
       }
@@ -376,7 +441,7 @@ const RekapKehadiranEskul = () => {
 
       toast({
         title: "Export Berhasil",
-        description: `Rekap kehadiran ${eMonth - sMonth + 1} bulan berhasil diekspor ke PDF`,
+        description: `Rekap kehadiran ${exportedMonths} bulan berhasil diekspor ke PDF${emptyMonths.length > 0 ? ` (${emptyMonths.length} bulan dilewati karena tidak ada data)` : ''}`,
       });
     } catch (error) {
       console.error("Error exporting PDF:", error);
@@ -474,7 +539,7 @@ const RekapKehadiranEskul = () => {
 
             <Button
               className="w-full"
-              onClick={() => setIsExportDateDialogOpen(true)}
+              onClick={handleExportClick}
               disabled={loading || previewData.length === 0}
             >
               <FileText className="mr-2 h-4 w-4" />
@@ -584,6 +649,30 @@ const RekapKehadiranEskul = () => {
           </CardContent>
         </Card>
       </div>
+
+
+      <AlertDialog open={showEmptyMonthsDialog} onOpenChange={setShowEmptyMonthsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Peringatan Data Kosong</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bulan berikut tidak memiliki data kehadiran dan akan dilewati dalam laporan:
+              <ul className="list-disc list-inside mt-2 font-semibold">
+                {emptyMonths.map((month, index) => (
+                  <li key={index}>{month}</li>
+                ))}
+              </ul>
+              <p className="mt-2">Apakah Anda tetap ingin melanjutkan export?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmExport}>
+              Lanjutkan Export
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ExportDateDialog
         open={isExportDateDialogOpen}
