@@ -126,6 +126,7 @@ const JurnalGuru = () => {
   const [jenisKegiatan, setJenisKegiatan] = useState<JenisKegiatan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJurnal, setSelectedJurnal] = useState<JurnalEntry | null>(null);
+  const [selectedKegiatan, setSelectedKegiatan] = useState<JenisKegiatan | null>(null);
   const [showJurnalDialog, setShowJurnalDialog] = useState(false);
   const [showKegiatanDialog, setShowKegiatanDialog] = useState(false);
   const [showRapatDialog, setShowRapatDialog] = useState(false);
@@ -705,17 +706,31 @@ const JurnalGuru = () => {
       const kegiatanData = {
         nama_kegiatan: data.nama_kegiatan,
         deskripsi: data.deskripsi || "",
+        use_highlight: data.use_highlight || false,
       };
       
-      const result = await indexedDB.insert("jenis_kegiatan", kegiatanData);
-      if (result.error) throw new Error(result.error);
-
-      toast({
-        title: "Berhasil",
-        description: "Jenis kegiatan berhasil ditambahkan",
-      });
+      if (selectedKegiatan) {
+        // Update existing
+        const result = await indexedDB.update("jenis_kegiatan", selectedKegiatan.id, kegiatanData);
+        if (result.error) throw new Error(result.error);
+        
+        toast({
+          title: "Berhasil",
+          description: "Jenis kegiatan berhasil diperbarui",
+        });
+      } else {
+        // Insert new
+        const result = await indexedDB.insert("jenis_kegiatan", kegiatanData);
+        if (result.error) throw new Error(result.error);
+        
+        toast({
+          title: "Berhasil",
+          description: "Jenis kegiatan berhasil ditambahkan",
+        });
+      }
 
       setShowKegiatanDialog(false);
+      setSelectedKegiatan(null);
       kegiatanForm.reset();
       fetchData();
     } catch (error) {
@@ -726,6 +741,19 @@ const JurnalGuru = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditKegiatan = (id: string) => {
+    const kegiatan = jenisKegiatan.find(k => k.id === id);
+    if (!kegiatan) return;
+    
+    setSelectedKegiatan(kegiatan);
+    kegiatanForm.reset({
+      nama_kegiatan: kegiatan.nama_kegiatan,
+      deskripsi: kegiatan.deskripsi,
+      use_highlight: kegiatan.use_highlight || false,
+    });
+    setShowKegiatanDialog(true);
   };
 
   const handleEdit = (id: string) => {
@@ -1020,7 +1048,13 @@ const JurnalGuru = () => {
               ))}
             </SelectContent>
           </Select>
-          <Dialog open={showKegiatanDialog} onOpenChange={setShowKegiatanDialog}>
+          <Dialog open={showKegiatanDialog} onOpenChange={(open) => {
+            setShowKegiatanDialog(open);
+            if (!open) {
+              setSelectedKegiatan(null);
+              kegiatanForm.reset();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -1029,9 +1063,9 @@ const JurnalGuru = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Tambah Jenis Kegiatan</DialogTitle>
+                <DialogTitle>{selectedKegiatan ? "Edit" : "Tambah"} Jenis Kegiatan</DialogTitle>
                 <DialogDescription>
-                  Tambahkan jenis kegiatan baru untuk jurnal
+                  {selectedKegiatan ? "Edit jenis kegiatan" : "Tambahkan jenis kegiatan baru untuk jurnal"}
                 </DialogDescription>
               </DialogHeader>
               <Form {...kegiatanForm}>
@@ -1549,6 +1583,7 @@ const JurnalGuru = () => {
                   { key: "use_highlight_display", label: "Highlight", sortable: true },
                 ]}
                 loading={loading}
+                onEdit={handleEditKegiatan}
                 onDelete={handleDeleteKegiatan}
                 searchPlaceholder="Cari jenis kegiatan..."
                 title="Jenis Kegiatan"
