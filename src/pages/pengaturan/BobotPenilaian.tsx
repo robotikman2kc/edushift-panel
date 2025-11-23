@@ -1026,7 +1026,15 @@ export default function BobotPenilaian() {
                   className="flex items-center gap-4 p-4 border rounded-lg"
                 >
                   <div className="w-16">
-                    <div className="text-2xl font-bold text-primary">
+                    <div 
+                      className={`text-2xl font-bold ${
+                        grade === 'A' ? 'text-grade-a' :
+                        grade === 'B' ? 'text-grade-b' :
+                        grade === 'C' ? 'text-grade-c' :
+                        grade === 'D' ? 'text-grade-d' :
+                        'text-grade-e'
+                      }`}
+                    >
                       {grade}
                     </div>
                   </div>

@@ -52,6 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				grade: {
+					a: 'hsl(var(--grade-a))',
+					b: 'hsl(var(--grade-b))',
+					c: 'hsl(var(--grade-c))',
+					d: 'hsl(var(--grade-d))',
+					e: 'hsl(var(--grade-e))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
