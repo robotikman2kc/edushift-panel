@@ -74,7 +74,7 @@ const InputNilaiEskul = () => {
     // Filter by class if not "all"
     if (selectedKelas !== 'all') {
       anggota = anggota.filter((a: any) => 
-        `${a.tingkat} ${a.nama_kelas}` === selectedKelas
+        a.nama_kelas === selectedKelas
       );
     }
 
@@ -263,7 +263,7 @@ const InputNilaiEskul = () => {
         index + 1,
         anggota.nisn,
         anggota.nama_siswa,
-        `${anggota.tingkat} ${anggota.nama_kelas}`,
+        anggota.nama_kelas,
         grades[anggota.id] || '-'
       ]);
 
@@ -341,7 +341,7 @@ const InputNilaiEskul = () => {
     const allAnggota = await eskulDB.select('anggota_eskul', (a: any) => 
       a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
     );
-    const classes = [...new Set(allAnggota.map((a: any) => `${a.tingkat} ${a.nama_kelas}`))];
+    const classes = [...new Set(allAnggota.map((a: any) => a.nama_kelas))];
     return classes.sort();
   };
 
@@ -490,7 +490,7 @@ const InputNilaiEskul = () => {
                       <td className="p-3">{index + 1}</td>
                       <td className="p-3">{anggota.nisn}</td>
                       <td className="p-3">{anggota.nama_siswa}</td>
-                      <td className="p-3">{anggota.tingkat} {anggota.nama_kelas}</td>
+                      <td className="p-3">{anggota.nama_kelas}</td>
                       <td className="p-3">
                         <Select
                           value={grades[anggota.id] || ""}
