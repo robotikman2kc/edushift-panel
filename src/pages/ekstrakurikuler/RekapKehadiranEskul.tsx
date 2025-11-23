@@ -357,8 +357,8 @@ const RekapKehadiranEskul = () => {
               });
               
               doc.text(`${location}, ${dateStr}`, signatureX, finalY);
-              doc.text(template.teacherInfo?.jabatan || 'Pembimbing Ekstrakurikuler', signatureX, finalY + 5);
-              doc.text(template.teacherInfo?.name || eskul.pembimbing, signatureX, finalY + 25);
+              doc.text('Pembimbing Ekstrakurikuler', signatureX, finalY + 5);
+              doc.text(eskul.pembimbing, signatureX, finalY + 25);
             }
           },
         });
