@@ -1025,7 +1025,7 @@ export default function BobotPenilaian() {
                   key={grade}
                   className="flex items-center gap-4 p-4 border rounded-lg"
                 >
-                  <div className="w-16">
+                  <div className="w-16 flex items-center justify-center">
                     <div 
                       className={`text-2xl font-bold ${
                         grade === 'A' ? 'text-grade-a' :
