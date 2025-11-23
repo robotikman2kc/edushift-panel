@@ -432,6 +432,13 @@ const RekapKehadiranEskul = () => {
           },
           columnStyles,
           didDrawPage: (data: any) => {
+            // Add legend below table
+            const legendY = (data as any).cursor.y + 5;
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Keterangan:', template.layout.margins.left, legendY);
+            doc.text('H = Hadir, S = Sakit, I = Izin, A = Alpha', template.layout.margins.left + 25, legendY);
+
             // Add page numbers
             const pageCount = doc.getNumberOfPages();
             doc.setFontSize(10);
@@ -445,7 +452,7 @@ const RekapKehadiranEskul = () => {
 
             // Add signature if it's the last page of this month's report
             if (template.footer?.signatureSection && signatureDate) {
-              const finalY = (data as any).cursor.y + 15;
+              const finalY = legendY + 10;
               const signatureX = pageWidth - template.layout.margins.right - 60;
               
               doc.setFontSize(10);
@@ -461,6 +468,9 @@ const RekapKehadiranEskul = () => {
               doc.text(`${location}, ${dateStr}`, signatureX, finalY);
               doc.text('Pembimbing Ekstrakurikuler', signatureX, finalY + 5);
               doc.text(eskul.pembimbing, signatureX, finalY + 25);
+            }
+          },
+        });
       }
 
       // Check if any months were actually exported
@@ -471,10 +481,6 @@ const RekapKehadiranEskul = () => {
           variant: "destructive",
         });
         return;
-      }
-
-          },
-        });
       }
 
       // Save PDF
