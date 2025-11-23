@@ -26,6 +26,10 @@ export function analyzeLocalStorage(): CleanupItem[] {
     'auth_currentUser',
     'sidebarState',
     'userPreferences',
+    'developer_notes',
+    'custom_jurnal_templates',
+    'eskulRekapFilters',
+    'agenda_mengajar_from_kehadiran',
   ];
   
   // Keys that are no longer used (ALL moved to IndexedDB)
@@ -77,6 +81,16 @@ export function analyzeLocalStorage(): CleanupItem[] {
       shouldRemove = false;
       reason = 'Data aktif digunakan';
     }
+    // Check for filter keys (active)
+    else if (key.startsWith('input_kehadiran_') || 
+             key.startsWith('rekap_kehadiran_') || 
+             key.startsWith('laporan_kehadiran_') ||
+             key.startsWith('rekap_nilai_') ||
+             key.startsWith('table_sort_') ||
+             key.startsWith('ally-supports-cache')) {
+      shouldRemove = false;
+      reason = 'Data filter/state aktif digunakan';
+    }
     // Check if it's a deprecated key
     else if (deprecatedKeys.includes(key)) {
       shouldRemove = true;
@@ -91,11 +105,6 @@ export function analyzeLocalStorage(): CleanupItem[] {
     else if (value === '[]' || value === '{}' || value === '') {
       shouldRemove = true;
       reason = 'Data kosong';
-    }
-    // Keys with table_sort_ prefix are for table sorting state
-    else if (key.startsWith('table_sort_')) {
-      shouldRemove = false;
-      reason = 'Pengaturan sorting tabel';
     }
     // Unknown keys - suggest removal with warning
     else {
@@ -162,11 +171,30 @@ function getKeyDescription(key: string): string {
     'lastBackupDate': 'Tanggal backup terakhir (AKTIF)',
     'selectedDate': 'Tanggal terpilih (AKTIF)',
     'authSession': 'Sesi autentikasi (AKTIF)',
+    'developer_notes': 'Catatan developer (AKTIF)',
+    'custom_jurnal_templates': 'Template jurnal custom (AKTIF)',
+    'eskulRekapFilters': 'Filter rekap eskul (AKTIF)',
+    'agenda_mengajar_from_kehadiran': 'Filter agenda dari kehadiran (AKTIF)',
   };
 
-  // Check for table_sort_ prefix
+  // Check for pattern-based keys (active)
+  if (key.startsWith('input_kehadiran_')) {
+    return 'Filter input kehadiran (AKTIF)';
+  }
+  if (key.startsWith('rekap_kehadiran_')) {
+    return 'Filter rekap kehadiran (AKTIF)';
+  }
+  if (key.startsWith('laporan_kehadiran_')) {
+    return 'Filter laporan kehadiran (AKTIF)';
+  }
+  if (key.startsWith('rekap_nilai_')) {
+    return 'Filter rekap nilai (AKTIF)';
+  }
   if (key.startsWith('table_sort_')) {
-    return `Pengaturan sorting tabel (AKTIF)`;
+    return 'Pengaturan sorting tabel (AKTIF)';
+  }
+  if (key.startsWith('ally-supports-cache')) {
+    return 'Cache aksesibilitas (sistem)';
   }
   
   return descriptions[key] || 'Data tidak dikenal (periksa sebelum hapus)';
