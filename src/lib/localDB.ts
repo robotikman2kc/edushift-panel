@@ -115,7 +115,15 @@ export interface KehadiranEskul extends BaseRecord {
   keterangan?: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jadwal_pelajaran' | 'jam_pelajaran' | 'pengaturan' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul';
+export interface NilaiEskul extends BaseRecord {
+  anggota_id: string;
+  ekstrakurikuler_id: string;
+  tahun_ajaran_id: string;
+  semester: string;
+  nilai: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jadwal_pelajaran' | 'jam_pelajaran' | 'pengaturan' | 'tahun_ajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul';
 
 // Generate UUID function
 function generateId(): string {
@@ -134,7 +142,7 @@ class LocalDB {
 
   // Initialize default data
   initializeDefaultData() {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan', 'tahun_ajaran', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'];
     
     tables.forEach(table => {
       if (!localStorage.getItem(this.getStorageKey(table))) {
