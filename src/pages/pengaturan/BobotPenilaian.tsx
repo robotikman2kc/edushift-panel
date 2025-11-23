@@ -109,6 +109,15 @@ export default function BobotPenilaian() {
       const activeCategories = (kategoriData as JenisPenilaian[]).filter(
         (k) => k.status === "Aktif"
       );
+      
+      console.log("All kategori data:", kategoriData);
+      console.log("Active categories with details:", activeCategories.map(c => ({
+        id: c.id,
+        nama: c.nama_kategori,
+        bobot: c.bobot,
+        status: c.status
+      })));
+      
       setCategories(activeCategories);
       
       console.log("Active categories:", activeCategories.length);
