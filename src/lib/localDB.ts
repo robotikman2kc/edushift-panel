@@ -325,5 +325,5 @@ class LocalDB {
 // Create single instance
 export const localDB = new LocalDB();
 
-// Initialize on module load
-localDB.initializeDefaultData();
+// DO NOT auto-initialize - all data now in IndexedDB
+// localDB.initializeDefaultData();
