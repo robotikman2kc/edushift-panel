@@ -6,6 +6,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +75,7 @@ export function PeriodeNonPembelajaranDialog({
   const [nama, setNama] = useState("");
   const [keterangan, setKeterangan] = useState("");
   const [jenis, setJenis] = useState("ujian");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (editingPeriode) {
@@ -98,10 +109,15 @@ export function PeriodeNonPembelajaranDialog({
   };
 
   const handleDelete = () => {
+    setShowDeleteConfirm(false);
     if (onDelete) {
       onDelete();
     }
     handleClose();
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
   };
 
   const handleClose = () => {
@@ -233,7 +249,7 @@ export function PeriodeNonPembelajaranDialog({
 
         <DialogFooter>
           {editingPeriode && onDelete && (
-            <Button variant="destructive" onClick={handleDelete} className="mr-auto">
+            <Button variant="destructive" onClick={handleDeleteClick} className="mr-auto">
               Hapus
             </Button>
           )}
@@ -248,6 +264,25 @@ export function PeriodeNonPembelajaranDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Confirmation Dialog for Delete */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Hapus Periode</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus periode "{editingPeriode?.nama}"? 
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
