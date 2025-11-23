@@ -3,13 +3,26 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/common/DataTable";
 import { localDB, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowUp, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function KelolaAnggota() {
   const [anggota, setAnggota] = useState<AnggotaEskul[]>([]);
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
+  const [showNaikKelasDialog, setShowNaikKelasDialog] = useState(false);
+  const [selectedAnggota, setSelectedAnggota] = useState<AnggotaEskul[]>([]);
 
   useEffect(() => {
     loadData();
@@ -22,7 +35,7 @@ export default function KelolaAnggota() {
       const eskulData = eskuls[0];
       setEskul(eskulData);
       
-      // Load anggota for this eskul
+      // Load all anggota (active and inactive) for this eskul
       const anggotaData = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
         a.ekstrakurikuler_id === eskulData.id
       );
@@ -139,6 +152,62 @@ export default function KelolaAnggota() {
     }
   };
 
+  const handleNaikKelas = () => {
+    // Get active members only
+    const activeMembers = anggota.filter(a => a.status === 'aktif');
+    setSelectedAnggota(activeMembers);
+    setShowNaikKelasDialog(true);
+  };
+
+  const confirmNaikKelas = () => {
+    try {
+      let successCount = 0;
+      let graduatedCount = 0;
+
+      selectedAnggota.forEach(member => {
+        let newTingkat = member.tingkat;
+        let newStatus = member.status;
+
+        // Tingkat naik: X -> XI, XI -> XII, XII -> non-aktif (lulus)
+        if (member.tingkat === 'X') {
+          newTingkat = 'XI';
+        } else if (member.tingkat === 'XI') {
+          newTingkat = 'XII';
+        } else if (member.tingkat === 'XII') {
+          newStatus = 'non-aktif';
+          graduatedCount++;
+        }
+
+        const result = localDB.update('anggota_eskul', member.id, {
+          tingkat: newTingkat,
+          status: newStatus
+        });
+
+        if (!result.error) {
+          successCount++;
+        }
+      });
+
+      toast.success(`${successCount} anggota berhasil naik kelas${graduatedCount > 0 ? `, ${graduatedCount} lulus` : ''}`);
+      loadData();
+      setShowNaikKelasDialog(false);
+    } catch (error) {
+      toast.error("Gagal melakukan naik kelas");
+    }
+  };
+
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'aktif' ? 'non-aktif' : 'aktif';
+    const result = localDB.update('anggota_eskul', id, { status: newStatus });
+    
+    if (result.error) {
+      toast.error("Gagal mengubah status anggota");
+    } else {
+      toast.success(`Anggota berhasil ${newStatus === 'aktif' ? 'diaktifkan' : 'dinonaktifkan'}`);
+      loadData();
+    }
+  };
+
   const handleImport = async (data: Record<string, string>[]) => {
     if (!eskul) {
       toast.error("Pengaturan ekstrakurikuler belum dibuat");
@@ -213,10 +282,29 @@ export default function KelolaAnggota() {
     }
   };
 
-  // Format data untuk tampilan tabel
+  // Format data untuk tampilan tabel dengan action buttons
   const formattedAnggota = anggota.map((item, index) => ({
     ...item,
-    no: index + 1
+    no: index + 1,
+    customActions: (
+      <Button
+        size="sm"
+        variant={item.status === 'aktif' ? 'destructive' : 'default'}
+        onClick={() => handleToggleStatus(item.id, item.status)}
+      >
+        {item.status === 'aktif' ? (
+          <>
+            <UserX className="h-4 w-4 mr-1" />
+            Nonaktifkan
+          </>
+        ) : (
+          <>
+            <UserCheck className="h-4 w-4 mr-1" />
+            Aktifkan
+          </>
+        )}
+      </Button>
+    )
   }));
 
   if (!eskul) {
@@ -238,12 +326,28 @@ export default function KelolaAnggota() {
     );
   }
 
+  const activeCount = anggota.filter(a => a.status === 'aktif').length;
+  const inactiveCount = anggota.filter(a => a.status === 'non-aktif').length;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={`Kelola Anggota - ${eskul.nama_eskul}`}
-        description="Kelola data anggota ekstrakurikuler"
+        description={`Kelola data anggota ekstrakurikuler • Aktif: ${activeCount} • Non-aktif: ${inactiveCount}`}
       />
+
+      <Card className="p-4">
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleNaikKelas}
+            variant="default"
+            disabled={activeCount === 0}
+          >
+            <ArrowUp className="mr-2 h-4 w-4" />
+            Naik Kelas Semua Anggota Aktif
+          </Button>
+        </div>
+      </Card>
 
       <DataTable
         columns={columns}
@@ -257,6 +361,32 @@ export default function KelolaAnggota() {
         title="Data Anggota Ekstrakurikuler"
         tableId="anggota-eskul"
       />
+
+      <AlertDialog open={showNaikKelasDialog} onOpenChange={setShowNaikKelasDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Naik Kelas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Fitur ini akan menaikkan tingkat semua anggota aktif:
+              <ul className="mt-2 space-y-1 list-disc list-inside">
+                <li>Tingkat X → XI</li>
+                <li>Tingkat XI → XII</li>
+                <li>Tingkat XII → Non-aktif (Lulus)</li>
+              </ul>
+              <br />
+              Total anggota aktif yang akan diproses: <strong>{selectedAnggota.length}</strong>
+              <br /><br />
+              Apakah Anda yakin ingin melanjutkan?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmNaikKelas}>
+              Ya, Naik Kelas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
