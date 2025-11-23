@@ -255,6 +255,8 @@ export function AppSidebar() {
 
   // Load profile from localStorage
   useEffect(() => {
+    let blobUrl: string | null = null;
+
     const loadProfile = async () => {
       const savedProfile = localStorage.getItem('userProfile');
       if (savedProfile) {
@@ -266,10 +268,15 @@ export function AppSidebar() {
           // Selalu load avatar dari OPFS jika menggunakan opfs://
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
             console.log('AppSidebar loading avatar from OPFS:', parsed.avatar_url);
-            const opfsUrl = await opfsStorage.getFile(parsed.avatar_url);
-            if (opfsUrl) {
-              console.log('AppSidebar avatar loaded:', opfsUrl);
-              setUserProfile({ ...parsed, avatar_url: opfsUrl });
+            const file = await opfsStorage.getFile(parsed.avatar_url);
+            if (file && file instanceof Blob) {
+              // Buat blob URL sendiri untuk kontrol cleanup
+              blobUrl = URL.createObjectURL(file);
+              console.log('AppSidebar avatar blob URL created:', blobUrl);
+              setUserProfile({ ...parsed, avatar_url: blobUrl });
+            } else if (typeof file === 'string') {
+              // base64 fallback
+              setUserProfile({ ...parsed, avatar_url: file });
             } else {
               console.error('AppSidebar failed to load avatar from OPFS');
               setUserProfile({ ...parsed, avatar_url: '' });
@@ -302,6 +309,11 @@ export function AppSidebar() {
     window.addEventListener('profileUpdated', handleProfileUpdate);
 
     return () => {
+      // Cleanup blob URL saat component unmount
+      if (blobUrl) {
+        console.log('AppSidebar cleaning up blob URL:', blobUrl);
+        URL.revokeObjectURL(blobUrl);
+      }
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
