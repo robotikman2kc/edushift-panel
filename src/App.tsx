@@ -54,6 +54,11 @@ import LaporanKehadiran from "./pages/laporan/LaporanKehadiran";
 import LaporanPenilaian from "./pages/laporan/LaporanPenilaian";
 import LaporanJurnalGuru from "./pages/laporan/LaporanJurnalGuru";
 
+// Ekstrakurikuler Pages
+import KelolaEkstrakurikuler from "./pages/ekstrakurikuler/KelolaEkstrakurikuler";
+import KelolaAnggota from "./pages/ekstrakurikuler/KelolaAnggota";
+import KehadiranEskul from "./pages/ekstrakurikuler/KehadiranEskul";
+
 // Placeholder for other pages
 import PlaceholderPage from "./pages/PlaceholderPage";
 
@@ -126,6 +131,11 @@ const App = () => {
                     path="/jurnal/input-jurnal" 
                     element={<PlaceholderPage title="Input Jurnal" description="Input jurnal mengajar" />} 
                   />
+
+                  {/* Ekstrakurikuler Routes */}
+                  <Route path="/ekstrakurikuler/kelola" element={<KelolaEkstrakurikuler />} />
+                  <Route path="/ekstrakurikuler/anggota" element={<KelolaAnggota />} />
+                  <Route path="/ekstrakurikuler/kehadiran" element={<KehadiranEskul />} />
 
                   {/* Kalender Route */}
                   <Route path="/kalender" element={<Kalender />} />
