@@ -1020,49 +1020,48 @@ export default function BobotPenilaian() {
                 </AlertDescription>
               </Alert>
 
-              {(['A', 'B', 'C', 'D', 'E'] as const).map((grade) => (
-                <div
-                  key={grade}
-                  className="flex items-center gap-4"
-                >
-                  <Card className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
-                    <div 
-                      className={`text-4xl font-bold ${
-                        grade === 'A' ? 'text-grade-a' :
-                        grade === 'B' ? 'text-grade-b' :
-                        grade === 'C' ? 'text-grade-c' :
-                        grade === 'D' ? 'text-grade-d' :
-                        'text-grade-e'
-                      }`}
-                    >
-                      {grade}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(['A', 'B', 'C', 'D', 'E'] as const).map((grade) => (
+                  <div
+                    key={grade}
+                    className="flex items-center gap-3"
+                  >
+                    <Card className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-background to-muted/30 shrink-0">
+                      <div 
+                        className={`text-3xl font-bold ${
+                          grade === 'A' ? 'text-grade-a' :
+                          grade === 'B' ? 'text-grade-b' :
+                          grade === 'C' ? 'text-grade-c' :
+                          grade === 'D' ? 'text-grade-d' :
+                          'text-grade-e'
+                        }`}
+                      >
+                        {grade}
+                      </div>
+                    </Card>
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor={`${grade}-threshold`} className="text-sm">
+                        Threshold {grade === 'E' && <span className="text-muted-foreground">(0)</span>}
+                      </Label>
+                      <Input
+                        id={`${grade}-threshold`}
+                        type="text"
+                        inputMode="decimal"
+                        value={gradeThresholds[grade]}
+                        onChange={(e) =>
+                          handleGradeThresholdChange(grade, e.target.value)
+                        }
+                        disabled={grade === 'E'}
+                        placeholder="0"
+                        className="h-9"
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        Rentang: <span className="font-semibold text-foreground">{getGradeRange(grade, gradeThresholds)}</span>
+                      </div>
                     </div>
-                  </Card>
-                  <div className="flex-1 space-y-2">
-                    <Label htmlFor={`${grade}-threshold`}>
-                      Threshold (Batas Minimum)
-                      {grade === 'E' && <span className="text-muted-foreground ml-2">(Harus 0)</span>}
-                    </Label>
-                    <Input
-                      id={`${grade}-threshold`}
-                      type="text"
-                      inputMode="decimal"
-                      value={gradeThresholds[grade]}
-                      onChange={(e) =>
-                        handleGradeThresholdChange(grade, e.target.value)
-                      }
-                      disabled={grade === 'E'}
-                      placeholder="0"
-                    />
                   </div>
-                  <div className="w-32 text-right">
-                    <div className="text-sm font-medium">Rentang Nilai</div>
-                    <div className="text-lg font-bold text-primary">
-                      {getGradeRange(grade, gradeThresholds)}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
               <div className="flex gap-3 pt-4 border-t">
                 <Button onClick={handleSaveGradeSettings} className="flex-1">
