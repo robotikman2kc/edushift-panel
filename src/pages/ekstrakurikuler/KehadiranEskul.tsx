@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { localDB, KehadiranEskul, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
-import { Save, Calendar, CheckCheck, X, Clock, UserX, AlertCircle, Star } from "lucide-react";
+import { Save, Calendar, CheckCheck, Clock, UserX, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -19,7 +19,6 @@ export default function KehadiranEskulPage() {
   const [selectedTingkat, setSelectedTingkat] = useState<string>("");
   const [selectedKelas, setSelectedKelas] = useState<string>("");
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
-  const [keaktifan, setKeaktifan] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: KehadiranEskul}>({});
   const [loading, setLoading] = useState(false);
 
@@ -78,31 +77,19 @@ export default function KehadiranEskulPage() {
     // Map existing attendance by anggota_id
     const attendanceMap: {[key: string]: KehadiranEskul} = {};
     const attendanceStatus: {[key: string]: string} = {};
-    const keaktifanStatus: {[key: string]: string} = {};
 
     existingData.forEach(record => {
       attendanceMap[record.anggota_id] = record;
       attendanceStatus[record.anggota_id] = record.status_kehadiran;
-      if (record.keaktifan) {
-        keaktifanStatus[record.anggota_id] = record.keaktifan;
-      }
     });
 
     setExistingAttendance(attendanceMap);
     setAttendance(attendanceStatus);
-    setKeaktifan(keaktifanStatus);
     setLoading(false);
   };
 
   const handleAttendanceChange = (anggotaId: string, status: string) => {
     setAttendance(prev => ({
-      ...prev,
-      [anggotaId]: status
-    }));
-  };
-
-  const handleKeaktifanChange = (anggotaId: string, status: string) => {
-    setKeaktifan(prev => ({
       ...prev,
       [anggotaId]: status
     }));
@@ -139,7 +126,6 @@ export default function KehadiranEskulPage() {
             ekstrakurikuler_id: eskul.id,
             tanggal: selectedDate,
             status_kehadiran: attendance[anggota.id],
-            keaktifan: keaktifan[anggota.id] || null,
             keterangan: existing?.keterangan || null,
           };
         });
@@ -155,7 +141,6 @@ export default function KehadiranEskulPage() {
           ekstrakurikuler_id: record.ekstrakurikuler_id,
           tanggal: record.tanggal,
           status_kehadiran: record.status_kehadiran,
-          keaktifan: record.keaktifan,
           keterangan: record.keterangan,
         });
         if (result.error) throw new Error(result.error);
@@ -165,7 +150,6 @@ export default function KehadiranEskulPage() {
       for (const record of toUpdate) {
         const result = localDB.update("kehadiran_eskul", record.id!, {
           status_kehadiran: record.status_kehadiran,
-          keaktifan: record.keaktifan,
           keterangan: record.keterangan,
         });
         if (result.error) throw new Error(result.error);
@@ -408,7 +392,6 @@ export default function KehadiranEskulPage() {
                       <TableHead>Tingkat</TableHead>
                       <TableHead>Kelas</TableHead>
                       <TableHead className="text-center">Status Kehadiran</TableHead>
-                      <TableHead className="text-center">Keaktifan</TableHead>
                       <TableHead className="text-center">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -422,28 +405,6 @@ export default function KehadiranEskulPage() {
                         <TableCell>{anggota.nama_kelas}</TableCell>
                         <TableCell className="text-center">
                           {getStatusBadge(attendance[anggota.id])}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center gap-1">
-                            <Button
-                              size="sm"
-                              variant={keaktifan[anggota.id] === 'Aktif' ? 'default' : 'outline'}
-                              onClick={() => handleKeaktifanChange(anggota.id, 'Aktif')}
-                              className={`h-7 text-xs ${keaktifan[anggota.id] === 'Aktif' ? 'bg-yellow-400 hover:bg-yellow-500 text-yellow-950 border-yellow-500' : ''}`}
-                              title="Anggota Aktif"
-                            >
-                              <Star className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleKeaktifanChange(anggota.id, '')}
-                              className="h-7 text-xs hover:bg-muted"
-                              title="Reset"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-center gap-1">
