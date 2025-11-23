@@ -194,7 +194,13 @@ export interface NilaiEskul extends BaseRecord {
   nilai: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'periode_non_pembelajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul';
+export interface AppSettings extends BaseRecord {
+  setting_key: string;
+  setting_value: string;
+  description?: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'periode_non_pembelajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul' | 'app_settings';
 
 // Generate UUID function
 function generateId(): string {
@@ -208,7 +214,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 8;
+  private dbVersion = 9; // Increment version for new table
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -226,13 +232,18 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'periode_non_pembelajaran', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'periode_non_pembelajaran', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul', 'app_settings'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {
             const store = db.createObjectStore(tableName, { keyPath: 'id' });
             // Create indexes for common search fields
             store.createIndex('created_at', 'created_at', { unique: false });
+            
+            // Special index for app_settings
+            if (tableName === 'app_settings') {
+              store.createIndex('setting_key', 'setting_key', { unique: true });
+            }
           }
         });
       };
