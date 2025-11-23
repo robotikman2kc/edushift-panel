@@ -103,6 +103,7 @@ const menuItems = [
       { title: "Kelola Ekstrakurikuler", url: "/ekstrakurikuler/kelola", icon: Trophy },
       { title: "Kelola Anggota", url: "/ekstrakurikuler/anggota", icon: UserPlus },
       { title: "Kehadiran Eskul", url: "/ekstrakurikuler/kehadiran", icon: ClipboardCheck },
+      { title: "Input Nilai Eskul", url: "/ekstrakurikuler/input-nilai", icon: FileInput },
       { title: "Rekap Kehadiran Eskul", url: "/ekstrakurikuler/rekap-kehadiran", icon: FileBarChart },
     ],
   },
