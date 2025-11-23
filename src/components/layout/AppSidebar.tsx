@@ -103,6 +103,7 @@ const menuItems = [
       { title: "Kelola Ekstrakurikuler", url: "/ekstrakurikuler/kelola", icon: Trophy },
       { title: "Kelola Anggota", url: "/ekstrakurikuler/anggota", icon: UserPlus },
       { title: "Kehadiran Eskul", url: "/ekstrakurikuler/kehadiran", icon: ClipboardCheck },
+      { title: "Rekap Kehadiran Eskul", url: "/ekstrakurikuler/rekap-kehadiran", icon: FileBarChart },
     ],
   },
   {
@@ -112,7 +113,6 @@ const menuItems = [
       { title: "Laporan Kehadiran", url: "/laporan/kehadiran", icon: FileText },
       { title: "Laporan Penilaian", url: "/laporan/penilaian", icon: BarChart3 },
       { title: "Laporan Jurnal Guru", url: "/laporan/jurnal-guru", icon: BookText },
-      { title: "Laporan Ekstrakurikuler", url: "/laporan/ekstrakurikuler", icon: Trophy },
     ],
   },
   {
