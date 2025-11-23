@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Plus, Pencil, Trash2, PartyPopper, Zap, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { isHariLiburKerja, generateHolidayTemplate, isHariLibur } from "@/lib/hariLiburUtils";
+import { isHariLiburKerja, generateHolidayTemplate, isHariLibur, isPeriodeNonPembelajaran, generatePeriodeTemplate } from "@/lib/hariLiburUtils";
 import { JurnalDetailStatusWidget } from "@/components/jurnal/JurnalDetailStatusWidget";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -134,6 +134,8 @@ const JurnalGuru = () => {
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [currentHoliday, setCurrentHoliday] = useState<any>(null);
+  const [currentPeriode, setCurrentPeriode] = useState<any>(null);
+  const [allPeriodeNonPembelajaran, setAllPeriodeNonPembelajaran] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [mataPelajaran, setMataPelajaran] = useState<any[]>([]);
   const [kelas, setKelas] = useState<any[]>([]);
@@ -178,39 +180,64 @@ const JurnalGuru = () => {
     fetchData();
     loadAvailableYears();
     ensureDefaultKegiatanExists();
+    loadPeriodeNonPembelajaran();
     autoFillHariLibur(); // Auto-create entries for holidays
+    autoFillPeriodeNonPembelajaran(); // Auto-create entries for non-teaching periods
     loadCustomTemplates();
   }, []);
 
-  // Watch for tanggal changes and auto-fill if holiday (weekdays only)
+  // Watch for tanggal changes and auto-fill if holiday or periode (weekdays only)
   useEffect(() => {
     const subscription = jurnalForm.watch((value, { name }) => {
       if (name === "tanggal" && value.tanggal) {
         const holiday = isHariLiburKerja(value.tanggal); // Only weekday holidays
-        setCurrentHoliday(holiday);
+        const periode = isPeriodeNonPembelajaran(value.tanggal, allPeriodeNonPembelajaran);
         
-        if (holiday && !selectedJurnal) {
-          // Only auto-fill for new entries on weekday holidays
-          const template = generateHolidayTemplate(holiday);
-          
-          // Find "Libur Nasional" jenis kegiatan
-          const liburNasionalKegiatan = jenisKegiatan.find(
-            k => k.nama_kegiatan.toLowerCase() === "libur nasional"
-          );
-          
-          if (liburNasionalKegiatan) {
-            jurnalForm.setValue("jenis_kegiatan_id", liburNasionalKegiatan.id);
+        setCurrentHoliday(holiday);
+        setCurrentPeriode(periode);
+        
+        if (!selectedJurnal) {
+          // Priority: Libur nasional > Periode non pembelajaran
+          if (holiday) {
+            // Auto-fill for weekday holidays
+            const template = generateHolidayTemplate(holiday);
+            
+            // Find "Libur Nasional" jenis kegiatan
+            const liburNasionalKegiatan = jenisKegiatan.find(
+              k => k.nama_kegiatan.toLowerCase() === "libur nasional"
+            );
+            
+            if (liburNasionalKegiatan) {
+              jurnalForm.setValue("jenis_kegiatan_id", liburNasionalKegiatan.id);
+            }
+            
+            jurnalForm.setValue("uraian_kegiatan", template.uraian);
+            jurnalForm.setValue("volume", template.volume);
+            jurnalForm.setValue("satuan_hasil", template.satuan);
+          } else if (periode) {
+            // Auto-fill for periode non pembelajaran (only if not holiday)
+            const template = generatePeriodeTemplate(periode);
+            
+            // Find "Libur Semester" or similar jenis kegiatan
+            const liburSemesterKegiatan = jenisKegiatan.find(
+              k => k.nama_kegiatan.toLowerCase().includes("libur") && 
+                   k.nama_kegiatan.toLowerCase() !== "libur nasional"
+            );
+            
+            if (liburSemesterKegiatan) {
+              jurnalForm.setValue("jenis_kegiatan_id", liburSemesterKegiatan.id);
+            }
+            
+            jurnalForm.setValue("uraian_kegiatan", template.uraian);
+            jurnalForm.setValue("volume", template.volume);
+            jurnalForm.setValue("satuan_hasil", template.satuan);
           }
-          
-          jurnalForm.setValue("uraian_kegiatan", template.uraian);
-          jurnalForm.setValue("volume", template.volume);
-          jurnalForm.setValue("satuan_hasil", template.satuan);
         }
       }
     });
     
     return () => subscription.unsubscribe();
-  }, [jurnalForm, jenisKegiatan, selectedJurnal]);
+  }, [jurnalForm, jenisKegiatan, selectedJurnal, allPeriodeNonPembelajaran]);
 
   const ensureDefaultKegiatanExists = async () => {
     try {
@@ -361,6 +388,103 @@ const JurnalGuru = () => {
       }
     } catch (error) {
       console.error("Error auto-filling hari libur:", error);
+    }
+  };
+
+  const loadPeriodeNonPembelajaran = async () => {
+    try {
+      const periode = await indexedDB.select("periode_non_pembelajaran");
+      setAllPeriodeNonPembelajaran(periode);
+    } catch (error) {
+      console.error("Error loading periode non pembelajaran:", error);
+    }
+  };
+
+  const autoFillPeriodeNonPembelajaran = async () => {
+    try {
+      // Get all jenis kegiatan
+      const kegiatanData = await indexedDB.select("jenis_kegiatan");
+      
+      // Find or create "Libur Semester" jenis kegiatan
+      let liburSemesterKegiatan = kegiatanData.find(
+        (k: any) => k.nama_kegiatan.toLowerCase() === "libur semester"
+      );
+      
+      if (!liburSemesterKegiatan) {
+        // Create "Libur Semester" if doesn't exist
+        const result = await indexedDB.insert("jenis_kegiatan", {
+          nama_kegiatan: "Libur Semester",
+          deskripsi: "Periode libur semester atau non-pembelajaran",
+        });
+        if (result.data) {
+          liburSemesterKegiatan = result.data;
+        } else {
+          return; // Can't proceed without the kegiatan
+        }
+      }
+      
+      // Get all periode non pembelajaran
+      const allPeriode = await indexedDB.select("periode_non_pembelajaran");
+      
+      // Get all existing jurnal entries
+      const existingJurnal = await indexedDB.select("jurnal");
+      const existingDates = new Set(existingJurnal.map((j: any) => j.tanggal));
+      
+      // Get all hari libur nasional
+      const allHariLibur = await indexedDB.select("hari_libur");
+      const hariLiburDates = new Set(allHariLibur.map((h: any) => h.tanggal));
+      
+      // Get current date (without time)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let autoCreatedCount = 0;
+      
+      // Process each periode
+      for (const periode of allPeriode) {
+        const startDate = new Date(periode.tanggal_mulai);
+        const endDate = new Date(periode.tanggal_selesai);
+        
+        // Iterate through each day in the periode
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          // Only process dates that are today or in the past
+          if (currentDate <= today) {
+            const dayOfWeek = currentDate.getDay();
+            // Only weekdays (1 = Monday to 5 = Friday)
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+              const dateStr = format(currentDate, "yyyy-MM-dd");
+              
+              // Skip if already has entry OR if it's a national holiday (priority)
+              if (!existingDates.has(dateStr) && !hariLiburDates.has(dateStr)) {
+                const template = generatePeriodeTemplate(periode);
+                
+                await indexedDB.insert("jurnal", {
+                  tanggal: dateStr,
+                  jenis_kegiatan_id: liburSemesterKegiatan.id,
+                  uraian_kegiatan: template.uraian,
+                  volume: template.volume,
+                  satuan_hasil: template.satuan,
+                });
+                
+                autoCreatedCount++;
+              }
+            }
+          }
+          // Move to next day
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+      
+      if (autoCreatedCount > 0) {
+        toast({
+          title: "Jurnal Otomatis Dibuat",
+          description: `${autoCreatedCount} entri jurnal untuk periode non-pembelajaran berhasil dibuat otomatis`,
+        });
+        await fetchData(); // Refresh to show new entries
+      }
+    } catch (error) {
+      console.error("Error auto-filling periode non pembelajaran:", error);
     }
   };
 
