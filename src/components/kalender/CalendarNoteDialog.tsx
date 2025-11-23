@@ -105,10 +105,10 @@ export function CalendarNoteDialog({
                   type="button"
                   onClick={() => setSelectedColor(color.value)}
                   className={cn(
-                    "h-12 rounded-md transition-all",
+                    "h-12 rounded-md transition-transform duration-200",
                     color.value,
                     selectedColor === color.value 
-                      ? `ring-2 ring-offset-2 ring-primary scale-105` 
+                      ? `ring-2 ring-offset-2 ring-primary scale-105`
                       : "hover:scale-105"
                   )}
                   title={color.name}

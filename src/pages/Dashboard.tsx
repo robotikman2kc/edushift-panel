@@ -359,7 +359,7 @@ const Dashboard = () => {
                 {todaySchedule.map((schedule, index) => (
                   <div 
                     key={index}
-                    className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 hover:shadow-sm"
+                    className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors duration-200 hover:shadow-sm"
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-primary/10 flex-shrink-0">
