@@ -386,12 +386,23 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : todaySchedule.length === 0 ? (
-              <EmptyState
-                icon={CalendarDays}
-                title="Tidak ada jadwal hari ini"
-                description="Jadwal pelajaran untuk hari ini kosong. Nikmati waktu luang Anda atau gunakan untuk persiapan."
-                variant="minimal"
-              />
+              // Check if it's weekend (Saturday=6 or Sunday=0)
+              selectedDate.getDay() === 0 || selectedDate.getDay() === 6 ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <div className="text-center">
+                    <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm font-medium">Akhir Pekan</p>
+                    <p className="text-xs mt-1">Selamat beristirahat!</p>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  icon={CalendarDays}
+                  title="Tidak ada jadwal hari ini"
+                  description="Jadwal pelajaran untuk hari ini kosong. Nikmati waktu luang Anda atau gunakan untuk persiapan."
+                  variant="minimal"
+                />
+              )
             ) : (
               <div className="space-y-2">
                 {todaySchedule.map((schedule, index) => (
