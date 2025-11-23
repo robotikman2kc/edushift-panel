@@ -63,7 +63,6 @@ const menuItems = [
       { title: "Daftar Siswa", url: "/pengaturan/siswa", icon: Users },
       { title: "Mata Pelajaran", url: "/pengaturan/mata-pelajaran", icon: BookOpen },
       { title: "Jadwal Pelajaran", url: "/pengaturan/jadwal-pelajaran", icon: CalendarDays },
-      { title: "Kategori Penilaian", url: "/pengaturan/kategori-penilaian", icon: Tags },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Tahun Ajaran", url: "/pengaturan/tahun-ajaran", icon: CalendarClock },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },

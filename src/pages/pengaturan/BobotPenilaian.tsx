@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Save, AlertCircle, CheckCircle2, RefreshCw, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Save, AlertCircle, CheckCircle2, RefreshCw, X, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import type { Kelas, JenisPenilaian } from "@/lib/indexedDB";
@@ -13,6 +14,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { saveBobotForKelas } from "@/lib/bobotUtils";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +45,7 @@ interface BobotKelas {
 }
 
 export default function BobotPenilaian() {
+  // Bobot states
   const [selectedTingkat, setSelectedTingkat] = useState<string>("");
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [classes, setClasses] = useState<Kelas[]>([]);
@@ -52,6 +58,18 @@ export default function BobotPenilaian() {
   const [activeTahunAjaran, setActiveTahunAjaran] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string>("");
+  
+  // Kategori states
+  const [isKategoriDialogOpen, setIsKategoriDialogOpen] = useState(false);
+  const [isKategoriDeleteDialogOpen, setIsKategoriDeleteDialogOpen] = useState(false);
+  const [editingKategori, setEditingKategori] = useState<JenisPenilaian | null>(null);
+  const [deletingKategoriId, setDeletingKategoriId] = useState<string>("");
+  const [kategoriFormData, setKategoriFormData] = useState({
+    nama_kategori: "",
+    bobot: "",
+    deskripsi: "",
+    status: "Aktif",
+  });
 
   const tingkatOptions = [
     { value: "X", label: "Kelas X" },
@@ -278,6 +296,117 @@ export default function BobotPenilaian() {
     });
   };
 
+  // Kategori management functions
+  const resetKategoriForm = () => {
+    setKategoriFormData({
+      nama_kategori: "",
+      bobot: "",
+      deskripsi: "",
+      status: "Aktif",
+    });
+    setEditingKategori(null);
+  };
+
+  const handleOpenKategoriDialog = (category?: JenisPenilaian) => {
+    if (category) {
+      setEditingKategori(category);
+      setKategoriFormData({
+        nama_kategori: category.nama_kategori,
+        bobot: category.bobot?.toString() || "",
+        deskripsi: category.deskripsi || "",
+        status: category.status,
+      });
+    } else {
+      resetKategoriForm();
+    }
+    setIsKategoriDialogOpen(true);
+  };
+
+  const handleCloseKategoriDialog = () => {
+    setIsKategoriDialogOpen(false);
+    resetKategoriForm();
+  };
+
+  const handleSaveKategori = async () => {
+    if (!kategoriFormData.nama_kategori.trim()) {
+      toast({
+        title: "Validasi Gagal",
+        description: "Nama kategori harus diisi",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const bobot = parseFloat(kategoriFormData.bobot) || 0;
+    if (bobot < 0 || bobot > 100) {
+      toast({
+        title: "Validasi Gagal",
+        description: "Bobot harus antara 0-100",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const categoryData = {
+        nama_kategori: kategoriFormData.nama_kategori.trim(),
+        bobot: bobot,
+        deskripsi: kategoriFormData.deskripsi.trim(),
+        status: kategoriFormData.status,
+      };
+
+      if (editingKategori) {
+        await indexedDB.update("jenis_penilaian", editingKategori.id, categoryData);
+        toast({
+          title: "Berhasil",
+          description: "Kategori penilaian berhasil diperbarui",
+        });
+      } else {
+        await indexedDB.insert("jenis_penilaian", categoryData);
+        toast({
+          title: "Berhasil",
+          description: "Kategori penilaian berhasil ditambahkan",
+        });
+      }
+
+      handleCloseKategoriDialog();
+      loadData(activeTahunAjaran);
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan kategori penilaian",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteKategori = (id: string) => {
+    setDeletingKategoriId(id);
+    setIsKategoriDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteKategori = async () => {
+    try {
+      await indexedDB.delete("jenis_penilaian", deletingKategoriId);
+      toast({
+        title: "Berhasil",
+        description: "Kategori penilaian berhasil dihapus",
+      });
+      loadData(activeTahunAjaran);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus kategori penilaian",
+        variant: "destructive",
+      });
+    } finally {
+      setIsKategoriDeleteDialogOpen(false);
+      setDeletingKategoriId("");
+    }
+  };
+
   const handleReset = () => {
     if (selectedClass) {
       loadBobotForClass(selectedClass);
@@ -299,9 +428,18 @@ export default function BobotPenilaian() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Bobot Penilaian"
-        description={`Atur bobot penilaian untuk setiap kategori per kelas - Tahun Ajaran ${activeTahunAjaran}`}
+        title="Bobot & Kategori Penilaian"
+        description={`Kelola kategori dan bobot penilaian - Tahun Ajaran ${activeTahunAjaran}`}
       />
+
+      <Tabs defaultValue="bobot" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="bobot">Pengaturan Bobot</TabsTrigger>
+          <TabsTrigger value="kategori">Kategori Penilaian</TabsTrigger>
+        </TabsList>
+
+        {/* Tab 1: Pengaturan Bobot */}
+        <TabsContent value="bobot" className="space-y-6 mt-6">
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Filter Section */}
@@ -537,6 +675,177 @@ export default function BobotPenilaian() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </TabsContent>
+
+        {/* Tab 2: Kategori Penilaian */}
+        <TabsContent value="kategori" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Daftar Kategori Penilaian</CardTitle>
+                  <CardDescription className="mt-2">
+                    Kelola kategori penilaian seperti PH, UTS, UAS, dll
+                  </CardDescription>
+                </div>
+                <Dialog open={isKategoriDialogOpen} onOpenChange={setIsKategoriDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => handleOpenKategoriDialog()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Tambah Kategori
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingKategori ? "Edit Kategori" : "Tambah Kategori"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="nama_kategori">
+                          Nama Kategori <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="nama_kategori"
+                          placeholder="Contoh: PH1, UTS, UAS"
+                          value={kategoriFormData.nama_kategori}
+                          onChange={(e) =>
+                            setKategoriFormData({ ...kategoriFormData, nama_kategori: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bobot">Bobot Default (%)</Label>
+                        <Input
+                          id="bobot"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="0-100"
+                          value={kategoriFormData.bobot}
+                          onChange={(e) =>
+                            setKategoriFormData({ ...kategoriFormData, bobot: e.target.value })
+                          }
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Bobot default ini dapat disesuaikan per kelas di tab Pengaturan Bobot
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="deskripsi">Deskripsi</Label>
+                        <Textarea
+                          id="deskripsi"
+                          placeholder="Deskripsi kategori penilaian"
+                          value={kategoriFormData.deskripsi}
+                          onChange={(e) =>
+                            setKategoriFormData({ ...kategoriFormData, deskripsi: e.target.value })
+                          }
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={handleCloseKategoriDialog}>
+                        Batal
+                      </Button>
+                      <Button onClick={handleSaveKategori}>Simpan</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nama Kategori</TableHead>
+                      <TableHead>Bobot Default</TableHead>
+                      <TableHead>Deskripsi</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          Belum ada data kategori penilaian
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      categories.map((cat) => (
+                        <TableRow key={cat.id}>
+                          <TableCell className="font-medium">{cat.nama_kategori}</TableCell>
+                          <TableCell>{cat.bobot || 0}%</TableCell>
+                          <TableCell>{cat.deskripsi || "-"}</TableCell>
+                          <TableCell>
+                            <Badge variant={cat.status === "Aktif" ? "default" : "secondary"}>
+                              {cat.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenKategoriDialog(cat)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteKategori(cat.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Info Card untuk Kategori */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>• Kategori penilaian yang dibuat akan tersedia untuk semua kelas</p>
+              <p>• Bobot default dapat disesuaikan per kelas di tab Pengaturan Bobot</p>
+              <p>• Kategori yang tidak aktif tidak akan muncul saat input nilai</p>
+              <p>• Hapus kategori hanya jika tidak ada data nilai yang terkait</p>
+            </CardContent>
+          </Card>
+
+          {/* Delete Kategori Dialog */}
+          <AlertDialog open={isKategoriDeleteDialogOpen} onOpenChange={setIsKategoriDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Hapus Kategori Penilaian</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Apakah Anda yakin ingin menghapus kategori penilaian ini? Tindakan ini tidak
+                  dapat dibatalkan dan akan menghapus semua data nilai yang terkait.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDeleteKategori}>Hapus</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
