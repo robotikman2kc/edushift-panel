@@ -391,6 +391,26 @@ const RekapKehadiranEskul = () => {
           columns.map(col => col.key === 'no' ? index + 1 : (row[col.key] || '-'))
         );
 
+        // Build column styles dynamically
+        const columnStyles: any = {
+          0: { halign: 'center', cellWidth: 10 }, // No
+          1: { halign: 'left' }, // NISN
+          2: { halign: 'left' }, // Nama Siswa
+          3: { halign: 'center' }, // Tingkat
+          4: { halign: 'center' }, // Kelas
+        };
+
+        // Set center alignment for all date columns
+        for (let i = 5; i < 5 + uniqueDates.length; i++) {
+          columnStyles[i] = { halign: 'center' };
+        }
+
+        // Set center alignment for H, S, I, A, Total, % columns (last 6 columns)
+        const lastColumnsStartIndex = 5 + uniqueDates.length;
+        for (let i = lastColumnsStartIndex; i < lastColumnsStartIndex + 6; i++) {
+          columnStyles[i] = { halign: 'center' };
+        }
+
         autoTable(doc, {
           startY: currentY,
           head: [columns.map(col => col.label)],
@@ -410,13 +430,7 @@ const RekapKehadiranEskul = () => {
             lineColor: [0, 0, 0],
             lineWidth: 0.1,
           },
-          columnStyles: {
-            0: { halign: 'center', cellWidth: 10 },
-            1: { halign: 'left' },
-            2: { halign: 'left' },
-            3: { halign: 'center' },
-            4: { halign: 'center' },
-          },
+          columnStyles,
           didDrawPage: (data: any) => {
             // Add page numbers
             const pageCount = doc.getNumberOfPages();
