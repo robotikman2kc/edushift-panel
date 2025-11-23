@@ -112,6 +112,7 @@ const menuItems = [
       { title: "Laporan Kehadiran", url: "/laporan/kehadiran", icon: FileText },
       { title: "Laporan Penilaian", url: "/laporan/penilaian", icon: BarChart3 },
       { title: "Laporan Jurnal Guru", url: "/laporan/jurnal-guru", icon: BookText },
+      { title: "Laporan Ekstrakurikuler", url: "/laporan/ekstrakurikuler", icon: Trophy },
     ],
   },
   {
