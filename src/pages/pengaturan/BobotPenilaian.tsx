@@ -1023,11 +1023,11 @@ export default function BobotPenilaian() {
               {(['A', 'B', 'C', 'D', 'E'] as const).map((grade) => (
                 <div
                   key={grade}
-                  className="flex items-center gap-4 p-4 border rounded-lg"
+                  className="flex items-center gap-4"
                 >
-                  <div className="w-16 flex items-center justify-center">
+                  <Card className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
                     <div 
-                      className={`text-2xl font-bold ${
+                      className={`text-4xl font-bold ${
                         grade === 'A' ? 'text-grade-a' :
                         grade === 'B' ? 'text-grade-b' :
                         grade === 'C' ? 'text-grade-c' :
@@ -1037,7 +1037,7 @@ export default function BobotPenilaian() {
                     >
                       {grade}
                     </div>
-                  </div>
+                  </Card>
                   <div className="flex-1 space-y-2">
                     <Label htmlFor={`${grade}-threshold`}>
                       Threshold (Batas Minimum)
