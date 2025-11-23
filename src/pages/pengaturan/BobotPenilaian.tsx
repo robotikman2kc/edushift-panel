@@ -81,10 +81,28 @@ export default function BobotPenilaian() {
     const initData = async () => {
       const year = await getActiveTahunAjaran();
       setActiveTahunAjaran(year);
-      loadData(year);
+      await loadData(year);
+      await loadLastSelectedFilters();
     };
     initData();
   }, []);
+
+  const loadLastSelectedFilters = async () => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const tingkatSetting = settings.find((s: any) => s.key === "last_selected_tingkat_bobot");
+      const kelasSetting = settings.find((s: any) => s.key === "last_selected_kelas_bobot");
+      
+      if (tingkatSetting?.value) {
+        setSelectedTingkat(tingkatSetting.value);
+      }
+      if (kelasSetting?.value) {
+        setSelectedClass(kelasSetting.value);
+      }
+    } catch (error) {
+      console.error("Error loading last selected filters:", error);
+    }
+  };
 
   useEffect(() => {
     if (selectedTingkat) {
@@ -95,6 +113,11 @@ export default function BobotPenilaian() {
       );
       console.log("Filtered classes:", filtered);
       setFilteredClasses(filtered);
+      
+      // Auto-select first class if available and no class selected yet
+      if (filtered.length > 0 && !selectedClass) {
+        setSelectedClass(filtered[0].id);
+      }
     } else {
       setFilteredClasses([]);
     }
@@ -103,8 +126,51 @@ export default function BobotPenilaian() {
   useEffect(() => {
     if (selectedClass) {
       loadBobotForClass(selectedClass);
+      saveLastSelectedKelas(selectedClass);
     }
   }, [selectedClass, categories]);
+
+  useEffect(() => {
+    if (selectedTingkat) {
+      saveLastSelectedTingkat(selectedTingkat);
+    }
+  }, [selectedTingkat]);
+
+  const saveLastSelectedTingkat = async (tingkat: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_tingkat_bobot");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: tingkat });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_tingkat_bobot",
+          value: tingkat,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving tingkat:", error);
+    }
+  };
+
+  const saveLastSelectedKelas = async (kelasId: string) => {
+    try {
+      const settings = await indexedDB.select("pengaturan");
+      const existing = settings.find((s: any) => s.key === "last_selected_kelas_bobot");
+      
+      if (existing) {
+        await indexedDB.update("pengaturan", existing.id, { value: kelasId });
+      } else {
+        await indexedDB.insert("pengaturan", {
+          key: "last_selected_kelas_bobot",
+          value: kelasId,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving kelas:", error);
+    }
+  };
 
   useEffect(() => {
     const total = Object.values(bobotValues).reduce((sum, value) => sum + (value || 0), 0);
