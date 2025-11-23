@@ -102,6 +102,18 @@ const InputNilaiEskul = () => {
     }));
   };
 
+  const handleSetAllGrades = (grade: string) => {
+    const newGrades: { [key: string]: string } = {};
+    anggotaList.forEach((anggota) => {
+      newGrades[anggota.id] = grade;
+    });
+    setGrades(prev => ({ ...prev, ...newGrades }));
+    toast({
+      title: "Nilai Diset",
+      description: `Semua anggota yang ditampilkan diset nilai ${grade}`,
+    });
+  };
+
   const handleSave = async () => {
     if (!eskul || !activeTahunAjaran) {
       toast({
@@ -436,10 +448,24 @@ const InputNilaiEskul = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Input Nilai</CardTitle>
-          <Button onClick={handleSave} disabled={loading}>
-            <Save className="mr-2 h-4 w-4" />
-            Simpan Semua
-          </Button>
+          <div className="flex gap-2">
+            <Select onValueChange={handleSetAllGrades}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Set Semua Nilai..." />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADE_OPTIONS.map((grade) => (
+                  <SelectItem key={grade} value={grade}>
+                    Set Semua {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleSave} disabled={loading}>
+              <Save className="mr-2 h-4 w-4" />
+              Simpan Semua
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {anggotaList.length === 0 ? (
