@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, AlertCircle, CheckCircle2, RefreshCw, X, Plus, Pencil, Trash2 } from "lucide-react";
+import { Save, AlertCircle, CheckCircle2, RefreshCw, X, Plus, Pencil, Trash2, Info } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import type { Kelas, JenisPenilaian } from "@/lib/indexedDB";
@@ -18,6 +18,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  getGradeThresholds,
+  saveGradeThresholds,
+  validateGradeThresholds,
+  getGradeRange,
+  getLetterGrade,
+  type GradeThreshold
+} from "@/lib/gradeUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,12 +80,12 @@ export default function BobotPenilaian() {
   });
 
   // Grade settings states
-  const [gradeSettings, setGradeSettings] = useState({
-    A: { min: 85, max: 100 },
-    B: { min: 70, max: 84 },
-    C: { min: 55, max: 69 },
-    D: { min: 40, max: 54 },
-    E: { min: 0, max: 39 },
+  const [gradeThresholds, setGradeThresholds] = useState<GradeThreshold>({
+    A: 85,
+    B: 70,
+    C: 55,
+    D: 40,
+    E: 0,
   });
 
   const tingkatOptions = [
@@ -486,69 +494,35 @@ export default function BobotPenilaian() {
   // Grade settings functions
   const loadGradeSettings = async () => {
     try {
-      const settings = await indexedDB.select("pengaturan");
-      const gradeSetting = settings.find((s: any) => s.key === "grade_settings");
-      
-      if (gradeSetting?.value) {
-        setGradeSettings(JSON.parse(gradeSetting.value));
-      }
+      const thresholds = await getGradeThresholds();
+      setGradeThresholds(thresholds);
     } catch (error) {
       console.error("Error loading grade settings:", error);
     }
   };
 
-  const handleGradeChange = (grade: string, field: 'min' | 'max', value: string) => {
+  const handleGradeThresholdChange = (grade: keyof GradeThreshold, value: string) => {
     const numValue = parseFloat(value) || 0;
-    setGradeSettings(prev => ({
+    setGradeThresholds(prev => ({
       ...prev,
-      [grade]: {
-        ...prev[grade as keyof typeof prev],
-        [field]: numValue
-      }
+      [grade]: numValue
     }));
   };
 
   const handleSaveGradeSettings = async () => {
-    // Validation: check overlapping ranges
-    const grades = ['A', 'B', 'C', 'D', 'E'];
-    for (let i = 0; i < grades.length; i++) {
-      const grade = grades[i];
-      const settings = gradeSettings[grade as keyof typeof gradeSettings];
-      
-      if (settings.min > settings.max) {
-        toast({
-          title: "Validasi Gagal",
-          description: `Grade ${grade}: Nilai minimum tidak boleh lebih besar dari maksimum`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (settings.min < 0 || settings.max > 100) {
-        toast({
-          title: "Validasi Gagal",
-          description: `Grade ${grade}: Nilai harus antara 0-100`,
-          variant: "destructive",
-        });
-        return;
-      }
+    // Validate thresholds
+    const validation = validateGradeThresholds(gradeThresholds);
+    if (!validation.valid) {
+      toast({
+        title: "Validasi Gagal",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
-      const settings = await indexedDB.select("pengaturan");
-      const existing = settings.find((s: any) => s.key === "grade_settings");
-      
-      if (existing) {
-        await indexedDB.update("pengaturan", existing.id, {
-          value: JSON.stringify(gradeSettings),
-        });
-      } else {
-        await indexedDB.insert("pengaturan", {
-          key: "grade_settings",
-          value: JSON.stringify(gradeSettings),
-        });
-      }
-
+      await saveGradeThresholds(gradeThresholds);
       toast({
         title: "Berhasil",
         description: "Pengaturan grade berhasil disimpan",
@@ -563,13 +537,13 @@ export default function BobotPenilaian() {
     }
   };
 
-  const handleResetGradeSettings = () => {
-    setGradeSettings({
-      A: { min: 85, max: 100 },
-      B: { min: 70, max: 84 },
-      C: { min: 55, max: 69 },
-      D: { min: 40, max: 54 },
-      E: { min: 0, max: 39 },
+  const handleResetGradeSettings = async () => {
+    setGradeThresholds({
+      A: 85,
+      B: 70,
+      C: 55,
+      D: 40,
+      E: 0,
     });
     toast({
       title: "Reset",
@@ -1023,10 +997,18 @@ export default function BobotPenilaian() {
             <CardHeader>
               <CardTitle>Pengaturan Grade Nilai</CardTitle>
               <CardDescription>
-                Atur rentang nilai untuk setiap grade (berlaku untuk semua kelas)
+                Atur batas minimum (threshold) untuk setiap grade. Sistem akan otomatis menentukan rentang tanpa gap.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Cara kerja:</strong> Nilai akan dikonversi ke grade berdasarkan threshold (≥).
+                  Contoh: jika A=85, maka nilai 84.6 akan mendapat grade B, nilai 85.0 mendapat grade A.
+                </AlertDescription>
+              </Alert>
+
               {(['A', 'B', 'C', 'D', 'E'] as const).map((grade) => (
                 <div
                   key={grade}
@@ -1037,41 +1019,52 @@ export default function BobotPenilaian() {
                       {grade}
                     </div>
                   </div>
-                  <div className="flex-1 grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`${grade}-min`}>Nilai Minimum</Label>
-                      <Input
-                        id={`${grade}-min`}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={gradeSettings[grade].min}
-                        onChange={(e) =>
-                          handleGradeChange(grade, 'min', e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`${grade}-max`}>Nilai Maksimum</Label>
-                      <Input
-                        id={`${grade}-max`}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={gradeSettings[grade].max}
-                        onChange={(e) =>
-                          handleGradeChange(grade, 'max', e.target.value)
-                        }
-                      />
-                    </div>
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor={`${grade}-threshold`}>
+                      Threshold (Batas Minimum)
+                      {grade === 'E' && <span className="text-muted-foreground ml-2">(Harus 0)</span>}
+                    </Label>
+                    <Input
+                      id={`${grade}-threshold`}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={gradeThresholds[grade]}
+                      onChange={(e) =>
+                        handleGradeThresholdChange(grade, e.target.value)
+                      }
+                      disabled={grade === 'E'}
+                    />
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {gradeSettings[grade].min} - {gradeSettings[grade].max}
+                  <div className="w-32 text-right">
+                    <div className="text-sm font-medium">Rentang Nilai</div>
+                    <div className="text-lg font-bold text-primary">
+                      {getGradeRange(grade, gradeThresholds)}
+                    </div>
                   </div>
                 </div>
               ))}
+
+              {/* Preview with example */}
+              <Card className="bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="text-base">Preview Konversi</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 gap-2 text-sm">
+                    {[84.6, 85, 70, 55, 40, 39.9].map((score) => (
+                      <div key={score} className="text-center p-2 bg-background rounded border">
+                        <div className="font-medium">{score}</div>
+                        <div className="text-xs text-muted-foreground">→</div>
+                        <div className="text-lg font-bold text-primary">
+                          {getLetterGrade(score, gradeThresholds)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="flex gap-3 pt-4 border-t">
                 <Button onClick={handleSaveGradeSettings} className="flex-1">
@@ -1096,9 +1089,10 @@ export default function BobotPenilaian() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p>• Pengaturan grade berlaku untuk semua kelas</p>
-              <p>• Nilai minimum tidak boleh lebih besar dari nilai maksimum</p>
-              <p>• Pastikan rentang nilai tidak tumpang tindih antar grade</p>
-              <p>• Nilai default: A (85-100), B (70-84), C (55-69), D (40-54), E (0-39)</p>
+              <p>• Threshold harus urut menurun: A {'>'} B {'>'} C {'>'} D {'>'} E</p>
+              <p>• Grade E harus selalu 0 (nilai di bawah threshold D)</p>
+              <p>• Tidak ada gap dalam sistem ini - setiap nilai pasti masuk ke salah satu grade</p>
+              <p>• Default: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, E {'<'} 40</p>
             </CardContent>
           </Card>
         </TabsContent>
