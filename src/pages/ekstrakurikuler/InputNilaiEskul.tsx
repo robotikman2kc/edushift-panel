@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { localDB, Ekstrakurikuler, AnggotaEskul } from "@/lib/localDB";
+import { eskulDB } from "@/lib/eskulDB";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,7 @@ interface NilaiEskul {
 }
 
 const InputNilaiEskul = () => {
-  const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
+  const [eskul, setEskul] = useState<any>(null);
   const [activeTahunAjaran, setActiveTahunAjaran] = useState<string>("");
   const [selectedSemester, setSelectedSemester] = useState<string>("1");
   const [selectedKelas, setSelectedKelas] = useState<string>("all");
@@ -45,8 +45,8 @@ const InputNilaiEskul = () => {
     }
   }, [eskul, activeTahunAjaran, selectedSemester, selectedKelas]);
 
-  const loadEskulData = () => {
-    const eskuls = localDB.select('ekstrakurikuler');
+  const loadEskulData = async () => {
+    const eskuls = await eskulDB.select('ekstrakurikuler');
     if (eskuls.length > 0) {
       setEskul(eskuls[0]);
     }
@@ -64,22 +64,22 @@ const InputNilaiEskul = () => {
     }
   };
 
-  const loadAnggotaAndGrades = () => {
+  const loadAnggotaAndGrades = async () => {
     if (!eskul) return;
 
-    let anggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+    let anggota = await eskulDB.select('anggota_eskul', (a: any) => 
       a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
     );
 
     // Filter by class if not "all"
     if (selectedKelas !== 'all') {
-      anggota = anggota.filter((a: AnggotaEskul) => 
+      anggota = anggota.filter((a: any) => 
         `${a.tingkat} ${a.nama_kelas}` === selectedKelas
       );
     }
 
     // Load existing grades
-    const nilaiData = localDB.select('nilai_eskul', (n: NilaiEskul) =>
+    const nilaiData = await eskulDB.select('nilai_eskul', (n: any) =>
       n.ekstrakurikuler_id === eskul.id &&
       n.tahun_ajaran_id === activeTahunAjaran &&
       n.semester === selectedSemester
@@ -87,7 +87,7 @@ const InputNilaiEskul = () => {
 
     // Map grades to state
     const gradeMap: { [key: string]: string } = {};
-    nilaiData.forEach((nilai: NilaiEskul) => {
+    nilaiData.forEach((nilai: any) => {
       gradeMap[nilai.anggota_id] = nilai.nilai;
     });
 
@@ -102,7 +102,7 @@ const InputNilaiEskul = () => {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!eskul || !activeTahunAjaran) {
       toast({
         title: "Error",
@@ -118,12 +118,12 @@ const InputNilaiEskul = () => {
       let successCount = 0;
       let errorCount = 0;
 
-      anggotaList.forEach((anggota) => {
+      for (const anggota of anggotaList) {
         const grade = grades[anggota.id];
-        if (!grade) return; // Skip if no grade entered
+        if (!grade) continue; // Skip if no grade entered
 
         // Check if grade already exists
-        const existingGrade = localDB.select('nilai_eskul', (n: NilaiEskul) =>
+        const existingGrade = await eskulDB.select('nilai_eskul', (n: any) =>
           n.anggota_id === anggota.id &&
           n.ekstrakurikuler_id === eskul.id &&
           n.tahun_ajaran_id === activeTahunAjaran &&
@@ -140,7 +140,7 @@ const InputNilaiEskul = () => {
 
         if (existingGrade.length > 0) {
           // Update existing grade
-          const result = localDB.update('nilai_eskul', existingGrade[0].id, nilaiData);
+          const result = await eskulDB.update('nilai_eskul', existingGrade[0].id, nilaiData);
           if (result.error) {
             errorCount++;
           } else {
@@ -148,14 +148,14 @@ const InputNilaiEskul = () => {
           }
         } else {
           // Insert new grade
-          const result = localDB.insert('nilai_eskul', nilaiData);
+          const result = await eskulDB.insert('nilai_eskul', nilaiData);
           if (result.error) {
             errorCount++;
           } else {
             successCount++;
           }
         }
-      });
+      }
 
       if (errorCount > 0) {
         toast({
@@ -324,14 +324,27 @@ const InputNilaiEskul = () => {
     }
   };
 
-  const getUniqueClasses = () => {
+  const getUniqueClasses = async () => {
     if (!eskul) return [];
-    const allAnggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+    const allAnggota = await eskulDB.select('anggota_eskul', (a: any) => 
       a.ekstrakurikuler_id === eskul.id && a.status === 'aktif'
     );
-    const classes = [...new Set(allAnggota.map((a: AnggotaEskul) => `${a.tingkat} ${a.nama_kelas}`))];
+    const classes = [...new Set(allAnggota.map((a: any) => `${a.tingkat} ${a.nama_kelas}`))];
     return classes.sort();
   };
+
+  // Load classes for select
+  const [kelasOptions, setKelasOptions] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const loadKelas = async () => {
+      const classes = await getUniqueClasses();
+      setKelasOptions(classes);
+    };
+    if (eskul) {
+      loadKelas();
+    }
+  }, [eskul]);
 
   if (!eskul) {
     return (
@@ -396,7 +409,7 @@ const InputNilaiEskul = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Kelas</SelectItem>
-                  {getUniqueClasses().map((kelas) => (
+                  {kelasOptions.map((kelas) => (
                     <SelectItem key={kelas} value={kelas}>
                       {kelas}
                     </SelectItem>
@@ -405,7 +418,7 @@ const InputNilaiEskul = () => {
               </Select>
             </div>
           </div>
-          
+
           <div className="mt-4">
             <Button
               className="w-full md:w-auto"
