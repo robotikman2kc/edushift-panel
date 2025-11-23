@@ -54,9 +54,13 @@ const InputNilaiEskul = () => {
   const loadActiveTahunAjaran = () => {
     // Get active academic year from settings
     const settings = localDB.select('pengaturan');
+    console.log('Settings:', settings);
+    
     if (settings.length > 0 && settings[0].tahun_ajaran_id) {
       const tahunAjaranId = settings[0].tahun_ajaran_id;
+      console.log('Tahun Ajaran ID from settings:', tahunAjaranId);
       const tahunAjaranData = localDB.selectById('tahun_ajaran', tahunAjaranId);
+      console.log('Tahun Ajaran Data:', tahunAjaranData);
       if (tahunAjaranData) {
         setActiveTahunAjaran(tahunAjaranData);
         return;
@@ -64,7 +68,15 @@ const InputNilaiEskul = () => {
     }
     
     // Fallback: get first active tahun ajaran
-    const tahunAjaranList = localDB.select('tahun_ajaran', (ta: any) => ta.status === 'aktif');
+    const allTahunAjaran = localDB.select('tahun_ajaran');
+    console.log('All Tahun Ajaran:', allTahunAjaran);
+    
+    const tahunAjaranList = localDB.select('tahun_ajaran', (ta: any) => {
+      console.log('Checking tahun ajaran:', ta, 'status:', ta.status);
+      return ta.status === 'aktif';
+    });
+    console.log('Active Tahun Ajaran List:', tahunAjaranList);
+    
     if (tahunAjaranList.length > 0) {
       setActiveTahunAjaran(tahunAjaranList[0]);
     }
