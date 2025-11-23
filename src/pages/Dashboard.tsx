@@ -388,7 +388,7 @@ const Dashboard = () => {
                         onClick={() => navigate('/jurnal/jurnal-guru')} 
                         size="sm"
                         variant="outline"
-                        className="mt-2 h-7 text-xs bg-yellow-100 dark:bg-yellow-900 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-200 dark:hover:bg-yellow-800"
+                        className="mt-2 h-7 text-xs bg-background hover:bg-muted"
                       >
                         <FileText className="h-3 w-3 mr-1.5" />
                         Isi Jurnal Guru
