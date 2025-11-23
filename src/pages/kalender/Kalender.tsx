@@ -27,6 +27,8 @@ interface CalendarData {
   hasNotes: boolean;
   noteColor?: string;
   noteText?: string;
+  isPeriodeNonPembelajaran: boolean;
+  periodeNama?: string;
 }
 
 export default function Kalender() {
@@ -182,6 +184,7 @@ export default function Kalender() {
               hasSchedule: false,
               isHoliday: false,
               hasNotes: false,
+              isPeriodeNonPembelajaran: false,
             };
             existing.hasSchedule = true;
             dataMap.set(dateKey, existing);
@@ -200,6 +203,7 @@ export default function Kalender() {
           hasSchedule: false,
           isHoliday: false,
           hasNotes: false,
+          isPeriodeNonPembelajaran: false,
         };
         existing.hasAgenda = true;
         dataMap.set(agenda.tanggal, existing);
@@ -215,6 +219,7 @@ export default function Kalender() {
           hasSchedule: false,
           isHoliday: false,
           hasNotes: false,
+          isPeriodeNonPembelajaran: false,
         };
         existing.hasAttendance = true;
         dataMap.set(att.tanggal, existing);
@@ -230,6 +235,7 @@ export default function Kalender() {
           hasSchedule: false,
           isHoliday: false,
           hasNotes: false,
+          isPeriodeNonPembelajaran: false,
         };
         existing.hasJournal = true;
         dataMap.set(journal.tanggal, existing);
@@ -245,6 +251,7 @@ export default function Kalender() {
           hasSchedule: false,
           isHoliday: false,
           hasNotes: false,
+          isPeriodeNonPembelajaran: false,
         };
         existing.isHoliday = true;
         existing.holidayName = holiday.nama;
@@ -261,11 +268,43 @@ export default function Kalender() {
           hasSchedule: false,
           isHoliday: false,
           hasNotes: false,
+          isPeriodeNonPembelajaran: false,
         };
         existing.hasNotes = true;
         existing.noteColor = (note as any).warna || "bg-purple-500";
         existing.noteText = note.catatan;
         dataMap.set(note.tanggal, existing);
+      });
+
+      // Process periode non pembelajaran - only on weekdays
+      sortedPeriode.forEach((periode) => {
+        const startDate = new Date(periode.tanggal_mulai);
+        const endDate = new Date(periode.tanggal_selesai);
+        
+        // Iterate through each day in the periode
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          const dayOfWeek = currentDate.getDay();
+          // Only mark weekdays (1 = Monday to 5 = Friday)
+          if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            const dateKey = format(currentDate, "yyyy-MM-dd");
+            const existing = dataMap.get(dateKey) || {
+              date: dateKey,
+              hasAgenda: false,
+              hasAttendance: false,
+              hasJournal: false,
+              hasSchedule: false,
+              isHoliday: false,
+              hasNotes: false,
+              isPeriodeNonPembelajaran: false,
+            };
+            existing.isPeriodeNonPembelajaran = true;
+            existing.periodeNama = periode.nama;
+            dataMap.set(dateKey, existing);
+          }
+          // Move to next day
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
       });
 
       // Mark all Sundays as holidays
@@ -281,6 +320,7 @@ export default function Kalender() {
             hasSchedule: false,
             isHoliday: false,
             hasNotes: false,
+            isPeriodeNonPembelajaran: false,
           };
           existing.isHoliday = true;
           if (!existing.holidayName) {
@@ -563,6 +603,10 @@ export default function Kalender() {
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded bg-red-500" />
               <span>Hari Libur</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-orange-500" />
+              <span>Periode Non-Pembelajaran</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded bg-blue-500" />

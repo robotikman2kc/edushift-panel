@@ -15,6 +15,8 @@ interface CalendarDayProps {
   hasNotes?: boolean;
   noteColor?: string;
   noteText?: string;
+  isPeriodeNonPembelajaran?: boolean;
+  periodeNama?: string;
   onClick: () => void;
 }
 
@@ -32,6 +34,8 @@ export function CalendarDay({
   hasNotes = false,
   noteColor,
   noteText,
+  isPeriodeNonPembelajaran = false,
+  periodeNama,
   onClick,
 }: CalendarDayProps) {
   const dayNumber = format(date, "d");
@@ -47,6 +51,7 @@ export function CalendarDay({
         !isCurrentMonth && "bg-muted/20 text-muted-foreground",
         isToday && "bg-primary/10 font-semibold",
         isHoliday && !hasNotes && "bg-red-50 dark:bg-red-950",
+        isPeriodeNonPembelajaran && !isHoliday && !hasNotes && "bg-orange-50 dark:bg-orange-950",
         hasNotes && noteColor,
         isSelected && "ring-2 ring-inset ring-primary"
       )}
@@ -73,6 +78,12 @@ export function CalendarDay({
         {isHoliday && !hasNotes && (
           <div className="text-[10px] text-red-600 dark:text-red-400 font-medium mb-1 line-clamp-2">
             {holidayName}
+          </div>
+        )}
+        
+        {isPeriodeNonPembelajaran && !isHoliday && !hasNotes && (
+          <div className="text-[10px] text-orange-600 dark:text-orange-400 font-medium mb-1 line-clamp-2">
+            {periodeNama}
           </div>
         )}
         

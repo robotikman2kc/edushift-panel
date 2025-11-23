@@ -12,6 +12,8 @@ interface CalendarData {
   hasNotes: boolean;
   noteColor?: string;
   noteText?: string;
+  isPeriodeNonPembelajaran: boolean;
+  periodeNama?: string;
 }
 
 interface CalendarGridProps {
@@ -54,6 +56,7 @@ export function CalendarGrid({ currentDate, calendarData, selectedDate, onDateCl
             hasSchedule: false,
             isHoliday: false,
             hasNotes: false,
+            isPeriodeNonPembelajaran: false,
           };
 
           return (
@@ -72,6 +75,8 @@ export function CalendarGrid({ currentDate, calendarData, selectedDate, onDateCl
               hasNotes={dayData.hasNotes}
               noteColor={dayData.noteColor}
               noteText={dayData.noteText}
+              isPeriodeNonPembelajaran={dayData.isPeriodeNonPembelajaran}
+              periodeNama={dayData.periodeNama}
               onClick={() => onDateClick(day)}
             />
           );
