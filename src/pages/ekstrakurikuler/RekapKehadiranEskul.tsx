@@ -14,10 +14,28 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const RekapKehadiranEskul = () => {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
-  const currentMonth = new Date().getMonth().toString();
-  const [startMonth, setStartMonth] = useState<string>(currentMonth);
-  const [endMonth, setEndMonth] = useState<string>(currentMonth);
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  
+  // Load saved filters from localStorage
+  const getSavedFilters = () => {
+    try {
+      const saved = localStorage.getItem('eskulRekapFilters');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading saved filters:', error);
+    }
+    return {
+      startMonth: new Date().getMonth().toString(),
+      endMonth: new Date().getMonth().toString(),
+      selectedYear: new Date().getFullYear().toString()
+    };
+  };
+  
+  const savedFilters = getSavedFilters();
+  const [startMonth, setStartMonth] = useState<string>(savedFilters.startMonth);
+  const [endMonth, setEndMonth] = useState<string>(savedFilters.endMonth);
+  const [selectedYear, setSelectedYear] = useState<string>(savedFilters.selectedYear);
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   const [emptyMonths, setEmptyMonths] = useState<string[]>([]);
@@ -50,6 +68,15 @@ const RekapKehadiranEskul = () => {
       loadPreviewData();
     }
   }, [startMonth, endMonth, selectedYear, eskul]);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('eskulRekapFilters', JSON.stringify({
+      startMonth,
+      endMonth,
+      selectedYear
+    }));
+  }, [startMonth, endMonth, selectedYear]);
 
   const loadData = () => {
     const eskuls = localDB.select('ekstrakurikuler');
