@@ -238,7 +238,7 @@ export function DayDetailPanel({
             variant="outline" 
             size="sm" 
             className="w-full justify-start"
-            onClick={() => navigate("/kehadiran/input")}
+            onClick={() => navigate("/kehadiran/input-kehadiran")}
           >
             <Users className="h-4 w-4 mr-2" />
             Input Kehadiran
@@ -247,7 +247,7 @@ export function DayDetailPanel({
             variant="outline" 
             size="sm" 
             className="w-full justify-start"
-            onClick={() => navigate("/jurnal")}
+            onClick={() => navigate("/jurnal/jurnal-guru")}
           >
             <FileText className="h-4 w-4 mr-2" />
             Tulis Jurnal
