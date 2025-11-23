@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,29 +7,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { localDB, KehadiranEskul, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
-import { Save, FileDown } from "lucide-react";
+import { Save, FileDown, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function KehadiranEskulPage() {
-  const [ekstrakurikulers] = useState<Ekstrakurikuler[]>(
-    localDB.select('ekstrakurikuler', (e: Ekstrakurikuler) => e.status === 'aktif')
-  );
-  const [selectedEskul, setSelectedEskul] = useState<string>("");
+  const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
+  const [anggotaEskul, setAnggotaEskul] = useState<AnggotaEskul[]>([]);
   const [tanggal, setTanggal] = useState<string>(new Date().toISOString().split('T')[0]);
   const [kehadiranData, setKehadiranData] = useState<Record<string, { status: string; keterangan: string }>>({});
 
-  const anggotaEskul = selectedEskul 
-    ? localDB.select('anggota_eskul', (a: AnggotaEskul) => 
-        a.ekstrakurikuler_id === selectedEskul && a.status === 'aktif'
-      )
-    : [];
+  useEffect(() => {
+    loadEskulData();
+  }, []);
+
+  useEffect(() => {
+    if (eskul && tanggal) {
+      loadKehadiranData();
+    }
+  }, [eskul, tanggal]);
+
+  const loadEskulData = () => {
+    const eskuls = localDB.select('ekstrakurikuler');
+    if (eskuls.length > 0) {
+      const eskulData = eskuls[0];
+      setEskul(eskulData);
+      
+      // Load anggota aktif
+      const anggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+        a.ekstrakurikuler_id === eskulData.id && a.status === 'aktif'
+      );
+      setAnggotaEskul(anggota);
+    } else {
+      setEskul(null);
+      setAnggotaEskul([]);
+    }
+  };
 
   const loadKehadiranData = () => {
-    if (!selectedEskul || !tanggal) return;
+    if (!eskul || !tanggal) return;
     
     const existingKehadiran = localDB.select('kehadiran_eskul', (k: KehadiranEskul) => 
-      k.ekstrakurikuler_id === selectedEskul && k.tanggal === tanggal
+      k.ekstrakurikuler_id === eskul.id && k.tanggal === tanggal
     );
 
     const newData: Record<string, { status: string; keterangan: string }> = {};
@@ -58,14 +77,14 @@ export default function KehadiranEskulPage() {
   };
 
   const handleSimpan = () => {
-    if (!selectedEskul || !tanggal) {
-      toast.error("Pilih ekstrakurikuler dan tanggal terlebih dahulu");
+    if (!eskul || !tanggal) {
+      toast.error("Data tidak lengkap");
       return;
     }
 
     // Delete existing kehadiran for this date
     const existingKehadiran = localDB.select('kehadiran_eskul', (k: KehadiranEskul) => 
-      k.ekstrakurikuler_id === selectedEskul && k.tanggal === tanggal
+      k.ekstrakurikuler_id === eskul.id && k.tanggal === tanggal
     );
     existingKehadiran.forEach((k: KehadiranEskul) => {
       localDB.delete('kehadiran_eskul', k.id);
@@ -75,7 +94,7 @@ export default function KehadiranEskulPage() {
     let successCount = 0;
     Object.entries(kehadiranData).forEach(([anggotaId, data]) => {
       const result = localDB.insert('kehadiran_eskul', {
-        ekstrakurikuler_id: selectedEskul,
+        ekstrakurikuler_id: eskul.id,
         anggota_id: anggotaId,
         tanggal: tanggal,
         status_kehadiran: data.status,
@@ -91,74 +110,46 @@ export default function KehadiranEskulPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      hadir: "default",
-      sakit: "secondary",
-      izin: "secondary",
-      alpha: "destructive"
-    };
-    return <Badge variant={variants[status] || "default"}>{status.toUpperCase()}</Badge>;
-  };
-
   const columns = [
-    {
-      key: "no",
-      label: "No"
-    },
-    {
-      key: "nisn",
-      label: "NISN"
-    },
-    {
-      key: "nama_siswa",
-      label: "Nama Siswa"
-    },
-    {
-      key: "tingkat",
-      label: "Tingkat"
-    },
-    {
-      key: "nama_kelas",
-      label: "Kelas"
-    },
-    {
-      key: "status_kehadiran",
-      label: "Status Kehadiran"
-    },
-    {
-      key: "keterangan",
-      label: "Keterangan"
-    }
+    { key: "no", label: "No" },
+    { key: "nisn", label: "NISN" },
+    { key: "nama_siswa", label: "Nama Siswa" },
+    { key: "tingkat", label: "Tingkat" },
+    { key: "nama_kelas", label: "Kelas" },
+    { key: "status_kehadiran", label: "Status Kehadiran" },
+    { key: "keterangan", label: "Keterangan" }
   ];
+
+  if (!eskul) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Kehadiran Ekstrakurikuler"
+          description="Input kehadiran anggota ekstrakurikuler"
+        />
+        <Card className="p-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Silakan buat pengaturan ekstrakurikuler terlebih dahulu di menu "Kelola Ekstrakurikuler"
+            </AlertDescription>
+          </Alert>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Kehadiran Ekstrakurikuler"
-        description="Input kehadiran anggota ekstrakurikuler"
+        title={`Kehadiran - ${eskul.nama_eskul}`}
+        description={`Jadwal: ${eskul.hari_pertemuan}, ${eskul.jam_pertemuan}`}
       />
 
       <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid gap-4 mb-6 max-w-xs">
           <div className="grid gap-2">
-            <Label htmlFor="ekstrakurikuler">Ekstrakurikuler</Label>
-            <Select value={selectedEskul} onValueChange={setSelectedEskul}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih ekstrakurikuler" />
-              </SelectTrigger>
-              <SelectContent>
-                {ekstrakurikulers.map((eskul) => (
-                  <SelectItem key={eskul.id} value={eskul.id}>
-                    {eskul.nama_eskul}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="tanggal">Tanggal</Label>
+            <Label htmlFor="tanggal">Tanggal Pertemuan</Label>
             <Input
               id="tanggal"
               type="date"
@@ -166,15 +157,9 @@ export default function KehadiranEskulPage() {
               onChange={(e) => setTanggal(e.target.value)}
             />
           </div>
-
-          <div className="flex items-end">
-            <Button onClick={loadKehadiranData} disabled={!selectedEskul || !tanggal} className="w-full">
-              Tampilkan Data
-            </Button>
-          </div>
         </div>
 
-        {anggotaEskul.length > 0 && (
+        {anggotaEskul.length > 0 ? (
           <>
             <Table>
               <TableHeader>
@@ -237,11 +222,9 @@ export default function KehadiranEskulPage() {
               </Button>
             </div>
           </>
-        )}
-
-        {selectedEskul && tanggal && anggotaEskul.length === 0 && (
+        ) : (
           <div className="text-center py-8 text-muted-foreground">
-            Tidak ada anggota aktif untuk ekstrakurikuler ini
+            Belum ada anggota aktif yang terdaftar
           </div>
         )}
       </Card>
