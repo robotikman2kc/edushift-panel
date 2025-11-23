@@ -13,6 +13,22 @@ export function analyzeLocalStorage(): CleanupItem[] {
   
   // Keys that are actively used and should NOT be removed
   const activeKeys = [
+    'pdfFormatSettings',
+    'theme',
+    'userProfile',
+    'quickMenuItems',
+    'notificationSettings',
+    'lastBackupDate',
+    'selectedDate',
+    'authSession',
+  ];
+  
+  // Keys that are no longer used (ALL moved to IndexedDB)
+  const deprecatedKeys = [
+    'localdb_ekstrakurikuler',
+    'localdb_anggota_eskul',
+    'localdb_kehadiran_eskul',
+    'localdb_nilai_eskul',
     'localdb_users',
     'localdb_guru',
     'localdb_mata_pelajaran',
@@ -27,22 +43,10 @@ export function analyzeLocalStorage(): CleanupItem[] {
     'localdb_tahun_ajaran',
     'localdb_nilai',
     'localdb_kategori_nilai',
-    'pdfFormatSettings',
-    'theme',
-    'userProfile',
-    'quickMenuItems',
-    'notificationSettings',
-    'lastBackupDate',
-    'selectedDate',
-    'authSession',
-  ];
-  
-  // Keys that are no longer used (moved to IndexedDB)
-  const deprecatedKeys = [
-    'localdb_ekstrakurikuler',
-    'localdb_anggota_eskul',
-    'localdb_kehadiran_eskul',
-    'localdb_nilai_eskul',
+    'localdb_agenda_mengajar',
+    'localdb_catatan_kalender',
+    'localdb_hari_libur',
+    'localdb_activity_log',
   ];
 
   // Keys that might be old/unused
@@ -50,6 +54,7 @@ export function analyzeLocalStorage(): CleanupItem[] {
     'localdb_backup', // Old backup format
     'migrationCompleted', // Migration flag
     'needsMigration', // Migration flag
+    'eskulMigrationCompleted', // Eskul migration flag
   ];
 
   for (let i = 0; i < localStorage.length; i++) {
@@ -113,35 +118,40 @@ export function analyzeLocalStorage(): CleanupItem[] {
 
 function getKeyDescription(key: string): string {
   const descriptions: Record<string, string> = {
-    // Deprecated keys (moved to IndexedDB)
+    // ALL deprecated keys (moved to IndexedDB)
     'localdb_ekstrakurikuler': 'Data ekstrakurikuler (sudah di IndexedDB)',
     'localdb_anggota_eskul': 'Data anggota eskul (sudah di IndexedDB)',
     'localdb_kehadiran_eskul': 'Data kehadiran eskul (sudah di IndexedDB)',
     'localdb_nilai_eskul': 'Data nilai eskul (sudah di IndexedDB)',
+    'localdb_users': 'Data pengguna (sudah di IndexedDB)',
+    'localdb_guru': 'Data guru (sudah di IndexedDB)',
+    'localdb_mata_pelajaran': 'Data mata pelajaran (sudah di IndexedDB)',
+    'localdb_kelas': 'Data kelas (sudah di IndexedDB)',
+    'localdb_siswa': 'Data siswa (sudah di IndexedDB)',
+    'localdb_jenis_kegiatan': 'Jenis kegiatan jurnal (sudah di IndexedDB)',
+    'localdb_jurnal': 'Jurnal guru (sudah di IndexedDB)',
+    'localdb_kehadiran': 'Kehadiran siswa (sudah di IndexedDB)',
+    'localdb_jadwal_pelajaran': 'Jadwal pelajaran (sudah di IndexedDB)',
+    'localdb_jam_pelajaran': 'Jam pelajaran (sudah di IndexedDB)',
+    'localdb_pengaturan': 'Pengaturan aplikasi (sudah di IndexedDB)',
+    'localdb_tahun_ajaran': 'Tahun ajaran (sudah di IndexedDB)',
+    'localdb_nilai': 'Data nilai siswa (sudah di IndexedDB)',
+    'localdb_kategori_nilai': 'Kategori penilaian (sudah di IndexedDB)',
+    'localdb_agenda_mengajar': 'Agenda mengajar (sudah di IndexedDB)',
+    'localdb_catatan_kalender': 'Catatan kalender (sudah di IndexedDB)',
+    'localdb_hari_libur': 'Hari libur (sudah di IndexedDB)',
+    'localdb_activity_log': 'Log aktivitas (sudah di IndexedDB)',
     
     // Old/migration related
-    'localdb_backup': 'Backup lama',
-    'migrationCompleted': 'Flag migrasi selesai',
-    'needsMigration': 'Flag perlu migrasi',
+    'localdb_backup': 'Backup lama (tidak terpakai)',
+    'migrationCompleted': 'Flag migrasi (tidak terpakai)',
+    'needsMigration': 'Flag migrasi (tidak terpakai)',
+    'eskulMigrationCompleted': 'Flag migrasi eskul (tidak terpakai)',
     
     // Active data (should keep)
-    'localdb_users': 'Data pengguna (AKTIF)',
-    'localdb_guru': 'Data guru (AKTIF)',
-    'localdb_mata_pelajaran': 'Data mata pelajaran (AKTIF)',
-    'localdb_kelas': 'Data kelas (AKTIF)',
-    'localdb_siswa': 'Data siswa (AKTIF)',
-    'localdb_jenis_kegiatan': 'Jenis kegiatan jurnal (AKTIF)',
-    'localdb_jurnal': 'Jurnal guru (AKTIF)',
-    'localdb_kehadiran': 'Kehadiran siswa (AKTIF)',
-    'localdb_jadwal_pelajaran': 'Jadwal pelajaran (AKTIF)',
-    'localdb_jam_pelajaran': 'Jam pelajaran (AKTIF)',
-    'localdb_pengaturan': 'Pengaturan aplikasi (AKTIF)',
-    'localdb_tahun_ajaran': 'Tahun ajaran (AKTIF)',
-    'localdb_nilai': 'Data nilai siswa (AKTIF)',
-    'localdb_kategori_nilai': 'Kategori penilaian (AKTIF)',
     'pdfFormatSettings': 'Pengaturan format PDF (AKTIF)',
     'theme': 'Tema aplikasi (AKTIF)',
-    'userProfile': 'Profil user aktif (AKTIF)',
+    'userProfile': 'Profil user (AKTIF)',
     'quickMenuItems': 'Menu cepat (AKTIF)',
     'notificationSettings': 'Pengaturan notifikasi (AKTIF)',
     'lastBackupDate': 'Tanggal backup terakhir (AKTIF)',
@@ -151,7 +161,7 @@ function getKeyDescription(key: string): string {
 
   // Check for table_sort_ prefix
   if (key.startsWith('table_sort_')) {
-    return `Pengaturan sorting: ${key.replace('table_sort_', '')}`;
+    return `Pengaturan sorting tabel (AKTIF)`;
   }
   
   return descriptions[key] || 'Data tidak dikenal (periksa sebelum hapus)';
