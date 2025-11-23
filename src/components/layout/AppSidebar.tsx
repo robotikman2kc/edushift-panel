@@ -264,6 +264,15 @@ export function AppSidebar() {
           
           console.log('AppSidebar loading profile:', parsed);
           
+          // IMPORTANT: Clean up invalid blob:// URLs from localStorage
+          if (parsed.avatar_url && parsed.avatar_url.startsWith('blob:')) {
+            console.log('⚠️ Found invalid blob URL in localStorage, removing:', parsed.avatar_url);
+            parsed.avatar_url = '';
+            localStorage.setItem('userProfile', JSON.stringify(parsed));
+            setUserProfile(parsed);
+            return;
+          }
+          
           // Selalu load avatar dari OPFS jika menggunakan opfs://
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
             console.log('AppSidebar loading avatar from OPFS:', parsed.avatar_url);

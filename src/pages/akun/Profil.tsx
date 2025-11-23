@@ -65,6 +65,15 @@ const Profil = () => {
       try {
         const parsed = JSON.parse(savedProfile);
         
+        // IMPORTANT: Clean up invalid blob:// URLs from localStorage
+        if (parsed.avatar_url && parsed.avatar_url.startsWith('blob:')) {
+          console.log('⚠️ Found invalid blob URL in localStorage, removing:', parsed.avatar_url);
+          parsed.avatar_url = '';
+          localStorage.setItem('userProfile', JSON.stringify(parsed));
+          setProfile(parsed);
+          return;
+        }
+        
         // Selalu load avatar dari OPFS jika menggunakan opfs://
         if (parsed.avatar_url) {
           if (parsed.avatar_url.startsWith('opfs://')) {
