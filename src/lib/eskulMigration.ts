@@ -68,27 +68,16 @@ export async function isEskulMigrationNeeded(): Promise<boolean> {
     const localKehadiran = localDB.select('kehadiran_eskul');
     const localNilai = localDB.select('nilai_eskul');
     
-    console.log('LocalStorage anggota_eskul count:', localAnggota.length);
-    console.log('LocalStorage kehadiran_eskul count:', localKehadiran.length);
-    console.log('LocalStorage nilai_eskul count:', localNilai.length);
-    
     const indexedAnggota = await indexedDB.select('anggota_eskul');
     const indexedKehadiran = await indexedDB.select('kehadiran_eskul');
     const indexedNilai = await indexedDB.select('nilai_eskul');
     
-    console.log('IndexedDB anggota_eskul count:', indexedAnggota.length);
-    console.log('IndexedDB kehadiran_eskul count:', indexedKehadiran.length);
-    console.log('IndexedDB nilai_eskul count:', indexedNilai.length);
-    
     // Migration needed if any localStorage table has data but IndexedDB doesn't
-    const needsMigration = (
+    return (
       (localAnggota.length > 0 && indexedAnggota.length === 0) ||
       (localKehadiran.length > 0 && indexedKehadiran.length === 0) ||
       (localNilai.length > 0 && indexedNilai.length === 0)
     );
-    
-    console.log('Migration needed?', needsMigration);
-    return needsMigration;
   } catch (error) {
     console.error('Error checking migration status:', error);
     return false;
