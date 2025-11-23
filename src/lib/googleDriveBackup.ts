@@ -245,12 +245,14 @@ class GoogleDriveBackup {
     try {
       const settings = await this.getSettings();
       
+      // Don't auto backup if webhook URL is not configured
       if (!settings.webhookUrl) {
         return false;
       }
 
+      // Don't auto backup if no previous backup (user must manually trigger first backup)
       if (!settings.lastBackupDate) {
-        return true; // Never backed up before
+        return false; // Changed from true to false - require manual first backup
       }
 
       const now = new Date();
