@@ -93,7 +93,10 @@ const RekapKehadiranEskul = () => {
       k.tanggal <= endDateStr
     );
 
-    // Calculate summary for each member
+    // Get unique dates from attendance records and sort them
+    const uniqueDates = [...new Set(kehadiran.map((k: any) => k.tanggal))].sort();
+
+    // Calculate summary for each member with date-based attendance
     const summary = anggota.map((member: AnggotaEskul) => {
       const memberAttendance = kehadiran.filter((k: any) => k.anggota_id === member.id);
       
@@ -104,17 +107,26 @@ const RekapKehadiranEskul = () => {
       const total = memberAttendance.length;
       const persentase = total > 0 ? ((hadir / total) * 100).toFixed(1) : "0.0";
 
+      // Create date-based attendance object
+      const dateAttendance: any = {};
+      uniqueDates.forEach(date => {
+        const record = memberAttendance.find((k: any) => k.tanggal === date);
+        dateAttendance[date] = record ? record.status_kehadiran : '-';
+      });
+
       return {
         nisn: member.nisn,
         nama_siswa: member.nama_siswa,
         tingkat: member.tingkat,
         nama_kelas: member.nama_kelas,
+        ...dateAttendance,
         hadir,
         sakit,
         izin,
         alpha,
         total,
-        persentase: `${persentase}%`
+        persentase: `${persentase}%`,
+        _dates: uniqueDates // Store dates for reference
       };
     });
 
@@ -149,15 +161,24 @@ const RekapKehadiranEskul = () => {
         ? `${startMonthName} ${selectedYear}`
         : `${startMonthName} - ${endMonthName} ${selectedYear}`;
 
+      // Get unique dates from preview data
+      const uniqueDates = previewData[0]?._dates || [];
+      
       const columns = [
         { key: "nisn", label: "NISN" },
         { key: "nama_siswa", label: "Nama Siswa" },
         { key: "tingkat", label: "Tingkat" },
         { key: "nama_kelas", label: "Kelas" },
-        { key: "hadir", label: "Hadir", align: 'center' as const },
-        { key: "sakit", label: "Sakit", align: 'center' as const },
-        { key: "izin", label: "Izin", align: 'center' as const },
-        { key: "alpha", label: "Alpha", align: 'center' as const },
+        // Add date columns
+        ...uniqueDates.map((date: string) => ({
+          key: date,
+          label: new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' }),
+          align: 'center' as const
+        })),
+        { key: "hadir", label: "H", align: 'center' as const },
+        { key: "sakit", label: "S", align: 'center' as const },
+        { key: "izin", label: "I", align: 'center' as const },
+        { key: "alpha", label: "A", align: 'center' as const },
         { key: "total", label: "Total", align: 'center' as const },
         { key: "persentase", label: "%", align: 'center' as const },
       ];
@@ -321,10 +342,15 @@ const RekapKehadiranEskul = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-2">No</th>
-                      <th className="text-left p-2">NISN</th>
-                      <th className="text-left p-2">Nama</th>
+                      <th className="text-left p-2 sticky left-0 bg-background">No</th>
+                      <th className="text-left p-2 sticky left-12 bg-background">NISN</th>
+                      <th className="text-left p-2 sticky left-32 bg-background">Nama</th>
                       <th className="text-left p-2">Kelas</th>
+                      {previewData[0]?._dates?.map((date: string) => (
+                        <th key={date} className="text-center p-2 whitespace-nowrap">
+                          {new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })}
+                        </th>
+                      ))}
                       <th className="text-center p-2">H</th>
                       <th className="text-center p-2">S</th>
                       <th className="text-center p-2">I</th>
@@ -336,10 +362,27 @@ const RekapKehadiranEskul = () => {
                   <tbody>
                     {previewData.map((item, index) => (
                       <tr key={index} className="border-b hover:bg-muted/50">
-                        <td className="p-2">{index + 1}</td>
-                        <td className="p-2">{item.nisn}</td>
-                        <td className="p-2">{item.nama_siswa}</td>
+                        <td className="p-2 sticky left-0 bg-background">{index + 1}</td>
+                        <td className="p-2 sticky left-12 bg-background">{item.nisn}</td>
+                        <td className="p-2 sticky left-32 bg-background">{item.nama_siswa}</td>
                         <td className="p-2">{item.tingkat} {item.nama_kelas}</td>
+                        {item._dates?.map((date: string) => {
+                          const status = item[date];
+                          const statusShort = status === 'Hadir' ? 'H' : status === 'Sakit' ? 'S' : status === 'Izin' ? 'I' : status === 'Alpha' ? 'A' : '-';
+                          return (
+                            <td key={date} className="p-2 text-center">
+                              <span className={`font-medium ${
+                                status === 'Hadir' ? 'text-green-600' :
+                                status === 'Sakit' ? 'text-yellow-600' :
+                                status === 'Izin' ? 'text-blue-600' :
+                                status === 'Alpha' ? 'text-red-600' :
+                                'text-muted-foreground'
+                              }`}>
+                                {statusShort}
+                              </span>
+                            </td>
+                          );
+                        })}
                         <td className="p-2 text-center">{item.hadir}</td>
                         <td className="p-2 text-center">{item.sakit}</td>
                         <td className="p-2 text-center">{item.izin}</td>
