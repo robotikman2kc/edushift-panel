@@ -115,6 +115,10 @@ export default function Kalender() {
         (p) => p.tanggal_selesai >= monthStartStr && p.tanggal_mulai <= monthEndStr
       );
 
+      console.log('Total periode di database:', periode.length);
+      console.log('Periode setelah filter:', filteredPeriode.length);
+      console.log('Detail periode:', filteredPeriode);
+
       setCalendarNotes(filteredNotes);
       setHariLibur(filteredHolidays);
       setPeriodeNonPembelajaran(filteredPeriode);
@@ -410,6 +414,7 @@ export default function Kalender() {
       if (periodeData.id) {
         // Update existing periode
         await indexedDB.update("periode_non_pembelajaran", periodeData.id, periodeData);
+        console.log('Periode updated:', periodeData);
         toast({
           title: "Periode Diperbarui",
           description: "Periode non-pembelajaran berhasil diperbarui",
@@ -417,6 +422,7 @@ export default function Kalender() {
       } else {
         // Create new periode
         const result = await indexedDB.insert("periode_non_pembelajaran", periodeData);
+        console.log('Periode inserted:', result);
         
         if (result.error) {
           throw new Error(result.error);
@@ -429,8 +435,9 @@ export default function Kalender() {
       }
 
       setEditingPeriode(null);
-      fetchData();
+      await fetchData(); // Ensure fetchData completes
     } catch (error) {
+      console.error('Error saving periode:', error);
       toast({
         title: "Error",
         description: "Gagal menyimpan periode",
