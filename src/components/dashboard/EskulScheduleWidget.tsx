@@ -49,7 +49,7 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
           {todayEskul.map((eskul, index) => (
             <div 
               key={index}
-              className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:shadow-md"
+              className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors duration-200 cursor-pointer hover:shadow-md"
               onClick={() => navigate('/ekstrakurikuler/kehadiran')}
             >
               <div className="flex items-start justify-between gap-3">
