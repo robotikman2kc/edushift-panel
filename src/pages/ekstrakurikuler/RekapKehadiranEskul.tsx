@@ -316,12 +316,16 @@ const RekapKehadiranEskul = () => {
           styles: {
             fontSize: 8,
             cellPadding: 2,
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
           },
           headStyles: {
             fillColor: template.styling.primaryColor,
             textColor: [255, 255, 255],
             fontStyle: 'bold',
             halign: 'center',
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
           },
           columnStyles: {
             0: { halign: 'left' },
