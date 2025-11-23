@@ -88,7 +88,34 @@ export interface Kehadiran extends BaseRecord {
   keterangan?: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jadwal_pelajaran' | 'jam_pelajaran' | 'pengaturan';
+export interface Ekstrakurikuler extends BaseRecord {
+  nama_eskul: string;
+  pembimbing: string;
+  hari_pertemuan: string;
+  jam_pertemuan: string;
+  deskripsi?: string;
+  status: string;
+}
+
+export interface AnggotaEskul extends BaseRecord {
+  ekstrakurikuler_id: string;
+  nisn: string;
+  nama_siswa: string;
+  tingkat: string;
+  nama_kelas: string;
+  tanggal_masuk: string;
+  status: string;
+}
+
+export interface KehadiranEskul extends BaseRecord {
+  ekstrakurikuler_id: string;
+  anggota_id: string;
+  tanggal: string;
+  status_kehadiran: string;
+  keterangan?: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jadwal_pelajaran' | 'jam_pelajaran' | 'pengaturan' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul';
 
 // Generate UUID function
 function generateId(): string {
@@ -107,7 +134,7 @@ class LocalDB {
 
   // Initialize default data
   initializeDefaultData() {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul'];
     
     tables.forEach(table => {
       if (!localStorage.getItem(this.getStorageKey(table))) {
@@ -264,7 +291,7 @@ class LocalDB {
 
   // Export all data
   exportAll(): Record<TableName, any[]> {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan'];
+    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jadwal_pelajaran', 'jam_pelajaran', 'pengaturan', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul'];
     const exportData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
     
     tables.forEach(table => {

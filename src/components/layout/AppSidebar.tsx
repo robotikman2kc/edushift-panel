@@ -27,7 +27,10 @@ import {
   ChevronDown,
   Star,
   Sparkles,
-  Tags
+  Tags,
+  Trophy,
+  UserPlus,
+  ClipboardCheck
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -94,6 +97,15 @@ const menuItems = [
     ],
   },
   {
+    title: "EKSTRAKURIKULER",
+    icon: Trophy,
+    items: [
+      { title: "Kelola Ekstrakurikuler", url: "/ekstrakurikuler/kelola", icon: Trophy },
+      { title: "Kelola Anggota", url: "/ekstrakurikuler/anggota", icon: UserPlus },
+      { title: "Kehadiran Eskul", url: "/ekstrakurikuler/kehadiran", icon: ClipboardCheck },
+    ],
+  },
+  {
     title: "LAPORAN",
     icon: FileBarChart,
     items: [
@@ -136,7 +148,7 @@ export function AppSidebar() {
     LayoutDashboard, CalendarDays, UserCheck, GraduationCap, Users, BookOpen,
     TrendingUp, CalendarClock, FileText, Bell, FileInput, BarChart3, CalendarCheck,
     Calendar, ClipboardList, FileBarChart, BookText, Database, Download, Cloud,
-    HardDrive, User, HelpCircle, Tags
+    HardDrive, User, HelpCircle, Tags, Trophy, UserPlus, ClipboardCheck
   };
   
   // Get all available menu items for quick menu
