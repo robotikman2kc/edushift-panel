@@ -11,10 +11,14 @@ class EskulDB {
   private async ensureMigration() {
     if (this.migrationChecked) return;
     
+    console.log('Checking if eskul migration is needed...');
     const needsMigration = await isEskulMigrationNeeded();
+    console.log('Migration needed:', needsMigration);
+    
     if (needsMigration) {
       console.log('Auto-migrating ekstrakurikuler data to IndexedDB...');
-      await migrateEskulData();
+      const result = await migrateEskulData();
+      console.log('Migration result:', result);
     }
     
     this.migrationChecked = true;

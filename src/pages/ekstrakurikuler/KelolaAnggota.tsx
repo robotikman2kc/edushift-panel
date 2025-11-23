@@ -33,6 +33,11 @@ export default function KelolaAnggota() {
 
   const loadData = async () => {
     console.log('Loading eskul data...');
+    
+    // Check localStorage for anggota data
+    const localAnggota = (window as any).localDB?.select('anggota_eskul') || [];
+    console.log('LocalStorage anggota_eskul:', localAnggota);
+    
     // Load eskul data
     const eskuls = await eskulDB.select('ekstrakurikuler');
     console.log('Eskuls from IndexedDB:', eskuls);
@@ -46,6 +51,8 @@ export default function KelolaAnggota() {
         a.ekstrakurikuler_id === eskulData.id
       );
       console.log('Anggota data from IndexedDB:', anggotaData);
+      console.log('Filtering by ekstrakurikuler_id:', eskulData.id);
+      
       setAnggota(anggotaData);
     } else {
       console.log('No eskul data found!');
