@@ -193,6 +193,9 @@ const InputNilai = () => {
         indexedDB.select('jenis_penilaian', (jenis: JenisPenilaian) => jenis.status === 'Aktif')
       ]);
       
+      console.log('All jenis_penilaian from DB:', await indexedDB.select('jenis_penilaian'));
+      console.log('Filtered active categories:', jenisPenilaianData);
+      
       setClasses(kelasData);
       setSubjects(mataPelajaranData);
       setCategories(jenisPenilaianData);
