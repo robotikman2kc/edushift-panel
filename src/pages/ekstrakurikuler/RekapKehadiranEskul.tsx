@@ -161,6 +161,8 @@ const RekapKehadiranEskul = () => {
       const periodText = startMonth === endMonth 
         ? `${startMonthName} ${selectedYear}`
         : `${startMonthName} - ${endMonthName} ${selectedYear}`;
+      
+      const totalMeetings = previewData[0]?._dates?.length || 0;
 
       // Get unique dates from preview data
       const uniqueDates = previewData[0]?._dates || [];
@@ -204,7 +206,12 @@ const RekapKehadiranEskul = () => {
         columns,
         `REKAP KEHADIRAN EKSTRAKURIKULER\n${eskul.nama_eskul.toUpperCase()}\nPeriode ${periodText}`,
         updatedTemplate,
-        {}
+        {
+          eskul: eskul.nama_eskul,
+          pembimbing: eskul.pembimbing,
+          periode: periodText,
+          totalPertemuan: `${totalMeetings} kali`
+        }
       );
 
       if (!pdfBlob) {
