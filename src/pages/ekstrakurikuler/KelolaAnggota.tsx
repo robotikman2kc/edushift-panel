@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/common/DataTable";
-import { localDB, AnggotaEskul, Ekstrakurikuler } from "@/lib/localDB";
+import { eskulDB } from "@/lib/eskulDB";
+import { AnggotaEskul, Ekstrakurikuler } from "@/lib/indexedDB";
 import { AlertCircle, ArrowUp, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,15 +31,15 @@ export default function KelolaAnggota() {
     loadData();
   }, []);
 
-  const loadData = () => {
+  const loadData = async () => {
     // Load eskul data
-    const eskuls = localDB.select('ekstrakurikuler');
+    const eskuls = await eskulDB.select('ekstrakurikuler');
     if (eskuls.length > 0) {
       const eskulData = eskuls[0];
       setEskul(eskulData);
       
       // Load all anggota (active and inactive) for this eskul
-      const anggotaData = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+      const anggotaData = await eskulDB.select('anggota_eskul', (a: AnggotaEskul) => 
         a.ekstrakurikuler_id === eskulData.id
       );
       setAnggota(anggotaData);
@@ -127,32 +128,32 @@ export default function KelolaAnggota() {
       status: "aktif"
     };
 
-    const result = localDB.insert('anggota_eskul', dataToSave);
+    const result = await eskulDB.insert('anggota_eskul', dataToSave);
     if (result.error) {
       toast.error("Gagal menambahkan anggota");
     } else {
       toast.success("Anggota berhasil ditambahkan");
-      loadData();
+      await loadData();
     }
   };
 
   const handleEdit = async (id: string, formData: Record<string, string>) => {
-    const result = localDB.update('anggota_eskul', id, formData);
+    const result = await eskulDB.update('anggota_eskul', id, formData);
     if (result.error) {
       toast.error("Gagal mengupdate anggota");
     } else {
       toast.success("Anggota berhasil diupdate");
-      loadData();
+      await loadData();
     }
   };
 
   const handleDelete = async (id: string) => {
-    const result = localDB.delete('anggota_eskul', id);
+    const result = await eskulDB.delete('anggota_eskul', id);
     if (result.error) {
       toast.error("Gagal menghapus anggota");
     } else {
       toast.success("Anggota berhasil dihapus");
-      loadData();
+      await loadData();
     }
   };
 
@@ -163,12 +164,12 @@ export default function KelolaAnggota() {
     setShowNaikKelasDialog(true);
   };
 
-  const confirmNaikKelas = () => {
+  const confirmNaikKelas = async () => {
     try {
       let successCount = 0;
       let graduatedCount = 0;
 
-      selectedAnggota.forEach(member => {
+      for (const member of selectedAnggota) {
         let newTingkat = member.tingkat;
         let newStatus = member.status;
 
@@ -182,7 +183,7 @@ export default function KelolaAnggota() {
           graduatedCount++;
         }
 
-        const result = localDB.update('anggota_eskul', member.id, {
+        const result = await eskulDB.update('anggota_eskul', member.id, {
           tingkat: newTingkat,
           status: newStatus
         });
@@ -190,10 +191,10 @@ export default function KelolaAnggota() {
         if (!result.error) {
           successCount++;
         }
-      });
+      }
 
       toast.success(`${successCount} anggota berhasil naik kelas${graduatedCount > 0 ? `, ${graduatedCount} lulus` : ''}`);
-      loadData();
+      await loadData();
       setShowNaikKelasDialog(false);
     } catch (error) {
       toast.error("Gagal melakukan naik kelas");
@@ -205,17 +206,17 @@ export default function KelolaAnggota() {
     setShowToggleStatusDialog(true);
   };
 
-  const handleToggleStatus = () => {
+  const handleToggleStatus = async () => {
     if (!selectedAnggotaForToggle) return;
     
     const newStatus = selectedAnggotaForToggle.status === 'aktif' ? 'non-aktif' : 'aktif';
-    const result = localDB.update('anggota_eskul', selectedAnggotaForToggle.id, { status: newStatus });
+    const result = await eskulDB.update('anggota_eskul', selectedAnggotaForToggle.id, { status: newStatus });
     
     if (result.error) {
       toast.error("Gagal mengubah status anggota");
     } else {
       toast.success(`Anggota berhasil ${newStatus === 'aktif' ? 'diaktifkan' : 'dinonaktifkan'}`);
-      loadData();
+      await loadData();
     }
     
     setShowToggleStatusDialog(false);
@@ -245,7 +246,7 @@ export default function KelolaAnggota() {
           }
 
           // Cek apakah NISN sudah ada - jika ada, update data
-          const allAnggota = localDB.select('anggota_eskul', (a: AnggotaEskul) => 
+          const allAnggota = await eskulDB.select('anggota_eskul', (a: AnggotaEskul) => 
             a.ekstrakurikuler_id === eskul.id
           );
           const existingAnggota = allAnggota.find(a => a.nisn === row.NISN);
@@ -262,13 +263,13 @@ export default function KelolaAnggota() {
 
           if (existingAnggota) {
             // Update existing
-            const result = localDB.update('anggota_eskul', existingAnggota.id, anggotaData);
+            const result = await eskulDB.update('anggota_eskul', existingAnggota.id, anggotaData);
             if (result.error) {
               throw new Error(result.error);
             }
           } else {
             // Insert new
-            const result = localDB.insert('anggota_eskul', anggotaData);
+            const result = await eskulDB.insert('anggota_eskul', anggotaData);
             if (result.error) {
               throw new Error(result.error);
             }
@@ -283,7 +284,7 @@ export default function KelolaAnggota() {
 
       if (successCount > 0) {
         toast.success(`Berhasil import ${successCount} anggota`);
-        loadData();
+        await loadData();
       }
 
       if (errorCount > 0) {
