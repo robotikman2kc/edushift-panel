@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { EventDetailsPopover } from "./EventDetailsPopover";
 
 interface CalendarDayProps {
   date: Date;
@@ -12,11 +13,14 @@ interface CalendarDayProps {
   hasSchedule: boolean;
   isHoliday?: boolean;
   holidayName?: string;
+  holidayDescription?: string;
   hasNotes?: boolean;
   noteColor?: string;
   noteText?: string;
   isPeriodeNonPembelajaran?: boolean;
   periodeNama?: string;
+  periodeDescription?: string;
+  periodeDateRange?: { start: string; end: string };
   onClick: () => void;
 }
 
@@ -31,17 +35,47 @@ export function CalendarDay({
   hasSchedule,
   isHoliday = false,
   holidayName,
+  holidayDescription,
   hasNotes = false,
   noteColor,
   noteText,
   isPeriodeNonPembelajaran = false,
   periodeNama,
+  periodeDescription,
+  periodeDateRange,
   onClick,
 }: CalendarDayProps) {
   const dayNumber = format(date, "d");
   
   const isWorkingDay = hasSchedule && !isHoliday;
   const hasAnyActivity = hasAgenda || hasAttendance || hasJournal;
+
+  // Collect all events for the popover
+  const events = [];
+  if (isHoliday && holidayName) {
+    events.push({
+      type: 'holiday' as const,
+      title: holidayName,
+      description: holidayDescription,
+    });
+  }
+  if (isPeriodeNonPembelajaran && periodeNama) {
+    events.push({
+      type: 'periode' as const,
+      title: periodeNama,
+      description: periodeDescription,
+      dateRange: periodeDateRange,
+    });
+  }
+  if (hasNotes && noteText) {
+    events.push({
+      type: 'note' as const,
+      title: noteText,
+    });
+  }
+
+  // Show popover icon if there's more than one event
+  const showEventDetailsIcon = events.length > 1;
 
   return (
     <div
@@ -56,6 +90,10 @@ export function CalendarDay({
         isSelected && "ring-2 ring-inset ring-primary"
       )}
     >
+      {showEventDetailsIcon && (
+        <EventDetailsPopover events={events} date={date} />
+      )}
+      
       <div className="flex flex-col h-full">
         <div className="flex items-start justify-between mb-1">
           <span className={cn(
