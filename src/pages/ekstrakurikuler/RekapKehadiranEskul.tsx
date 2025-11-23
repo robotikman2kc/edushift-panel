@@ -238,6 +238,7 @@ const RekapKehadiranEskul = () => {
 
         // Create columns for this month
         const columns = [
+          { key: "no", label: "No" },
           { key: "nisn", label: "NISN" },
           { key: "nama_siswa", label: "Nama Siswa" },
           { key: "tingkat", label: "Tingkat" },
@@ -304,8 +305,8 @@ const RekapKehadiranEskul = () => {
         currentY += 8;
 
         // Table
-        const tableData = monthData.map(row => 
-          columns.map(col => row[col.key] || '-')
+        const tableData = monthData.map((row, index) => 
+          columns.map(col => col.key === 'no' ? index + 1 : (row[col.key] || '-'))
         );
 
         autoTable(doc, {
@@ -328,10 +329,11 @@ const RekapKehadiranEskul = () => {
             lineWidth: 0.1,
           },
           columnStyles: {
-            0: { halign: 'left' },
+            0: { halign: 'center', cellWidth: 10 },
             1: { halign: 'left' },
-            2: { halign: 'center' },
+            2: { halign: 'left' },
             3: { halign: 'center' },
+            4: { halign: 'center' },
           },
           didDrawPage: (data: any) => {
             // Add page numbers
