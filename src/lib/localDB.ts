@@ -112,7 +112,6 @@ export interface KehadiranEskul extends BaseRecord {
   anggota_id: string;
   tanggal: string;
   status_kehadiran: string;
-  keaktifan?: string;
   keterangan?: string;
 }
 
