@@ -16,8 +16,8 @@ export default function KehadiranEskulPage() {
   const [anggotaEskul, setAnggotaEskul] = useState<AnggotaEskul[]>([]);
   const [filteredAnggota, setFilteredAnggota] = useState<AnggotaEskul[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [selectedTingkat, setSelectedTingkat] = useState<string>("");
-  const [selectedKelas, setSelectedKelas] = useState<string>("");
+  const [selectedTingkat, setSelectedTingkat] = useState<string>("all");
+  const [selectedKelas, setSelectedKelas] = useState<string>("all");
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: KehadiranEskul}>({});
   const [loading, setLoading] = useState(false);
@@ -38,11 +38,11 @@ export default function KehadiranEskulPage() {
   useEffect(() => {
     let filtered = [...anggotaEskul];
     
-    if (selectedTingkat) {
+    if (selectedTingkat && selectedTingkat !== "all") {
       filtered = filtered.filter(a => a.tingkat === selectedTingkat);
     }
     
-    if (selectedKelas) {
+    if (selectedKelas && selectedKelas !== "all") {
       filtered = filtered.filter(a => a.nama_kelas === selectedKelas);
     }
     
@@ -184,7 +184,7 @@ export default function KehadiranEskulPage() {
   const stats = getAttendanceStats();
 
   // Get unique kelas names from anggota
-  const kelasOptions = selectedTingkat
+  const kelasOptions = selectedTingkat && selectedTingkat !== "all"
     ? [...new Set(anggotaEskul
         .filter(a => a.tingkat === selectedTingkat)
         .map(a => a.nama_kelas))]
@@ -255,13 +255,13 @@ export default function KehadiranEskulPage() {
               <Label htmlFor="tingkat">Filter Tingkat</Label>
               <Select value={selectedTingkat} onValueChange={(value) => {
                 setSelectedTingkat(value);
-                setSelectedKelas(""); // Reset kelas saat tingkat berubah
+                setSelectedKelas("all"); // Reset kelas saat tingkat berubah
               }}>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Semua Tingkat" />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="">Semua Tingkat</SelectItem>
+                  <SelectItem value="all">Semua Tingkat</SelectItem>
                   {tingkatOptions.map((tingkat) => (
                     <SelectItem key={tingkat} value={tingkat}>
                       {tingkat}
@@ -278,7 +278,7 @@ export default function KehadiranEskulPage() {
                   <SelectValue placeholder="Semua Kelas" />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="">Semua Kelas</SelectItem>
+                  <SelectItem value="all">Semua Kelas</SelectItem>
                   {kelasOptions.map((kelas) => (
                     <SelectItem key={kelas} value={kelas}>
                       {kelas}
