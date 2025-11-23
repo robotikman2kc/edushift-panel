@@ -20,6 +20,17 @@ interface DataStats {
   jenis_kegiatan: number;
   jurnal: number;
   users: number;
+  nilai_siswa: number;
+  jenis_penilaian: number;
+  jadwal_pelajaran: number;
+  jam_pelajaran: number;
+  agenda_mengajar: number;
+  catatan_kalender: number;
+  hari_libur: number;
+  ekstrakurikuler: number;
+  anggota_eskul: number;
+  kehadiran_eskul: number;
+  nilai_eskul: number;
 }
 
 const ManajemenData = () => {
@@ -31,7 +42,18 @@ const ManajemenData = () => {
     kehadiran: 0,
     jenis_kegiatan: 0,
     jurnal: 0,
-    users: 0
+    users: 0,
+    nilai_siswa: 0,
+    jenis_penilaian: 0,
+    jadwal_pelajaran: 0,
+    jam_pelajaran: 0,
+    agenda_mengajar: 0,
+    catatan_kalender: 0,
+    hari_libur: 0,
+    ekstrakurikuler: 0,
+    anggota_eskul: 0,
+    kehadiran_eskul: 0,
+    nilai_eskul: 0
   });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -51,6 +73,17 @@ const ManajemenData = () => {
       const kehadiranCount = await indexedDB.count('kehadiran');
       const jenisKegiatanCount = await indexedDB.count('jenis_kegiatan');
       const jurnalCount = await indexedDB.count('jurnal');
+      const nilaiSiswaCount = await indexedDB.count('nilai_siswa');
+      const jenisPenilaianCount = await indexedDB.count('jenis_penilaian');
+      const jadwalPelajaranCount = await indexedDB.count('jadwal_pelajaran');
+      const jamPelajaranCount = await indexedDB.count('jam_pelajaran');
+      const agendaMengajarCount = await indexedDB.count('agenda_mengajar');
+      const catatanKalenderCount = await indexedDB.count('catatan_kalender');
+      const hariLiburCount = await indexedDB.count('hari_libur');
+      const ekstrakurikulerCount = await indexedDB.count('ekstrakurikuler');
+      const anggotaEskulCount = await indexedDB.count('anggota_eskul');
+      const kehadiranEskulCount = await indexedDB.count('kehadiran_eskul');
+      const nilaiEskulCount = await indexedDB.count('nilai_eskul');
       
       setStats({
         guru: guruCount,
@@ -60,7 +93,18 @@ const ManajemenData = () => {
         kehadiran: kehadiranCount,
         jenis_kegiatan: jenisKegiatanCount,
         jurnal: jurnalCount,
-        users: usersData.length
+        users: usersData.length,
+        nilai_siswa: nilaiSiswaCount,
+        jenis_penilaian: jenisPenilaianCount,
+        jadwal_pelajaran: jadwalPelajaranCount,
+        jam_pelajaran: jamPelajaranCount,
+        agenda_mengajar: agendaMengajarCount,
+        catatan_kalender: catatanKalenderCount,
+        hari_libur: hariLiburCount,
+        ekstrakurikuler: ekstrakurikulerCount,
+        anggota_eskul: anggotaEskulCount,
+        kehadiran_eskul: kehadiranEskulCount,
+        nilai_eskul: nilaiEskulCount
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -113,13 +157,13 @@ const ManajemenData = () => {
   };
 
   // Delete all data from a table
-  const deleteAllData = async (tableName: 'guru' | 'kelas' | 'mata_pelajaran' | 'siswa' | 'kehadiran' | 'jenis_kegiatan' | 'jurnal' | 'users', displayName: string) => {
+  const deleteAllData = async (tableName: string, displayName: string) => {
     setDeleting(tableName);
     try {
       if (tableName === 'users') {
         localStorage.setItem('users', JSON.stringify([]));
       } else {
-        const result = await indexedDB.clear(tableName);
+        const result = await indexedDB.clear(tableName as any);
         if (result.error) {
           throw new Error(result.error);
         }
@@ -144,14 +188,25 @@ const ManajemenData = () => {
   };
 
   const dataTypes = [
-    { key: 'users' as const, title: 'User', icon: Users, count: stats.users },
-    { key: 'guru' as const, title: 'Guru', icon: Users, count: stats.guru },
-    { key: 'mata_pelajaran' as const, title: 'Mata Pelajaran', icon: BookOpen, count: stats.mata_pelajaran },
-    { key: 'kelas' as const, title: 'Kelas', icon: School, count: stats.kelas },
-    { key: 'siswa' as const, title: 'Siswa', icon: GraduationCap, count: stats.siswa },
-    { key: 'jenis_kegiatan' as const, title: 'Jenis Kegiatan', icon: Database, count: stats.jenis_kegiatan },
-    { key: 'jurnal' as const, title: 'Jurnal', icon: FileText, count: stats.jurnal },
-    { key: 'kehadiran' as const, title: 'Kehadiran', icon: Calendar, count: stats.kehadiran }
+    { key: 'users', title: 'User', icon: Users, count: stats.users },
+    { key: 'guru', title: 'Guru', icon: Users, count: stats.guru },
+    { key: 'mata_pelajaran', title: 'Mata Pelajaran', icon: BookOpen, count: stats.mata_pelajaran },
+    { key: 'kelas', title: 'Kelas', icon: School, count: stats.kelas },
+    { key: 'siswa', title: 'Siswa', icon: GraduationCap, count: stats.siswa },
+    { key: 'nilai_siswa', title: 'Nilai Siswa', icon: FileText, count: stats.nilai_siswa },
+    { key: 'jenis_penilaian', title: 'Jenis Penilaian', icon: Database, count: stats.jenis_penilaian },
+    { key: 'kehadiran', title: 'Kehadiran', icon: Calendar, count: stats.kehadiran },
+    { key: 'jadwal_pelajaran', title: 'Jadwal Pelajaran', icon: Calendar, count: stats.jadwal_pelajaran },
+    { key: 'jam_pelajaran', title: 'Jam Pelajaran', icon: Calendar, count: stats.jam_pelajaran },
+    { key: 'jenis_kegiatan', title: 'Jenis Kegiatan', icon: Database, count: stats.jenis_kegiatan },
+    { key: 'jurnal', title: 'Jurnal', icon: FileText, count: stats.jurnal },
+    { key: 'agenda_mengajar', title: 'Agenda Mengajar', icon: FileText, count: stats.agenda_mengajar },
+    { key: 'catatan_kalender', title: 'Catatan Kalender', icon: Calendar, count: stats.catatan_kalender },
+    { key: 'hari_libur', title: 'Hari Libur', icon: Calendar, count: stats.hari_libur },
+    { key: 'ekstrakurikuler', title: 'Ekstrakurikuler', icon: GraduationCap, count: stats.ekstrakurikuler },
+    { key: 'anggota_eskul', title: 'Anggota Eskul', icon: Users, count: stats.anggota_eskul },
+    { key: 'kehadiran_eskul', title: 'Kehadiran Eskul', icon: Calendar, count: stats.kehadiran_eskul },
+    { key: 'nilai_eskul', title: 'Nilai Eskul', icon: FileText, count: stats.nilai_eskul }
   ];
 
   return (
