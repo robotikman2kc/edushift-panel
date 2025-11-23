@@ -65,11 +65,15 @@ export const useStorageMonitor = () => {
   const getTableDescription = (tableName: string): string => {
     const descriptions: Record<string, string> = {
       // IndexedDB tables
-      'nilai': 'Data nilai siswa per mata pelajaran',
+      'nilai_siswa': 'Data nilai siswa per mata pelajaran',
       'jenis_penilaian': 'Kategori penilaian (UH, UTS, UAS, dll)',
-      'bobot_penilaian': 'Bobot nilai per kelas dan kategori',
       'catatan_kalender': 'Catatan & reminder di kalender',
       'hari_libur': 'Data hari libur nasional',
+      'agenda_mengajar': 'Agenda mengajar guru',
+      'ekstrakurikuler': 'Data ekstrakurikuler',
+      'anggota_eskul': 'Data anggota ekstrakurikuler',
+      'kehadiran_eskul': 'Data kehadiran ekstrakurikuler',
+      'nilai_eskul': 'Data nilai ekstrakurikuler',
       // localStorage tables
       'localdb_users': 'Data pengguna aplikasi',
       'localdb_guru': 'Data guru/pengajar',

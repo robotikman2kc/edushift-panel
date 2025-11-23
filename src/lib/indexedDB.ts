@@ -437,7 +437,13 @@ class IndexedDBManager {
 
   // Export all data
   async exportAll(): Promise<Record<TableName, any[]>> {
-    const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log'];
+    const tables: TableName[] = [
+      'users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 
+      'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 
+      'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 
+      'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur',
+      'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul'
+    ];
     const exportData: Record<TableName, any[]> = {} as Record<TableName, any[]>;
     
     for (const table of tables) {

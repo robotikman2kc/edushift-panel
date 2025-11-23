@@ -176,8 +176,8 @@ export default function StorageMonitor() {
         <AlertDescription>
           <strong>Info Penyimpanan:</strong>
           <ul className="mt-2 space-y-1 text-sm">
-            <li>• <strong>localStorage</strong>: Storage utama untuk semua data (guru, siswa, jurnal, kehadiran, dll)</li>
-            <li>• <strong>IndexedDB</strong>: Database untuk data nilai dan kalender</li>
+            <li>• <strong>localStorage</strong>: Storage untuk pengaturan dan preferensi</li>
+            <li>• <strong>IndexedDB</strong>: Database untuk semua data utama (guru, siswa, nilai, eskul, dll)</li>
             <li>• <strong>OPFS</strong>: File system untuk foto profil dan dokumen</li>
             <li>• <strong>Cache</strong>: Data sementara untuk mempercepat loading aplikasi</li>
             <li>• <strong>Memory</strong>: Penggunaan RAM oleh aplikasi saat ini</li>
@@ -194,7 +194,7 @@ export default function StorageMonitor() {
               <Database className="h-5 w-5" />
               IndexedDB
             </CardTitle>
-            <CardDescription>Database untuk data penilaian dan kalender</CardDescription>
+            <CardDescription>Database utama untuk semua data aplikasi</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-1 flex flex-col">
             <div className="text-center py-4">
@@ -250,7 +250,7 @@ export default function StorageMonitor() {
               <HardDrive className="h-5 w-5" />
               localStorage
             </CardTitle>
-            <CardDescription>Storage utama untuk semua data aplikasi</CardDescription>
+            <CardDescription>Storage untuk preferensi dan pengaturan</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-1 flex flex-col">
             <div className="text-center py-4">
