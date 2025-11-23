@@ -54,6 +54,39 @@ export const generateHolidayTemplate = (holiday: HariLibur) => {
 };
 
 /**
+ * Check if a date falls within a non-teaching period (weekday only)
+ * @param date - Date to check
+ * @param periodeList - List of periode non pembelajaran
+ * @returns Periode object if found and is a weekday, null otherwise
+ */
+export const isPeriodeNonPembelajaran = (
+  date: Date, 
+  periodeList: Array<{ tanggal_mulai: string; tanggal_selesai: string; nama: string; keterangan?: string }>
+): { tanggal_mulai: string; tanggal_selesai: string; nama: string; keterangan?: string } | null => {
+  if (!isWeekday(date)) {
+    return null; // Weekend, no journal entry needed
+  }
+  
+  const dateStr = format(date, "yyyy-MM-dd");
+  const periode = periodeList.find(p => dateStr >= p.tanggal_mulai && dateStr <= p.tanggal_selesai);
+  return periode || null;
+};
+
+/**
+ * Generate auto-fill template for a periode non pembelajaran
+ * @param periode - Periode object
+ * @returns Template object with default values
+ */
+export const generatePeriodeTemplate = (periode: { nama: string; keterangan?: string }) => {
+  const keterangan = periode.keterangan ? ` - ${periode.keterangan}` : '';
+  return {
+    uraian: `${periode.nama}${keterangan}`,
+    volume: 1,
+    satuan: "hari"
+  };
+};
+
+/**
  * Get all holidays for a specific month and year
  * @param month - Month (0-11)
  * @param year - Year
