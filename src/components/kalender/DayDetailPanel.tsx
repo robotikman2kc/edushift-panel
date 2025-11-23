@@ -15,8 +15,8 @@ interface DayDetailPanelProps {
   journals: Jurnal[];
   attendanceCount: number;
   notes?: CatatanKalender[];
-  holiday?: HariLibur;
-  periode?: PeriodeNonPembelajaran;
+  holidays?: HariLibur[];
+  periodes?: PeriodeNonPembelajaran[];
   onClose: () => void;
   onEditNote?: (note: CatatanKalender) => void;
   onDeleteNote?: (noteId: string) => void;
@@ -29,8 +29,8 @@ export function DayDetailPanel({
   journals,
   attendanceCount,
   notes = [],
-  holiday,
-  periode,
+  holidays = [],
+  periodes = [],
   onClose,
   onEditNote,
   onDeleteNote,
@@ -53,40 +53,38 @@ export function DayDetailPanel({
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Hari Libur */}
-        {holiday && (
+        {/* Hari Libur & Periode Non-Pembelajaran */}
+        {(holidays.length > 0 || periodes.length > 0) && (
           <>
-            <div className="p-4 bg-red-50 dark:bg-red-950 border-2 border-red-200 dark:border-red-800 rounded-lg">
-              <div className="flex items-start gap-3">
-                <PartyPopper className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-red-600 dark:text-red-400">{holiday.nama}</h3>
-                  {holiday.keterangan && (
-                    <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">{holiday.keterangan}</p>
-                  )}
+            <div className="space-y-2">
+              {/* Hari Libur */}
+              {holidays.map((holiday) => (
+                <div key={holiday.id} className="flex items-start gap-2 p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded">
+                  <PartyPopper className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-red-600 dark:text-red-400">{holiday.nama}</p>
+                    {holiday.keterangan && (
+                      <p className="text-xs text-red-600/70 dark:text-red-400/70">{holiday.keterangan}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-            <Separator />
-          </>
-        )}
-
-        {/* Periode Non-Pembelajaran */}
-        {periode && !holiday && (
-          <>
-            <div className="p-4 bg-orange-50 dark:bg-orange-950 border-2 border-orange-200 dark:border-orange-800 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-orange-600 dark:text-orange-400">{periode.nama}</h3>
-                  {periode.keterangan && (
-                    <p className="text-sm text-orange-600/80 dark:text-orange-400/80 mt-1">{periode.keterangan}</p>
-                  )}
-                  <p className="text-xs text-orange-600/60 dark:text-orange-400/60 mt-1">
-                    {format(new Date(periode.tanggal_mulai), "dd MMM", { locale: id })} - {format(new Date(periode.tanggal_selesai), "dd MMM yyyy", { locale: id })}
-                  </p>
+              ))}
+              
+              {/* Periode Non-Pembelajaran */}
+              {periodes.map((periode) => (
+                <div key={periode.id} className="flex items-start gap-2 p-2 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded">
+                  <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-orange-600 dark:text-orange-400">{periode.nama}</p>
+                    {periode.keterangan && (
+                      <p className="text-xs text-orange-600/70 dark:text-orange-400/70">{periode.keterangan}</p>
+                    )}
+                    <p className="text-xs text-orange-600/60 dark:text-orange-400/60 mt-0.5">
+                      {format(new Date(periode.tanggal_mulai), "dd MMM", { locale: id })} - {format(new Date(periode.tanggal_selesai), "dd MMM yyyy", { locale: id })}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
             <Separator />
           </>
