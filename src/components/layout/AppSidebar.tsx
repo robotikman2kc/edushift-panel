@@ -28,6 +28,7 @@ import {
   Star,
   Sparkles,
   Tags,
+  Trash2,
   Trophy,
   UserPlus,
   ClipboardCheck
@@ -124,6 +125,7 @@ const menuItems = [
       { title: "Backup dan Restore", url: "/data/backup-restore", icon: Download },
       { title: "Backup Google Drive", url: "/data/backup-google-drive", icon: Cloud },
       { title: "Storage Monitor", url: "/data/storage-monitor", icon: HardDrive },
+      { title: "Cleanup Storage", url: "/data/cleanup-storage", icon: Trash2 },
     ],
   },
   {

@@ -35,6 +35,7 @@ import ManajemenData from "./pages/data/ManajemenData";
 import BackupRestore from "./pages/data/BackupRestore";
 import BackupGoogleDrive from "./pages/data/BackupGoogleDrive";
 import StorageMonitor from "./pages/data/StorageMonitor";
+import CleanupStorage from "./pages/data/CleanupStorage";
 
 // Jurnal Pages
 import JurnalGuru from "./pages/jurnal/JurnalGuru";
@@ -147,6 +148,7 @@ const App = () => {
                   <Route path="/data/backup-restore" element={<BackupRestore />} />
                   <Route path="/data/backup-google-drive" element={<BackupGoogleDrive />} />
                   <Route path="/data/storage-monitor" element={<StorageMonitor />} />
+                  <Route path="/data/cleanup-storage" element={<CleanupStorage />} />
 
                   {/* Laporan Routes */}
                   <Route path="/laporan/kehadiran" element={<LaporanKehadiran />} />
