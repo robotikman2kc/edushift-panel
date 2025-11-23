@@ -25,11 +25,14 @@ interface CalendarData {
   hasSchedule: boolean;
   isHoliday: boolean;
   holidayName?: string;
+  holidayDescription?: string;
   hasNotes: boolean;
   noteColor?: string;
   noteText?: string;
   isPeriodeNonPembelajaran: boolean;
   periodeNama?: string;
+  periodeDescription?: string;
+  periodeDateRange?: { start: string; end: string };
 }
 
 export default function Kalender() {
@@ -256,6 +259,7 @@ export default function Kalender() {
         };
         existing.isHoliday = true;
         existing.holidayName = holiday.nama;
+        existing.holidayDescription = holiday.keterangan;
         dataMap.set(holiday.tanggal, existing);
       });
 
@@ -300,6 +304,11 @@ export default function Kalender() {
             };
             existing.isPeriodeNonPembelajaran = true;
             existing.periodeNama = periode.nama;
+            existing.periodeDescription = periode.keterangan;
+            existing.periodeDateRange = {
+              start: periode.tanggal_mulai,
+              end: periode.tanggal_selesai
+            };
             dataMap.set(dateKey, existing);
           }
           // Move to next day

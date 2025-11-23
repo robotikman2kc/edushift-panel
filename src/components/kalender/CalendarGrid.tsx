@@ -9,11 +9,14 @@ interface CalendarData {
   hasSchedule: boolean;
   isHoliday: boolean;
   holidayName?: string;
+  holidayDescription?: string;
   hasNotes: boolean;
   noteColor?: string;
   noteText?: string;
   isPeriodeNonPembelajaran: boolean;
   periodeNama?: string;
+  periodeDescription?: string;
+  periodeDateRange?: { start: string; end: string };
 }
 
 interface CalendarGridProps {
@@ -72,11 +75,14 @@ export function CalendarGrid({ currentDate, calendarData, selectedDate, onDateCl
               hasSchedule={dayData.hasSchedule}
               isHoliday={dayData.isHoliday}
               holidayName={dayData.holidayName}
+              holidayDescription={dayData.holidayDescription}
               hasNotes={dayData.hasNotes}
               noteColor={dayData.noteColor}
               noteText={dayData.noteText}
               isPeriodeNonPembelajaran={dayData.isPeriodeNonPembelajaran}
               periodeNama={dayData.periodeNama}
+              periodeDescription={dayData.periodeDescription}
+              periodeDateRange={dayData.periodeDateRange}
               onClick={() => onDateClick(day)}
             />
           );
