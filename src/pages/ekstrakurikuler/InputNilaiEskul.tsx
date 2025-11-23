@@ -25,8 +25,7 @@ interface NilaiEskul {
 
 const InputNilaiEskul = () => {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
-  const [tahunAjaran, setTahunAjaran] = useState<any[]>([]);
-  const [selectedTahunAjaran, setSelectedTahunAjaran] = useState<string>("");
+  const [activeTahunAjaran, setActiveTahunAjaran] = useState<any>(null);
   const [selectedSemester, setSelectedSemester] = useState<string>("1");
   const [selectedKelas, setSelectedKelas] = useState<string>("all");
   const [anggotaList, setAnggotaList] = useState<any[]>([]);
@@ -36,14 +35,14 @@ const InputNilaiEskul = () => {
 
   useEffect(() => {
     loadEskulData();
-    loadTahunAjaran();
+    loadActiveTahunAjaran();
   }, []);
 
   useEffect(() => {
-    if (eskul && selectedTahunAjaran && selectedSemester) {
+    if (eskul && activeTahunAjaran && selectedSemester) {
       loadAnggotaAndGrades();
     }
-  }, [eskul, selectedTahunAjaran, selectedSemester, selectedKelas]);
+  }, [eskul, activeTahunAjaran, selectedSemester, selectedKelas]);
 
   const loadEskulData = () => {
     const eskuls = localDB.select('ekstrakurikuler');
@@ -52,11 +51,22 @@ const InputNilaiEskul = () => {
     }
   };
 
-  const loadTahunAjaran = () => {
-    const tahunAjaranData = localDB.select('tahun_ajaran', (ta: any) => ta.status === 'aktif');
-    setTahunAjaran(tahunAjaranData);
-    if (tahunAjaranData.length > 0) {
-      setSelectedTahunAjaran(tahunAjaranData[0].id);
+  const loadActiveTahunAjaran = () => {
+    // Get active academic year from settings
+    const settings = localDB.select('pengaturan');
+    if (settings.length > 0 && settings[0].tahun_ajaran_id) {
+      const tahunAjaranId = settings[0].tahun_ajaran_id;
+      const tahunAjaranData = localDB.selectById('tahun_ajaran', tahunAjaranId);
+      if (tahunAjaranData) {
+        setActiveTahunAjaran(tahunAjaranData);
+        return;
+      }
+    }
+    
+    // Fallback: get first active tahun ajaran
+    const tahunAjaranList = localDB.select('tahun_ajaran', (ta: any) => ta.status === 'aktif');
+    if (tahunAjaranList.length > 0) {
+      setActiveTahunAjaran(tahunAjaranList[0]);
     }
   };
 
@@ -77,7 +87,7 @@ const InputNilaiEskul = () => {
     // Load existing grades
     const nilaiData = localDB.select('nilai_eskul', (n: NilaiEskul) =>
       n.ekstrakurikuler_id === eskul.id &&
-      n.tahun_ajaran_id === selectedTahunAjaran &&
+      n.tahun_ajaran_id === activeTahunAjaran.id &&
       n.semester === selectedSemester
     );
 
@@ -99,7 +109,7 @@ const InputNilaiEskul = () => {
   };
 
   const handleSave = () => {
-    if (!eskul || !selectedTahunAjaran) {
+    if (!eskul || !activeTahunAjaran) {
       toast({
         title: "Error",
         description: "Data tidak lengkap",
@@ -122,14 +132,14 @@ const InputNilaiEskul = () => {
         const existingGrade = localDB.select('nilai_eskul', (n: NilaiEskul) =>
           n.anggota_id === anggota.id &&
           n.ekstrakurikuler_id === eskul.id &&
-          n.tahun_ajaran_id === selectedTahunAjaran &&
+          n.tahun_ajaran_id === activeTahunAjaran.id &&
           n.semester === selectedSemester
         );
 
         const nilaiData: Partial<NilaiEskul> = {
           anggota_id: anggota.id,
           ekstrakurikuler_id: eskul.id,
-          tahun_ajaran_id: selectedTahunAjaran,
+          tahun_ajaran_id: activeTahunAjaran.id,
           semester: selectedSemester,
           nilai: grade,
         };
@@ -227,11 +237,9 @@ const InputNilaiEskul = () => {
       doc.setFontSize(template.styling.fontSize.header);
       const labelWidth = 30;
 
-      const selectedTA = tahunAjaran.find(ta => ta.id === selectedTahunAjaran);
-      
       doc.text('Tahun Ajaran', template.layout.margins.left, currentY);
       doc.text(':', template.layout.margins.left + labelWidth, currentY);
-      doc.text(selectedTA?.nama_tahun_ajaran || '-', template.layout.margins.left + labelWidth + 3, currentY);
+      doc.text(activeTahunAjaran?.nama_tahun_ajaran || '-', template.layout.margins.left + labelWidth + 3, currentY);
       currentY += 5;
 
       doc.text('Semester', template.layout.margins.left, currentY);
@@ -302,7 +310,7 @@ const InputNilaiEskul = () => {
         },
       });
 
-      const fileName = `nilai_${eskul.nama_eskul.toLowerCase().replace(/\s+/g, '_')}_semester_${selectedSemester}_${selectedTA?.nama_tahun_ajaran.replace(/\//g, '_')}.pdf`;
+      const fileName = `nilai_${eskul.nama_eskul.toLowerCase().replace(/\s+/g, '_')}_semester_${selectedSemester}_${activeTahunAjaran?.nama_tahun_ajaran.replace(/\//g, '_')}.pdf`;
       doc.save(fileName);
 
       toast({
@@ -363,21 +371,14 @@ const InputNilaiEskul = () => {
           <CardTitle>Filter</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Tahun Ajaran</Label>
-              <Select value={selectedTahunAjaran} onValueChange={setSelectedTahunAjaran}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih tahun ajaran" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tahunAjaran.map((ta) => (
-                    <SelectItem key={ta.id} value={ta.id}>
-                      {ta.nama_tahun_ajaran}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="p-2 bg-muted rounded-md">
+                <p className="text-sm font-medium">
+                  {activeTahunAjaran?.nama_tahun_ajaran || 'Belum ada tahun ajaran aktif'}
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -409,17 +410,17 @@ const InputNilaiEskul = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2 flex items-end">
-              <Button
-                className="w-full"
-                onClick={() => setIsExportDateDialogOpen(true)}
-                disabled={loading || anggotaList.length === 0}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
-            </div>
+          </div>
+          
+          <div className="mt-4">
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => setIsExportDateDialogOpen(true)}
+              disabled={loading || anggotaList.length === 0}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Export PDF
+            </Button>
           </div>
         </CardContent>
       </Card>
