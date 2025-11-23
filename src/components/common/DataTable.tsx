@@ -748,16 +748,21 @@ export function DataTable({
                         const isEditing = editingCell?.rowId === item.id && editingCell?.columnKey === column.key;
                         const cellValue = column.key === 'no' ? startIndex + index + 1 : (item[column.key] || "-");
                         
+                        // Check if cellValue is a React element (custom component)
+                        const isReactElement = typeof cellValue === 'object' && cellValue !== null && 'type' in cellValue;
+                        
                         return (
                           <TableCell 
                             key={column.key}
-                            onDoubleClick={() => column.key !== 'no' && onEdit && handleCellEdit(item.id, column.key, item[column.key] || "")}
+                            onDoubleClick={() => !isReactElement && column.key !== 'no' && onEdit && handleCellEdit(item.id, column.key, item[column.key] || "")}
                             className={cn(
-                              `cursor-pointer hover:bg-muted/30 transition-colors ${getCellPaddingClass()}`,
+                              !isReactElement ? `cursor-pointer hover:bg-muted/30 transition-colors ${getCellPaddingClass()}` : getCellPaddingClass(),
                               column.align === 'center' ? "text-center" : column.align === 'right' ? "text-right" : "text-left"
                             )}
                           >
-                            {isEditing ? (
+                            {isReactElement ? (
+                              cellValue
+                            ) : isEditing ? (
                               <div className="flex gap-1">
                                 <Input
                                   value={editValue}
