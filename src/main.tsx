@@ -4,10 +4,14 @@ import App from './App.tsx'
 import './index.css'
 import { initNotificationScheduler } from './lib/notificationScheduler'
 import { indexedDB } from './lib/indexedDB'
+import { initializeSettings } from './lib/appSettings'
 
 // Initialize IndexedDB and default data
 indexedDB.initDB().then(async () => {
   indexedDB.initializeDefaultData();
+  
+  // Initialize and migrate settings from localStorage to IndexedDB
+  await initializeSettings();
   
   // Run academic year migration
   const { migrateToAcademicYear } = await import('./lib/academicYearMigration');
