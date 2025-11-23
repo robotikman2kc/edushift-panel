@@ -262,11 +262,8 @@ export function AppSidebar() {
         try {
           const parsed = JSON.parse(savedProfile);
           
-          console.log('AppSidebar loading profile:', parsed);
-          
           // IMPORTANT: Clean up invalid blob:// URLs from localStorage
           if (parsed.avatar_url && parsed.avatar_url.startsWith('blob:')) {
-            console.log('⚠️ Found invalid blob URL in localStorage, removing:', parsed.avatar_url);
             parsed.avatar_url = '';
             localStorage.setItem('userProfile', JSON.stringify(parsed));
             setUserProfile(parsed);
@@ -275,7 +272,6 @@ export function AppSidebar() {
           
           // Selalu load avatar dari OPFS jika menggunakan opfs://
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
-            console.log('AppSidebar loading avatar from OPFS:', parsed.avatar_url);
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
               // Cleanup old blob URL before creating new one
@@ -285,7 +281,6 @@ export function AppSidebar() {
               
               // Create new blob URL and store in state
               const newBlobUrl = URL.createObjectURL(file);
-              console.log('AppSidebar avatar blob URL created:', newBlobUrl);
               setAvatarBlobUrl(newBlobUrl);
               setUserProfile(parsed); // Keep original opfs:// path in profile
             } else if (typeof file === 'string') {
@@ -332,7 +327,6 @@ export function AppSidebar() {
     return () => {
       // Cleanup blob URL saat component unmount
       if (avatarBlobUrl) {
-        console.log('AppSidebar cleaning up blob URL:', avatarBlobUrl);
         URL.revokeObjectURL(avatarBlobUrl);
       }
       window.removeEventListener('storage', handleStorageChange);
@@ -370,10 +364,7 @@ export function AppSidebar() {
               <Avatar className="h-8 w-8 border-2 border-primary">
                 <AvatarImage 
                   src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url}
-                  onError={(e) => {
-                    console.log('Avatar image failed to load, using fallback');
-                    e.currentTarget.src = '';
-                  }}
+                  onError={(e) => e.currentTarget.src = ''}
                 />
                 <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
                   {userProfile?.nama ? userProfile.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'AD'}

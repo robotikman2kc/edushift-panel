@@ -47,7 +47,6 @@ const Profil = () => {
     // Cleanup blob URL saat component unmount
     return () => {
       if (avatarBlobUrl) {
-        console.log('Profil cleaning up blob URL:', avatarBlobUrl);
         URL.revokeObjectURL(avatarBlobUrl);
       }
     };
@@ -67,7 +66,6 @@ const Profil = () => {
         
         // IMPORTANT: Clean up invalid blob:// URLs from localStorage
         if (parsed.avatar_url && parsed.avatar_url.startsWith('blob:')) {
-          console.log('⚠️ Found invalid blob URL in localStorage, removing:', parsed.avatar_url);
           parsed.avatar_url = '';
           localStorage.setItem('userProfile', JSON.stringify(parsed));
           setProfile(parsed);
@@ -77,13 +75,11 @@ const Profil = () => {
         // Selalu load avatar dari OPFS jika menggunakan opfs://
         if (parsed.avatar_url) {
           if (parsed.avatar_url.startsWith('opfs://')) {
-            console.log('Loading avatar from OPFS:', parsed.avatar_url);
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
               // Buat blob URL baru untuk preview
               const newBlobUrl = URL.createObjectURL(file);
               setAvatarBlobUrl(newBlobUrl);
-              console.log('Avatar blob URL created:', newBlobUrl);
               // Keep opfs:// path in profile state
               setProfile(parsed);
             } else if (typeof file === 'string') {
@@ -188,14 +184,10 @@ const Profil = () => {
         throw new Error('Failed to save avatar');
       }
       
-      console.log('Avatar saved to OPFS:', avatarPath);
-      
       // PENTING: Simpan OPFS path (bukan blob URL) ke profile state DAN localStorage
       const updatedProfile = { ...profile, avatar_url: avatarPath };
       setProfile(updatedProfile);
       localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-      
-      console.log('Profile saved to localStorage:', updatedProfile);
       
       // Cleanup old blob URL
       if (avatarBlobUrl) {
@@ -205,8 +197,6 @@ const Profil = () => {
       // Untuk preview, buat blob URL baru dari file
       const newBlobUrl = URL.createObjectURL(file);
       setAvatarBlobUrl(newBlobUrl);
-      
-      console.log('Preview blob URL created:', newBlobUrl);
       
       // Trigger custom event to update other components
       window.dispatchEvent(new Event('profileUpdated'));
@@ -259,10 +249,7 @@ const Profil = () => {
               <Avatar className="h-20 w-20 border-2 border-primary">
                 <AvatarImage 
                   src={profile.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : profile.avatar_url}
-                  onError={(e) => {
-                    console.log('Profile avatar failed to load, using fallback');
-                    e.currentTarget.src = '';
-                  }}
+                  onError={(e) => e.currentTarget.src = ''}
                 />
                 <AvatarFallback className="text-lg">
                   {profile.nama ? profile.nama.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
