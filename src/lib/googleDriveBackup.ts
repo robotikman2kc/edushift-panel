@@ -4,6 +4,7 @@ interface BackupSettings {
   webhookUrl: string;
   intervalDays: number;
   lastBackupDate: Date | null;
+  autoBackupEnabled: boolean;
 }
 
 interface BackupResult {
@@ -35,6 +36,7 @@ class GoogleDriveBackup {
       return {
         webhookUrl: parsedSettings.webhookUrl || '',
         intervalDays: parsedSettings.intervalDays || 7,
+        autoBackupEnabled: parsedSettings.autoBackupEnabled !== false, // Default true
         lastBackupDate: lastBackupSetting?.value ? new Date(lastBackupSetting.value) : null,
       };
     } catch (error) {
@@ -42,6 +44,7 @@ class GoogleDriveBackup {
       return {
         webhookUrl: '',
         intervalDays: 7,
+        autoBackupEnabled: true,
         lastBackupDate: null,
       };
     }
@@ -50,7 +53,7 @@ class GoogleDriveBackup {
   /**
    * Save backup settings to localStorage
    */
-  async saveSettings(settings: { webhookUrl: string; intervalDays: number }): Promise<void> {
+  async saveSettings(settings: { webhookUrl: string; intervalDays: number; autoBackupEnabled?: boolean }): Promise<void> {
     try {
       const allSettings = await indexedDB.select('pengaturan');
       const existing = allSettings.find((s: any) => s.key === this.SETTINGS_KEY);
@@ -58,6 +61,7 @@ class GoogleDriveBackup {
       const value = JSON.stringify({
         webhookUrl: settings.webhookUrl,
         intervalDays: settings.intervalDays,
+        autoBackupEnabled: settings.autoBackupEnabled !== false, // Default true if not specified
       });
 
       if (existing) {
@@ -244,6 +248,11 @@ class GoogleDriveBackup {
   async shouldBackup(): Promise<boolean> {
     try {
       const settings = await this.getSettings();
+      
+      // Don't auto backup if feature is disabled
+      if (!settings.autoBackupEnabled) {
+        return false;
+      }
       
       // Don't auto backup if webhook URL is not configured
       if (!settings.webhookUrl) {
