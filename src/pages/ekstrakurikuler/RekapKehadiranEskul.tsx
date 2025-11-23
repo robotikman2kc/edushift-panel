@@ -340,6 +340,35 @@ const RekapKehadiranEskul = () => {
                 Tidak ada data kehadiran untuk periode yang dipilih
               </div>
             ) : (
+              <>
+                {/* Info Section */}
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Ekstrakurikuler</p>
+                      <p className="font-semibold">{eskul.nama_eskul}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pembimbing</p>
+                      <p className="font-semibold">{eskul.pembimbing}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Periode</p>
+                      <p className="font-semibold">
+                        {startMonth === endMonth 
+                          ? `${monthOptions[parseInt(startMonth)].label} ${selectedYear}`
+                          : `${monthOptions[parseInt(startMonth)].label} - ${monthOptions[parseInt(endMonth)].label} ${selectedYear}`
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Pertemuan</p>
+                      <p className="font-semibold">{previewData[0]?._dates?.length || 0} kali</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -396,6 +425,7 @@ const RekapKehadiranEskul = () => {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </CardContent>
         </Card>
