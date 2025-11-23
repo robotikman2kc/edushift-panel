@@ -34,6 +34,17 @@ export default function KelolaAnggota() {
   const loadData = async () => {
     console.log('Loading eskul data...');
     
+    // Check ALL localStorage keys
+    console.log('All localStorage keys:', Object.keys(localStorage));
+    
+    // Check if there's any anggota_eskul data anywhere
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.includes('anggota')) {
+        console.log(`Found key: ${key}`, localStorage.getItem(key));
+      }
+    }
+    
     // Check localStorage for anggota data
     const localAnggota = (window as any).localDB?.select('anggota_eskul') || [];
     console.log('LocalStorage anggota_eskul:', localAnggota);
@@ -46,11 +57,15 @@ export default function KelolaAnggota() {
       const eskulData = eskuls[0];
       setEskul(eskulData);
       
+      // Check all anggota in IndexedDB (without filter)
+      const allAnggota = await eskulDB.select('anggota_eskul');
+      console.log('ALL anggota in IndexedDB:', allAnggota);
+      
       // Load all anggota (active and inactive) for this eskul
       const anggotaData = await eskulDB.select('anggota_eskul', (a: AnggotaEskul) => 
         a.ekstrakurikuler_id === eskulData.id
       );
-      console.log('Anggota data from IndexedDB:', anggotaData);
+      console.log('Anggota data from IndexedDB (filtered):', anggotaData);
       console.log('Filtering by ekstrakurikuler_id:', eskulData.id);
       
       setAnggota(anggotaData);
