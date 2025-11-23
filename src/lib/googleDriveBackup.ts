@@ -36,7 +36,7 @@ class GoogleDriveBackup {
       return {
         webhookUrl: parsedSettings.webhookUrl || '',
         intervalDays: parsedSettings.intervalDays || 7,
-        autoBackupEnabled: parsedSettings.autoBackupEnabled !== false, // Default true
+        autoBackupEnabled: parsedSettings.autoBackupEnabled ?? true, // Default true
         lastBackupDate: lastBackupSetting?.value ? new Date(lastBackupSetting.value) : null,
       };
     } catch (error) {
@@ -61,7 +61,7 @@ class GoogleDriveBackup {
       const value = JSON.stringify({
         webhookUrl: settings.webhookUrl,
         intervalDays: settings.intervalDays,
-        autoBackupEnabled: settings.autoBackupEnabled !== false, // Default true if not specified
+        autoBackupEnabled: settings.autoBackupEnabled ?? true, // Default true if not specified
       });
 
       if (existing) {
