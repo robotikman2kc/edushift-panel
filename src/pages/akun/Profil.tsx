@@ -331,22 +331,22 @@ const Profil = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="jenis_kelamin">Jenis Kelamin</Label>
-                  <Select
-                    value={profile.jenis_kelamin || ""}
-                    onValueChange={(value) => setProfile(prev => ({ ...prev, jenis_kelamin: value as 'Laki-laki' | 'Perempuan' }))}
-                    disabled={!isEditing}
-                  >
-                    <SelectTrigger id="jenis_kelamin">
-                      <SelectValue placeholder="Pilih jenis kelamin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                      <SelectItem value="Perempuan">Perempuan</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Jenis Kelamin</Label>
+                <Select
+                  value={profile.jenis_kelamin || ""}
+                  onValueChange={(value) => setProfile(prev => ({ ...prev, jenis_kelamin: value as 'Laki-laki' | 'Perempuan' }))}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih jenis kelamin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                    <SelectItem value="Perempuan">Perempuan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
