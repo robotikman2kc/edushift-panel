@@ -120,6 +120,9 @@ export function PeriodeNonPembelajaranDialog({
           <DialogTitle>
             {editingPeriode ? "Edit Periode" : "Tambah Periode Non-Pembelajaran"}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Atur periode dimana tidak ada pembelajaran seperti ujian, libur semester, atau kegiatan khusus lainnya.
+          </p>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
