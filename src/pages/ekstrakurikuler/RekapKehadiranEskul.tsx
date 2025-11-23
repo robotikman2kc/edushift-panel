@@ -13,8 +13,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const RekapKehadiranEskul = () => {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
-  const [startMonth, setStartMonth] = useState<string>("0");
-  const [endMonth, setEndMonth] = useState<string>("0");
+  const currentMonth = new Date().getMonth().toString();
+  const [startMonth, setStartMonth] = useState<string>(currentMonth);
+  const [endMonth, setEndMonth] = useState<string>(currentMonth);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
