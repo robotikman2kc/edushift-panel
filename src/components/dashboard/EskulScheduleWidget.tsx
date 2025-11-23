@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { eskulDB } from "@/lib/eskulDB";
 import { Ekstrakurikuler } from "@/lib/indexedDB";
-import { Users, Clock, Calendar } from "lucide-react";
+import { indexedDB } from "@/lib/indexedDB";
+import { Users, Clock, Calendar, CalendarOff } from "lucide-react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 
@@ -15,9 +16,11 @@ interface EskulScheduleWidgetProps {
 export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) {
   const navigate = useNavigate();
   const [todayEskul, setTodayEskul] = useState<Ekstrakurikuler[]>([]);
+  const [currentPeriode, setCurrentPeriode] = useState<any>(null);
 
   useEffect(() => {
     loadTodayEskul();
+    checkPeriodeNonPembelajaran();
   }, [selectedDate]);
 
   const loadTodayEskul = async () => {
@@ -32,7 +35,24 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
     setTodayEskul(eskuls);
   };
 
-  if (todayEskul.length === 0) {
+  const checkPeriodeNonPembelajaran = async () => {
+    try {
+      const todayDate = format(selectedDate, "yyyy-MM-dd");
+      
+      // Check if today falls within any non-teaching period
+      const allPeriode = await indexedDB.select("periode_non_pembelajaran");
+      const activePeriode = allPeriode.find((p: any) => 
+        todayDate >= p.tanggal_mulai && todayDate <= p.tanggal_selesai
+      );
+      
+      setCurrentPeriode(activePeriode || null);
+    } catch (error) {
+      console.error("Error checking periode non pembelajaran:", error);
+    }
+  };
+
+  // Don't show if no ekstrakurikuler and no active periode
+  if (todayEskul.length === 0 && !currentPeriode) {
     return null;
   }
 
@@ -45,7 +65,27 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        {currentPeriode ? (
+          <div className="p-4 rounded-lg border bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-start gap-3">
+              <CalendarOff className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-sm text-yellow-900 dark:text-yellow-100 mb-1">
+                  {currentPeriode.nama}
+                </p>
+                <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2">
+                  {format(new Date(currentPeriode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(currentPeriode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
+                </p>
+                {currentPeriode.keterangan && (
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                    {currentPeriode.keterangan}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
           {todayEskul.map((eskul, index) => (
             <div 
               key={index}
@@ -79,6 +119,7 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
             </div>
           ))}
         </div>
+        )}
       </CardContent>
     </Card>
   );
