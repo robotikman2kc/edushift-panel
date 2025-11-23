@@ -60,6 +60,8 @@ const Dashboard = () => {
   const [loadingSchedule, setLoadingSchedule] = useState(true);
   const [calendarNotes, setCalendarNotes] = useState<any[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
+  const [nextMonthNotes, setNextMonthNotes] = useState<any[]>([]);
+  const [loadingNextMonthNotes, setLoadingNextMonthNotes] = useState(true);
   const [currentPeriode, setCurrentPeriode] = useState<any>(null);
 
   // Use cached data for static entities
@@ -95,6 +97,7 @@ const Dashboard = () => {
       fetchTodaySchedule();
     }
     fetchCalendarNotes();
+    fetchNextMonthNotes();
     checkPeriodeNonPembelajaran();
   }, [selectedDate, kelasData, mataPelajaranData]);
 
@@ -151,6 +154,57 @@ const Dashboard = () => {
       console.error("Error fetching calendar notes:", error);
     } finally {
       setLoadingNotes(false);
+    }
+  };
+
+  const fetchNextMonthNotes = async () => {
+    try {
+      setLoadingNextMonthNotes(true);
+      const today = new Date();
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const day7NextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 7);
+      
+      const firstDayStr = format(nextMonth, "yyyy-MM-dd");
+      const day7Str = format(day7NextMonth, "yyyy-MM-dd");
+
+      // Get calendar notes for first 7 days of next month
+      const notes = await indexedDB.select("catatan_kalender", (n: any) => 
+        n.tanggal >= firstDayStr && n.tanggal <= day7Str
+      );
+
+      // Get holidays for first 7 days of next month
+      const holidays = await indexedDB.select("hari_libur", (h: any) => 
+        h.tanggal >= firstDayStr && h.tanggal <= day7Str
+      );
+
+      // Get periode non pembelajaran that overlaps with first 7 days of next month
+      const allPeriode = await indexedDB.select("periode_non_pembelajaran");
+      const relevantPeriode = allPeriode.filter((p: any) => {
+        const periodeStart = new Date(p.tanggal_mulai);
+        const periodeEnd = new Date(p.tanggal_selesai);
+        return (periodeStart <= day7NextMonth && periodeEnd >= nextMonth);
+      });
+
+      // Combine notes, holidays, and periode with type indicator
+      const combined = [
+        ...notes.map((n: any) => ({ ...n, type: 'note' })),
+        ...holidays.map((h: any) => ({ ...h, type: 'holiday', catatan: h.nama })),
+        ...relevantPeriode.map((p: any) => ({ 
+          ...p, 
+          type: 'periode', 
+          catatan: p.nama,
+          tanggal: p.tanggal_mulai // Use start date for sorting
+        }))
+      ];
+
+      // Sort by date (earliest first)
+      setNextMonthNotes(combined.sort((a: any, b: any) => 
+        new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
+      ));
+    } catch (error) {
+      console.error("Error fetching next month notes:", error);
+    } finally {
+      setLoadingNextMonthNotes(false);
     }
   };
 
@@ -540,7 +594,70 @@ const Dashboard = () => {
               </div>
             )}
           </CardContent>
-        </Card>
+          </Card>
+
+          {/* Next Month Notes (First 7 Days) */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4" />
+                Catatan {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "MMM yyyy", { locale: idLocale })} (1-7)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingNextMonthNotes ? (
+                <LoadingSkeleton type="list" count={3} />
+              ) : nextMonthNotes.length === 0 ? (
+                <EmptyState
+                  icon={CalendarDays}
+                  title="Belum ada catatan"
+                  description="Tidak ada catatan untuk 7 hari pertama bulan depan"
+                  variant="minimal"
+                />
+              ) : (
+                <div className="space-y-2 max-h-[250px] overflow-y-auto">
+                  {nextMonthNotes.map((note, index) => (
+                    <div 
+                      key={note.id || index}
+                      className={`p-2 border rounded-lg hover:shadow-sm transition-shadow ${
+                        note.type === 'holiday' 
+                          ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
+                          : note.type === 'periode'
+                          ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
+                          : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs font-medium line-clamp-2">{note.catatan}</p>
+                          {note.type === 'periode' && note.tanggal_selesai && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {format(new Date(note.tanggal_mulai), "dd MMM", { locale: idLocale })} - {format(new Date(note.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {note.type === 'holiday' ? (
+                            <CalendarDays className="h-3 w-3 text-red-600 dark:text-red-400" />
+                          ) : note.type === 'periode' ? (
+                            <CalendarOff className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          ) : note.warna ? (
+                            <div 
+                              className="w-3 h-3 rounded border border-gray-300"
+                              style={{ backgroundColor: note.warna }}
+                            />
+                          ) : null}
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {format(new Date(note.tanggal), "dd MMM", { locale: idLocale })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
         {/* No Task Widget & Calendar Notes & PWA Controls */}
         <div className="lg:col-span-1 space-y-4">
