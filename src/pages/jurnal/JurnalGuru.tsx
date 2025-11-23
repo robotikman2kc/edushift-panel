@@ -442,8 +442,11 @@ const JurnalGuru = () => {
       
       // Process each periode
       for (const periode of allPeriode) {
-        const startDate = new Date(periode.tanggal_mulai);
-        const endDate = new Date(periode.tanggal_selesai);
+        // Parse dates properly to avoid timezone issues
+        const [startYear, startMonth, startDay] = periode.tanggal_mulai.split('-').map(Number);
+        const [endYear, endMonth, endDay] = periode.tanggal_selesai.split('-').map(Number);
+        const startDate = new Date(startYear, startMonth - 1, startDay);
+        const endDate = new Date(endYear, endMonth - 1, endDay);
         
         // Iterate through each day in the periode
         let currentDate = new Date(startDate);
