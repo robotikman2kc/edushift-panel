@@ -392,7 +392,7 @@ const Dashboard = () => {
                 {currentPeriode.jenis !== 'libur' && (
                   <div className="flex gap-2">
                     <Button 
-                      onClick={() => navigate('/jurnal/agenda-mengajar')} 
+                      onClick={() => navigate('/jurnal/jurnal-guru')} 
                       size="sm"
                       variant="outline"
                       className="flex-1"
