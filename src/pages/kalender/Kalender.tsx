@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarGrid } from "@/components/kalender/CalendarGrid";
 import { CalendarHeader } from "@/components/kalender/CalendarHeader";
@@ -9,6 +9,7 @@ import { CalendarNoteDialog } from "@/components/kalender/CalendarNoteDialog";
 import { PeriodeNonPembelajaranDialog } from "@/components/kalender/PeriodeNonPembelajaranDialog";
 import { indexedDB, type JadwalPelajaran, type AgendaMengajar, type Jurnal, type Kehadiran, type JamPelajaran, type Kelas, type MataPelajaran, type CatatanKalender, type HariLibur, type PeriodeNonPembelajaran } from "@/lib/indexedDB";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, BookOpen, Users, FileText, Plus, RefreshCw, CalendarOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -582,7 +583,8 @@ export default function Kalender() {
 
       {/* Calendar Grid and Detail Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Calendar Grid */}
           <Card>
             <CardContent className="p-6">
               <CalendarHeader
@@ -607,6 +609,46 @@ export default function Kalender() {
               />
             </CardContent>
           </Card>
+
+          {/* Daftar Periode Non-Pembelajaran */}
+          {periodeNonPembelajaran.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CalendarOff className="h-4 w-4" />
+                  Periode Non-Pembelajaran
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {periodeNonPembelajaran.map((periode) => (
+                    <div 
+                      key={periode.id}
+                      className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => handleEditPeriode(periode)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-semibold text-sm">{periode.nama}</p>
+                            <Badge variant="secondary" className="text-[10px]">
+                              {periode.jenis}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(periode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(periode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
+                          </p>
+                          {periode.keterangan && (
+                            <p className="text-xs text-muted-foreground mt-1">{periode.keterangan}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div>
