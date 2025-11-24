@@ -76,6 +76,7 @@ const Guru = () => {
       }
 
       toast({
+        variant: "success",
         title: "Sukses",
         description: "Data guru berhasil ditambahkan",
       });
@@ -110,6 +111,7 @@ const Guru = () => {
       }
 
       toast({
+        variant: "success",
         title: "Sukses",
         description: "Data guru berhasil diperbarui",
       });
@@ -138,6 +140,7 @@ const Guru = () => {
       }
 
       toast({
+        variant: "success",
         title: "Sukses",
         description: "Data guru berhasil dihapus",
       });
