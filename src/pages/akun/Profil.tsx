@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { User, Save, Camera, Upload, Phone, MapPin, Calendar as CalendarIcon, FileText } from "lucide-react";
+import { User, Save, Camera, Upload, Phone, MapPin, Calendar as CalendarIcon, FileText, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { opfsStorage } from "@/lib/opfsStorage";
 
@@ -220,6 +220,41 @@ const Profil = () => {
     }
   };
 
+  const handleDeleteAvatar = async () => {
+    try {
+      // Delete dari OPFS jika ada
+      if (profile.avatar_url?.startsWith('opfs://')) {
+        await opfsStorage.deleteFile(profile.avatar_url);
+      }
+      
+      // Cleanup blob URL
+      if (avatarBlobUrl) {
+        URL.revokeObjectURL(avatarBlobUrl);
+        setAvatarBlobUrl(null);
+      }
+      
+      // Update profile state dan localStorage
+      const updatedProfile = { ...profile, avatar_url: '' };
+      setProfile(updatedProfile);
+      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+      
+      // Trigger custom event to update other components
+      window.dispatchEvent(new Event('profileUpdated'));
+      
+      toast({
+        title: "Berhasil",
+        description: "Foto profil berhasil dihapus"
+      });
+    } catch (error) {
+      console.error('Error deleting avatar:', error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus foto profil",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleCancel = () => {
     loadProfile();
     setIsEditing(false);
@@ -279,6 +314,17 @@ const Profil = () => {
                       </>
                     )}
                   </Button>
+                  {profile.avatar_url && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isUploadingAvatar}
+                      onClick={handleDeleteAvatar}
+                    >
+                      <Trash2 className="mr-2 h-3 w-3" />
+                      Hapus
+                    </Button>
+                  )}
                   <input
                     id="avatar-upload"
                     type="file"
