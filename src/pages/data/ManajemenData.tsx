@@ -207,9 +207,9 @@ const ManajemenData = () => {
         description="Kelola dan hapus data sistem"
       />
 
-      <Alert variant="destructive" className="py-2">
+      <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription className="text-sm">
+        <AlertDescription>
           Penghapusan data bersifat <strong>permanen</strong> dan tidak dapat dibatalkan. Backup terlebih dahulu.
         </AlertDescription>
       </Alert>
