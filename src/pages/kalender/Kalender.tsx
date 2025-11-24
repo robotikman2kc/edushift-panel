@@ -37,8 +37,15 @@ interface CalendarData {
 
 export default function Kalender() {
   const { toast } = useToast();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  // Load date from localStorage or use current date
+  const [currentDate, setCurrentDate] = useState(() => {
+    const saved = localStorage.getItem('selectedDate');
+    return saved ? new Date(saved) : new Date();
+  });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    const saved = localStorage.getItem('selectedDate');
+    return saved ? new Date(saved) : new Date();
+  });
   const [calendarData, setCalendarData] = useState<Map<string, CalendarData>>(new Map());
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<{ id: string; catatan: string; warna?: string } | null>(null);
