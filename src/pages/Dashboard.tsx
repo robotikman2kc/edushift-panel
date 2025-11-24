@@ -412,7 +412,7 @@ const Dashboard = () => {
       {/* Today's Schedule & PWA Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Today's Schedule */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 bg-card/60 backdrop-blur-md">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between gap-2 text-base">
               <div className="flex items-center gap-2">
