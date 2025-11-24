@@ -163,7 +163,7 @@ const PembuatKelompok = () => {
     groups.forEach((group) => {
       text += `KELOMPOK ${group.groupNumber} (${group.members.length} siswa)\n`;
       group.members.forEach((member, idx) => {
-        text += `${idx + 1}. ${member.nama_lengkap} (${member.nisn})\n`;
+        text += `${idx + 1}. ${member.nama_lengkap}\n`;
       });
       text += "\n";
     });
@@ -230,13 +230,12 @@ const PembuatKelompok = () => {
         // Members table
         const tableData = group.members.map((member, idx) => [
           idx + 1,
-          member.nisn,
           member.nama_lengkap,
         ]);
 
         autoTable(doc, {
           startY: currentY,
-          head: [["No", "NISN", "Nama Lengkap"]],
+          head: [["No", "Nama Lengkap"]],
           body: tableData,
           theme: "grid",
           styles: {
@@ -255,8 +254,7 @@ const PembuatKelompok = () => {
           },
           columnStyles: {
             0: { halign: "center", cellWidth: 15 },
-            1: { halign: "left", cellWidth: 35 },
-            2: { halign: "left" },
+            1: { halign: "left" },
           },
         });
 
@@ -422,7 +420,6 @@ const PembuatKelompok = () => {
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{member.nama_lengkap}</p>
-                            <p className="text-xs text-muted-foreground">{member.nisn}</p>
                           </div>
                         </div>
                       ))}
