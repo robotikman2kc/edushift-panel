@@ -419,6 +419,7 @@ export default function Kalender() {
       await indexedDB.delete("catatan_kalender", noteId);
       
       toast({
+        variant: "success",
         title: "Catatan Dihapus",
         description: "Catatan kegiatan berhasil dihapus",
       });
@@ -479,6 +480,7 @@ export default function Kalender() {
         await indexedDB.update("periode_non_pembelajaran", periodeData.id, periodeData);
         console.log('Periode updated:', periodeData);
         toast({
+          variant: "success",
           title: "Periode Diperbarui",
           description: "Periode non-pembelajaran berhasil diperbarui",
         });
@@ -492,6 +494,7 @@ export default function Kalender() {
         }
 
         toast({
+          variant: "success",
           title: "Periode Ditambahkan",
           description: "Periode non-pembelajaran berhasil ditambahkan",
         });
@@ -516,6 +519,7 @@ export default function Kalender() {
       await indexedDB.delete("periode_non_pembelajaran", editingPeriode.id);
       
       toast({
+        variant: "success",
         title: "Periode Dihapus",
         description: "Periode non-pembelajaran berhasil dihapus",
       });
@@ -538,10 +542,11 @@ export default function Kalender() {
       if (noteId) {
         // Update existing note
         await indexedDB.update("catatan_kalender", noteId, { catatan, warna });
-        toast({
-          title: "Catatan Diperbarui",
-          description: "Catatan kegiatan berhasil diperbarui",
-        });
+      toast({
+        variant: "success",
+        title: "Catatan Diperbarui",
+        description: "Catatan kegiatan berhasil diperbarui",
+      });
       } else {
         // Create new note
         const result = await indexedDB.insert("catatan_kalender", {
@@ -554,10 +559,11 @@ export default function Kalender() {
           throw new Error(result.error);
         }
 
-        toast({
-          title: "Catatan Ditambahkan",
-          description: "Catatan kegiatan berhasil ditambahkan",
-        });
+      toast({
+        variant: "success",
+        title: "Catatan Ditambahkan",
+        description: "Catatan kegiatan berhasil ditambahkan",
+      });
       }
 
       setEditingNote(null);
