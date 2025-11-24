@@ -1140,7 +1140,7 @@ const JurnalGuru = () => {
       </PageHeader>
 
       {/* Template Kegiatan Cepat */}
-      <Card className="border-primary/20 bg-primary/5">
+      <Card className="bg-background border-border">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <Zap className="h-4 w-4" />
