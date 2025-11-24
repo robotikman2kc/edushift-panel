@@ -274,11 +274,6 @@ export function AppSidebar() {
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
-              // Cleanup old blob URL before creating new one
-              if (avatarBlobUrl) {
-                URL.revokeObjectURL(avatarBlobUrl);
-              }
-              
               // Create new blob URL and store in state
               const newBlobUrl = URL.createObjectURL(file);
               setAvatarBlobUrl(newBlobUrl);
@@ -295,11 +290,8 @@ export function AppSidebar() {
             return;
           }
           
-          // Non-OPFS URL - cleanup blob URL if exists
-          if (avatarBlobUrl) {
-            URL.revokeObjectURL(avatarBlobUrl);
-            setAvatarBlobUrl(null);
-          }
+          // Non-OPFS URL - no blob URL needed
+          setAvatarBlobUrl(null);
           setUserProfile(parsed);
         } catch (error) {
           console.error('Error loading profile:', error);
@@ -332,7 +324,7 @@ export function AppSidebar() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, [avatarBlobUrl]);
+  }, []);
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
