@@ -174,35 +174,30 @@ export default function TahunAjaran() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Manajemen Tahun Ajaran"
         description="Kelola tahun ajaran dan data per periode"
       />
 
       <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h3 className="text-lg font-medium">Daftar Tahun Ajaran</h3>
-          <p className="text-sm text-muted-foreground">
-            Buat tahun ajaran baru dan kelola data per periode
-          </p>
-        </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
+        <h3 className="text-base font-medium">Daftar Tahun Ajaran</h3>
+        <Button onClick={() => setIsDialogOpen(true)} size="sm">
           <Plus className="mr-2 h-4 w-4" />
           Tahun Ajaran Baru
         </Button>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-3">
         {yearStats.map((stat) => (
           <Card key={stat.tahunAjaran}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-2xl font-bold">
+                <CardTitle className="text-xl font-bold">
                   {stat.tahunAjaran}
                 </CardTitle>
                 {stat.isActive && (
-                  <Badge variant="default" className="ml-2">
+                  <Badge variant="default" className="ml-1">
                     <CheckCircle2 className="mr-1 h-3 w-3" />
                     Aktif
                   </Badge>
@@ -218,27 +213,27 @@ export default function TahunAjaran() {
                 </Button>
               )}
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg">
-                  <BookOpen className="h-8 w-8 text-primary" />
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
+                  <BookOpen className="h-6 w-6 text-primary" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Kelas</p>
-                    <p className="text-2xl font-bold">{stat.totalKelas}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Total Kelas</p>
+                    <p className="text-xl font-bold">{stat.totalKelas}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg">
-                  <Users className="h-8 w-8 text-primary" />
+                <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
+                  <Users className="h-6 w-6 text-primary" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Siswa</p>
-                    <p className="text-2xl font-bold">{stat.totalSiswa}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Total Siswa</p>
+                    <p className="text-xl font-bold">{stat.totalSiswa}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg">
-                  <GraduationCap className="h-8 w-8 text-primary" />
+                <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
+                  <GraduationCap className="h-6 w-6 text-primary" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Jadwal</p>
-                    <p className="text-2xl font-bold">{stat.totalJadwal}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Total Jadwal</p>
+                    <p className="text-xl font-bold">{stat.totalJadwal}</p>
                   </div>
                 </div>
               </div>
