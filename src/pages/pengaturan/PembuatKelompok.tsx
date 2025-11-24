@@ -166,8 +166,13 @@ const PembuatKelompok = () => {
           femaleIndex += size;
         }
 
+        console.log('Male distribution:', maleGroups.map(g => g.length));
+        console.log('Female distribution before reverse:', femaleGroups.map(g => g.length));
+
         // Reverse female distribution to balance group sizes
         femaleGroups.reverse();
+        
+        console.log('Female distribution after reverse:', femaleGroups.map(g => g.length));
 
         // Combine males and females into groups
         for (let i = 0; i < numGroups; i++) {
@@ -177,6 +182,8 @@ const PembuatKelompok = () => {
             members: shuffleArray(combinedMembers), // Shuffle to randomize order within group
           });
         }
+
+        console.log('Final group sizes:', newGroups.map(g => `${g.groupNumber}: ${g.members.length}`));
 
       } else {
         // Original random distribution with better balancing
