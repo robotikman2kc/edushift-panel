@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
-import { Shuffle, Users, Copy, Download, RefreshCw } from "lucide-react";
+import { Shuffle, Users, Copy, Download, RefreshCw, Save } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { v4 as uuidv4 } from "uuid";
 
 interface Siswa {
   id: string;
@@ -48,6 +49,7 @@ const PembuatKelompok = () => {
   const [groupSize, setGroupSize] = useState<number>(5);
   const [balanceGender, setBalanceGender] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
+  const [savedGroupId, setSavedGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     loadKelas();
@@ -94,6 +96,7 @@ const PembuatKelompok = () => {
       const filteredSiswa = allSiswa.filter((s: Siswa) => s.kelas_id === selectedKelas);
       setSiswaList(filteredSiswa);
       setGroups([]);
+      setSavedGroupId(null);
     } catch (error) {
       console.error("Error loading siswa:", error);
       toast({
@@ -229,6 +232,7 @@ const PembuatKelompok = () => {
       }
 
       setGroups(newGroups);
+      setSavedGroupId(null); // Reset saved status when creating new groups
       toast({
         title: "Berhasil",
         description: `${newGroups.length} kelompok telah dibuat`,
@@ -272,6 +276,56 @@ const PembuatKelompok = () => {
       title: "Berhasil",
       description: "Daftar kelompok berhasil disalin ke clipboard",
     });
+  };
+
+  const saveGroups = async () => {
+    if (groups.length === 0) return;
+    if (!selectedKelas) return;
+
+    setLoading(true);
+
+    try {
+      const kelasName = kelasOptions.find(k => k.id === selectedKelas)?.nama_kelas || "";
+      const mapelName = selectedMapel && selectedMapel !== "none"
+        ? mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || ""
+        : "";
+
+      const groupData = {
+        id: savedGroupId || uuidv4(),
+        kelas_id: selectedKelas,
+        mapel_id: selectedMapel && selectedMapel !== "none" ? selectedMapel : null,
+        nama_kelompok: `Kelompok ${kelasName}${mapelName ? ` - ${mapelName}` : ""}`,
+        tanggal_dibuat: new Date().toISOString(),
+        jumlah_kelompok: groups.length,
+        metode: groupMethod,
+        balance_gender: balanceGender,
+        data_kelompok: JSON.stringify(groups),
+      };
+
+      if (savedGroupId) {
+        await indexedDB.update("kelompok_siswa", groupData.id, groupData);
+        toast({
+          title: "Berhasil",
+          description: "Kelompok berhasil diperbarui",
+        });
+      } else {
+        await indexedDB.insert("kelompok_siswa", groupData);
+        setSavedGroupId(groupData.id);
+        toast({
+          title: "Berhasil",
+          description: "Kelompok berhasil disimpan",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving groups:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan kelompok",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const exportToPDF = async () => {
@@ -554,6 +608,10 @@ const PembuatKelompok = () => {
             </Button>
             {groups.length > 0 && (
               <>
+                <Button onClick={saveGroups} disabled={loading}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {savedGroupId ? "Perbarui" : "Simpan"} Kelompok
+                </Button>
                 <Button variant="outline" onClick={copyToClipboard}>
                   <Copy className="mr-2 h-4 w-4" />
                   Salin
