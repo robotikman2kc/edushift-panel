@@ -62,6 +62,7 @@ const MataPelajaran = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data mata pelajaran berhasil ditambahkan",
       });
@@ -89,6 +90,7 @@ const MataPelajaran = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data mata pelajaran berhasil diperbarui",
       });
@@ -111,6 +113,7 @@ const MataPelajaran = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data mata pelajaran berhasil dihapus",
       });

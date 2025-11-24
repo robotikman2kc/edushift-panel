@@ -302,6 +302,7 @@ const Siswa = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Siswa baru berhasil ditambahkan",
       });
@@ -334,6 +335,7 @@ const Siswa = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data siswa berhasil diperbarui",
       });
@@ -355,6 +357,7 @@ const Siswa = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Siswa berhasil dihapus",
       });
@@ -543,6 +546,7 @@ const Siswa = () => {
       // Tampilkan hasil import
       if (successCount > 0) {
         toast({
+          variant: "success",
           title: "Import Berhasil",
           description: `${successCount} siswa berhasil diimport${errorCount > 0 ? `, ${errorCount} gagal` : ''}`,
         });

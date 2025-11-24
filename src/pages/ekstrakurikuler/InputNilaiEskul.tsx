@@ -177,6 +177,7 @@ const InputNilaiEskul = () => {
         });
       } else {
         toast({
+          variant: "success",
           title: "Berhasil",
           description: `${successCount} nilai berhasil disimpan`,
         });
@@ -320,6 +321,7 @@ const InputNilaiEskul = () => {
       doc.save(fileName);
 
       toast({
+        variant: "success",
         title: "Export Berhasil",
         description: "Daftar nilai berhasil diekspor ke PDF",
       });

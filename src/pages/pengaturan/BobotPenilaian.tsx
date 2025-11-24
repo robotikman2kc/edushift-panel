@@ -322,6 +322,7 @@ export default function BobotPenilaian() {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Bobot penilaian berhasil disimpan dan akan digunakan untuk kelas ini",
       });
@@ -356,6 +357,7 @@ export default function BobotPenilaian() {
     setCategoryToDelete("");
     
     toast({
+      variant: "success",
       title: "Berhasil",
       description: "Kategori berhasil dihapus dari kelas ini",
     });
@@ -375,6 +377,7 @@ export default function BobotPenilaian() {
     }
 
     toast({
+      variant: "success",
       title: "Berhasil",
       description: "Kategori berhasil dipulihkan",
     });
@@ -442,12 +445,14 @@ export default function BobotPenilaian() {
       if (editingKategori) {
         await indexedDB.update("jenis_penilaian", editingKategori.id, categoryData);
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kategori penilaian berhasil diperbarui",
         });
       } else {
         await indexedDB.insert("jenis_penilaian", categoryData);
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kategori penilaian berhasil ditambahkan",
         });
@@ -474,6 +479,7 @@ export default function BobotPenilaian() {
     try {
       await indexedDB.delete("jenis_penilaian", deletingKategoriId);
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Kategori penilaian berhasil dihapus",
       });
@@ -535,6 +541,7 @@ export default function BobotPenilaian() {
     try {
       await saveGradeThresholds(gradeThresholds);
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Pengaturan grade berhasil disimpan",
       });

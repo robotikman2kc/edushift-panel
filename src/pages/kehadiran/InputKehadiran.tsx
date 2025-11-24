@@ -472,6 +472,7 @@ const InputKehadiran = () => {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data kehadiran berhasil disimpan",
       });

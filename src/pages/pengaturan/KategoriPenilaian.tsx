@@ -130,12 +130,14 @@ export default function KategoriPenilaian() {
       if (editingCategory) {
         await indexedDB.update("jenis_penilaian", editingCategory.id, categoryData);
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kategori penilaian berhasil diperbarui",
         });
       } else {
         await indexedDB.insert("jenis_penilaian", categoryData);
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kategori penilaian berhasil ditambahkan",
         });
@@ -162,6 +164,7 @@ export default function KategoriPenilaian() {
     try {
       await indexedDB.delete("jenis_penilaian", deletingId);
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Kategori penilaian berhasil dihapus",
       });

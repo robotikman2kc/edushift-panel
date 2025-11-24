@@ -448,6 +448,7 @@ export default function Kalender() {
       await fetchData();
       
       toast({
+        variant: "success",
         title: "Sinkronisasi Berhasil",
         description: `${holidays.length} hari libur berhasil disinkronkan`,
       });
