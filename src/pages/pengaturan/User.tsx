@@ -75,6 +75,7 @@ const User = () => {
       localAuth.registerUser(formData.email, formData.nama, 'guru');
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "User baru berhasil ditambahkan",
       });
@@ -101,6 +102,7 @@ const User = () => {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data user berhasil diperbarui",
       });
@@ -124,6 +126,7 @@ const User = () => {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "User berhasil dihapus",
       });

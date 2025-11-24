@@ -181,6 +181,7 @@ const PembuatKelompok = () => {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Kelompok berhasil dimuat",
       });
@@ -206,6 +207,7 @@ const PembuatKelompok = () => {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Kelompok berhasil dihapus",
       });
@@ -347,6 +349,7 @@ const PembuatKelompok = () => {
       setSavedGroupId(null); // Reset saved status when creating new groups
       setKeterangan(""); // Reset keterangan when creating new groups
       toast({
+        variant: "success",
         title: "Berhasil",
         description: `${newGroups.length} kelompok telah dibuat`,
       });
@@ -386,6 +389,7 @@ const PembuatKelompok = () => {
 
     navigator.clipboard.writeText(text);
     toast({
+      variant: "success",
       title: "Berhasil",
       description: "Daftar kelompok berhasil disalin ke clipboard",
     });
@@ -420,6 +424,7 @@ const PembuatKelompok = () => {
         await indexedDB.update("kelompok_siswa", groupData.id, groupData);
         await loadSavedGroups();
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kelompok berhasil diperbarui",
         });
@@ -428,6 +433,7 @@ const PembuatKelompok = () => {
         setSavedGroupId(groupData.id);
         await loadSavedGroups();
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kelompok berhasil disimpan",
         });

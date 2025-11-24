@@ -48,6 +48,7 @@ const Notifikasi = () => {
   const handleSave = () => {
     updateSettings(localSettings);
     toast({
+      variant: "success",
       title: "Pengaturan Disimpan",
       description: "Pengaturan notifikasi berhasil disimpan",
     });
@@ -69,6 +70,7 @@ const Notifikasi = () => {
     });
 
     toast({
+      variant: "success",
       title: "Notifikasi Dikirim",
       description: "Periksa notifikasi Anda",
     });

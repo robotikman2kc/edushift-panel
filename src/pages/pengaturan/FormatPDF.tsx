@@ -184,6 +184,7 @@ const FormatPDF: React.FC = () => {
     console.log('Settings saved to localStorage:', saved); // Debug log
     
     toast({
+      variant: "success",
       title: "Pengaturan disimpan",
       description: "Format PDF telah berhasil disimpan.",
     });
