@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface Siswa {
   id: string;
   nisn: string;
-  nama_lengkap: string;
+  nama_siswa: string;
   kelas_id: string;
 }
 
@@ -163,7 +163,7 @@ const PembuatKelompok = () => {
     groups.forEach((group) => {
       text += `KELOMPOK ${group.groupNumber} (${group.members.length} siswa)\n`;
       group.members.forEach((member, idx) => {
-        text += `${idx + 1}. ${member.nama_lengkap}\n`;
+        text += `${idx + 1}. ${member.nama_siswa}\n`;
       });
       text += "\n";
     });
@@ -230,7 +230,7 @@ const PembuatKelompok = () => {
         // Members table
         const tableData = group.members.map((member, idx) => [
           idx + 1,
-          member.nama_lengkap,
+          member.nama_siswa,
         ]);
 
         autoTable(doc, {
@@ -419,7 +419,7 @@ const PembuatKelompok = () => {
                             {idx + 1}.
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{member.nama_lengkap}</p>
+                            <p className="text-sm font-medium truncate">{member.nama_siswa}</p>
                           </div>
                         </div>
                       ))}
