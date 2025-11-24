@@ -704,7 +704,10 @@ const Dashboard = () => {
                                 ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
                                 : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
                             }`}
-                            onClick={() => navigate('/kalender')}
+                            onClick={() => {
+                              localStorage.setItem('selectedDate', new Date(note.tanggal).toISOString());
+                              navigate('/kalender');
+                            }}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
@@ -750,7 +753,10 @@ const Dashboard = () => {
                                 ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
                                 : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
                             }`}
-                            onClick={() => navigate('/kalender')}
+                            onClick={() => {
+                              localStorage.setItem('selectedDate', new Date(note.tanggal).toISOString());
+                              navigate('/kalender');
+                            }}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
