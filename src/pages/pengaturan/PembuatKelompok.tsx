@@ -142,26 +142,6 @@ const PembuatKelompok = () => {
         const shuffledLakiLaki = shuffleArray(lakiLaki);
         const shuffledPerempuan = shuffleArray(perempuan);
 
-        // Interleave males and females proportionally to maintain ratio
-        const interleavedStudents: Siswa[] = [];
-        const maleRatio = lakiLaki.length / siswaList.length;
-        let maleIndex = 0;
-        let femaleIndex = 0;
-
-        for (let i = 0; i < siswaList.length; i++) {
-          const expectedMales = (i + 1) * maleRatio;
-          const currentMales = maleIndex;
-          
-          // Add male if we haven't reached expected ratio yet
-          if (currentMales < expectedMales && maleIndex < shuffledLakiLaki.length) {
-            interleavedStudents.push(shuffledLakiLaki[maleIndex++]);
-          } else if (femaleIndex < shuffledPerempuan.length) {
-            interleavedStudents.push(shuffledPerempuan[femaleIndex++]);
-          } else if (maleIndex < shuffledLakiLaki.length) {
-            interleavedStudents.push(shuffledLakiLaki[maleIndex++]);
-          }
-        }
-
         // Initialize groups
         for (let i = 0; i < numGroups; i++) {
           newGroups.push({
@@ -170,8 +150,14 @@ const PembuatKelompok = () => {
           });
         }
 
-        // Distribute students round-robin for balanced group sizes
-        interleavedStudents.forEach((siswa, index) => {
+        // Distribute males round-robin
+        shuffledLakiLaki.forEach((siswa, index) => {
+          const groupIndex = index % numGroups;
+          newGroups[groupIndex].members.push(siswa);
+        });
+
+        // Distribute females round-robin
+        shuffledPerempuan.forEach((siswa, index) => {
           const groupIndex = index % numGroups;
           newGroups[groupIndex].members.push(siswa);
         });
