@@ -20,11 +20,11 @@ export function ActivityIndicator({ hasAgenda, hasAttendance, hasJournal, hasSch
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex gap-0.5 items-center justify-center mt-1">
-            {hasAgenda && <div className="w-1.5 h-1.5 rounded-full bg-green-500" />}
-            {hasAttendance && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
-            {hasJournal && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />}
-            {hasSchedule && !hasAgenda && !hasAttendance && <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />}
+          <div className="flex gap-0.5 items-center justify-center mt-0.5">
+            {hasAgenda && <div className="w-1 h-1 rounded-full bg-green-500" />}
+            {hasAttendance && <div className="w-1 h-1 rounded-full bg-blue-500" />}
+            {hasJournal && <div className="w-1 h-1 rounded-full bg-yellow-500" />}
+            {hasSchedule && !hasAgenda && !hasAttendance && <div className="w-1 h-1 rounded-full bg-muted-foreground/50" />}
           </div>
         </TooltipTrigger>
         <TooltipContent>
