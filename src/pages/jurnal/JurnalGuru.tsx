@@ -560,11 +560,12 @@ const JurnalGuru = () => {
     const updated = [...customTemplates, newTemplate];
     setCustomTemplates(updated);
     localStorage.setItem("custom_jurnal_templates", JSON.stringify(updated));
-    
-    toast({
-      title: "Berhasil",
-      description: "Template berhasil disimpan",
-    });
+      
+      toast({
+        variant: "success",
+        title: "Berhasil",
+        description: "Template berhasil disimpan",
+      });
     
     setShowTemplateDialog(false);
     setTemplateName("");
@@ -576,6 +577,7 @@ const JurnalGuru = () => {
     localStorage.setItem("custom_jurnal_templates", JSON.stringify(updated));
     
     toast({
+      variant: "success",
       title: "Berhasil",
       description: "Template berhasil dihapus",
     });
@@ -678,6 +680,7 @@ const JurnalGuru = () => {
         if (result.error) throw new Error(result.error);
         
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Jurnal berhasil diperbarui",
         });
@@ -686,6 +689,7 @@ const JurnalGuru = () => {
         if (result.error) throw new Error(result.error);
         
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Jurnal berhasil ditambahkan",
         });
@@ -719,6 +723,7 @@ const JurnalGuru = () => {
         if (result.error) throw new Error(result.error);
         
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Jenis kegiatan berhasil diperbarui",
         });
@@ -728,6 +733,7 @@ const JurnalGuru = () => {
         if (result.error) throw new Error(result.error);
         
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Jenis kegiatan berhasil ditambahkan",
         });
@@ -782,6 +788,7 @@ const JurnalGuru = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Jurnal berhasil dihapus",
       });
@@ -817,6 +824,7 @@ const JurnalGuru = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Jenis kegiatan berhasil dihapus",
       });
