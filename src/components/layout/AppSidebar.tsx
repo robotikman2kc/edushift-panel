@@ -33,7 +33,8 @@ import {
   UserPlus,
   ClipboardCheck,
   ChevronsDown,
-  ChevronsUp
+  ChevronsUp,
+  Shuffle
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { opfsStorage } from "@/lib/opfsStorage";
@@ -71,6 +72,7 @@ const menuItems = [
       { title: "Jadwal Pelajaran", url: "/pengaturan/jadwal-pelajaran", icon: CalendarDays },
       { title: "Bobot Penilaian", url: "/pengaturan/bobot-penilaian", icon: TrendingUp },
       { title: "Tahun Ajaran", url: "/pengaturan/tahun-ajaran", icon: CalendarClock },
+      { title: "Pembuat Kelompok", url: "/pengaturan/pembuat-kelompok", icon: Shuffle },
       { title: "Format PDF", url: "/pengaturan/format-pdf", icon: FileText },
       { title: "Notifikasi", url: "/pengaturan/notifikasi", icon: Bell },
     ],
@@ -155,7 +157,7 @@ export function AppSidebar() {
     LayoutDashboard, CalendarDays, UserCheck, GraduationCap, Users, BookOpen,
     TrendingUp, CalendarClock, FileText, Bell, FileInput, BarChart3, CalendarCheck,
     Calendar, ClipboardList, FileBarChart, BookText, Database, Download, Cloud,
-    HardDrive, User, HelpCircle, Tags, Trophy, UserPlus, ClipboardCheck
+    HardDrive, User, HelpCircle, Tags, Trophy, UserPlus, ClipboardCheck, Shuffle
   };
   
   // Get all available menu items for quick menu
