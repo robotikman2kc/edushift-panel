@@ -582,7 +582,14 @@ const Dashboard = () => {
                         </div>
                         
                         <div className="space-y-0.5">
-                          <p className="text-xs text-muted-foreground">{schedule.kelas_nama} • {schedule.waktu}</p>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <GraduationCap className="h-3 w-3" />
+                            <span>{schedule.kelas_nama}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>{schedule.waktu}</span>
+                          </div>
                           
                           {schedule.materi_terakhir && (
                             <div className="mt-1.5 pt-1.5 border-t">
