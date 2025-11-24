@@ -190,7 +190,10 @@ export default function TahunAjaran() {
 
       <div className="grid gap-3">
         {yearStats.map((stat) => (
-          <Card key={stat.tahunAjaran}>
+          <Card 
+            key={stat.tahunAjaran}
+            className={stat.isActive ? "bg-emerald-500/10 border-emerald-500/30" : ""}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-xl font-bold">
