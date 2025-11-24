@@ -128,11 +128,6 @@ export function TopBar() {
           if (parsed.avatar_url && parsed.avatar_url.startsWith('opfs://')) {
             const file = await opfsStorage.getFile(parsed.avatar_url);
             if (file && file instanceof Blob) {
-              // Cleanup old blob URL
-              if (avatarBlobUrl) {
-                URL.revokeObjectURL(avatarBlobUrl);
-              }
-              
               // Create new blob URL
               const newBlobUrl = URL.createObjectURL(file);
               setAvatarBlobUrl(newBlobUrl);
@@ -149,11 +144,8 @@ export function TopBar() {
             return;
           }
           
-          // Non-OPFS - cleanup blob URL
-          if (avatarBlobUrl) {
-            URL.revokeObjectURL(avatarBlobUrl);
-            setAvatarBlobUrl(null);
-          }
+          // Non-OPFS - no blob URL needed
+          setAvatarBlobUrl(null);
           setUserProfile(parsed);
         } catch (error) {
           console.error('Error loading profile:', error);
@@ -186,7 +178,7 @@ export function TopBar() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, [avatarBlobUrl]);
+  }, []);
 
   // Check last backup date
   useEffect(() => {
