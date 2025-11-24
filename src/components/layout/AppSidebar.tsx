@@ -333,8 +333,26 @@ export function AppSidebar() {
       : "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground";
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <Sidebar className={`${collapsed ? "w-14" : "w-64"} relative overflow-hidden`} collapsible="icon">
+      {/* Batik Pattern Background */}
+      <div 
+        className="absolute inset-0 opacity-20 pointer-events-none z-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 15% 45%, transparent 18%, hsl(var(--sidebar-foreground) / 0.08) 19%, hsl(var(--sidebar-foreground) / 0.08) 21%, transparent 22%),
+            radial-gradient(circle at 85% 55%, transparent 18%, hsl(var(--sidebar-foreground) / 0.08) 19%, hsl(var(--sidebar-foreground) / 0.08) 21%, transparent 22%),
+            radial-gradient(circle at 50% 15%, transparent 12%, hsl(var(--sidebar-foreground) / 0.05) 13%, transparent 14%),
+            radial-gradient(circle at 50% 85%, transparent 12%, hsl(var(--sidebar-foreground) / 0.05) 13%, transparent 14%),
+            linear-gradient(120deg, transparent 47%, hsl(var(--sidebar-foreground) / 0.04) 48%, transparent 50%),
+            linear-gradient(60deg, transparent 47%, hsl(var(--sidebar-foreground) / 0.04) 48%, transparent 50%),
+            repeating-linear-gradient(45deg, transparent, transparent 8px, hsl(var(--sidebar-foreground) / 0.03) 8px, hsl(var(--sidebar-foreground) / 0.03) 9px),
+            repeating-linear-gradient(135deg, transparent, transparent 8px, hsl(var(--sidebar-foreground) / 0.03) 8px, hsl(var(--sidebar-foreground) / 0.03) 9px)
+          `,
+          backgroundSize: '90px 90px, 90px 90px, 70px 70px, 70px 70px, 35px 35px, 35px 35px, 50px 50px, 50px 50px',
+          backgroundPosition: '0 0, 45px 45px, 20px 20px, 65px 65px, 0 0, 15px 15px, 0 0, 25px 25px'
+        }}
+      />
+      <SidebarHeader className="border-b border-sidebar-border p-4 relative z-10">
         <div 
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => navigate('/dashboard')}
@@ -393,7 +411,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="p-2 space-y-1">
+      <SidebarContent className="p-2 space-y-1 relative z-10">
         {/* Quick Menu Section */}
         {quickMenuItems.length > 0 && (
           <>
