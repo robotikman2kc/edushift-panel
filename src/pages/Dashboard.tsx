@@ -699,11 +699,15 @@ const Dashboard = () => {
                         {calendarNotes.map((note) => (
                           <div 
                             key={note.id}
-                            className={`p-2 border rounded-lg hover:shadow-sm transition-shadow ${
+                            className={`p-2 border rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${
                               note.type === 'holiday' 
                                 ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
                                 : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
                             }`}
+                            onClick={() => {
+                              localStorage.setItem('selectedDate', new Date(note.tanggal).toISOString());
+                              navigate('/kalender');
+                            }}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
@@ -742,13 +746,17 @@ const Dashboard = () => {
                         {nextMonthNotes.map((note, index) => (
                           <div 
                             key={note.id || index}
-                            className={`p-2 border rounded-lg hover:shadow-sm transition-shadow ${
+                            className={`p-2 border rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${
                               note.type === 'holiday' 
                                 ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
                                 : note.type === 'periode'
                                 ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
                                 : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
                             }`}
+                            onClick={() => {
+                              localStorage.setItem('selectedDate', new Date(note.tanggal).toISOString());
+                              navigate('/kalender');
+                            }}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
