@@ -384,138 +384,144 @@ const InputNilaiEskul = () => {
         description={`Pembimbing: ${eskul.pembimbing}`}
       />
 
-      {/* Filter Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Tahun Ajaran</Label>
-              <div className="p-2 bg-muted rounded-md">
-                <p className="text-sm font-medium">
-                  {activeTahunAjaran || 'Memuat...'}
-                </p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Filter Card - Left Side */}
+        <div className="lg:col-span-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Filter</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Tahun Ajaran</Label>
+                  <div className="p-2 bg-muted rounded-md">
+                    <p className="text-sm font-medium">
+                      {activeTahunAjaran || 'Memuat...'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Semester</Label>
+                  <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Semester 1</SelectItem>
+                      <SelectItem value="2">Semester 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Kelas</Label>
+                  <Select value={selectedKelas} onValueChange={setSelectedKelas}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih kelas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Kelas</SelectItem>
+                      {kelasOptions.map((kelas) => (
+                        <SelectItem key={kelas} value={kelas}>
+                          {kelas}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    className="w-full"
+                    onClick={() => setIsExportDateDialogOpen(true)}
+                    disabled={loading || anggotaList.length === 0}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Export PDF
+                  </Button>
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="space-y-2">
-              <Label>Semester</Label>
-              <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Semester 1</SelectItem>
-                  <SelectItem value="2">Semester 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Kelas</Label>
-              <Select value={selectedKelas} onValueChange={setSelectedKelas}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Kelas</SelectItem>
-                  {kelasOptions.map((kelas) => (
-                    <SelectItem key={kelas} value={kelas}>
-                      {kelas}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <Button
-              className="w-full md:w-auto"
-              onClick={() => setIsExportDateDialogOpen(true)}
-              disabled={loading || anggotaList.length === 0}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Export PDF
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Grades Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Input Nilai</CardTitle>
-          <div className="flex gap-2">
-            <Select onValueChange={handleSetAllGrades}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Set Semua Nilai..." />
-              </SelectTrigger>
-              <SelectContent>
-                {GRADE_OPTIONS.map((grade) => (
-                  <SelectItem key={grade} value={grade}>
-                    Set Semua {grade}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleSave} disabled={loading}>
-              <Save className="mr-2 h-4 w-4" />
-              Simpan Semua
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {anggotaList.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Tidak ada anggota untuk kelas yang dipilih
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3">No</th>
-                    <th className="text-left p-3">NISN</th>
-                    <th className="text-left p-3">Nama Siswa</th>
-                    <th className="text-left p-3">Kelas</th>
-                    <th className="text-center p-3">Nilai</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {anggotaList.map((anggota, index) => (
-                    <tr key={anggota.id} className="border-b hover:bg-muted/50">
-                      <td className="p-3">{index + 1}</td>
-                      <td className="p-3">{anggota.nisn}</td>
-                      <td className="p-3">{anggota.nama_siswa}</td>
-                      <td className="p-3">{anggota.nama_kelas}</td>
-                      <td className="p-3">
-                        <Select
-                          value={grades[anggota.id] || ""}
-                          onValueChange={(value) => handleGradeChange(anggota.id, value)}
-                        >
-                          <SelectTrigger className="w-24 mx-auto">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {GRADE_OPTIONS.map((grade) => (
-                              <SelectItem key={grade} value={grade}>
-                                {grade}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Grades Table - Right Side */}
+        <div className="lg:col-span-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Input Nilai</CardTitle>
+              <div className="flex gap-2">
+                <Select onValueChange={handleSetAllGrades}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Set Semua Nilai..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GRADE_OPTIONS.map((grade) => (
+                      <SelectItem key={grade} value={grade}>
+                        Set Semua {grade}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleSave} disabled={loading}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Simpan Semua
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {anggotaList.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Tidak ada anggota untuk kelas yang dipilih
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3">No</th>
+                        <th className="text-left p-3">NISN</th>
+                        <th className="text-left p-3">Nama Siswa</th>
+                        <th className="text-left p-3">Kelas</th>
+                        <th className="text-center p-3">Nilai</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {anggotaList.map((anggota, index) => (
+                        <tr key={anggota.id} className="border-b hover:bg-muted/50">
+                          <td className="p-3">{index + 1}</td>
+                          <td className="p-3">{anggota.nisn}</td>
+                          <td className="p-3">{anggota.nama_siswa}</td>
+                          <td className="p-3">{anggota.nama_kelas}</td>
+                          <td className="p-3">
+                            <Select
+                              value={grades[anggota.id] || ""}
+                              onValueChange={(value) => handleGradeChange(anggota.id, value)}
+                            >
+                              <SelectTrigger className="w-24 mx-auto">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {GRADE_OPTIONS.map((grade) => (
+                                  <SelectItem key={grade} value={grade}>
+                                    {grade}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <ExportDateDialog
         open={isExportDateDialogOpen}
