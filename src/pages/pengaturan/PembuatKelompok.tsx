@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
-import { Shuffle, Users, Copy, Download, RefreshCw, Save } from "lucide-react";
+import { Shuffle, Users, Copy, Download, RefreshCw, Save, Trash2, FolderOpen } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from "uuid";
@@ -50,6 +50,8 @@ const PembuatKelompok = () => {
   const [balanceGender, setBalanceGender] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [savedGroupId, setSavedGroupId] = useState<string | null>(null);
+  const [savedGroups, setSavedGroups] = useState<any[]>([]);
+  const [selectedSavedGroup, setSelectedSavedGroup] = useState<string>("");
 
   useEffect(() => {
     loadKelas();
@@ -59,6 +61,7 @@ const PembuatKelompok = () => {
   useEffect(() => {
     if (selectedKelas) {
       loadSiswa();
+      loadSavedGroups();
     }
   }, [selectedKelas]);
 
@@ -97,11 +100,85 @@ const PembuatKelompok = () => {
       setSiswaList(filteredSiswa);
       setGroups([]);
       setSavedGroupId(null);
+      setSelectedSavedGroup("");
     } catch (error) {
       console.error("Error loading siswa:", error);
       toast({
         title: "Error",
         description: "Gagal memuat data siswa",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadSavedGroups = async () => {
+    try {
+      const allGroups = await indexedDB.select("kelompok_siswa");
+      const filteredGroups = allGroups.filter((g: any) => g.kelas_id === selectedKelas);
+      setSavedGroups(filteredGroups.sort((a: any, b: any) => 
+        new Date(b.tanggal_dibuat).getTime() - new Date(a.tanggal_dibuat).getTime()
+      ));
+    } catch (error) {
+      console.error("Error loading saved groups:", error);
+    }
+  };
+
+  const loadGroup = async (groupId: string) => {
+    try {
+      const savedGroup = await indexedDB.selectById("kelompok_siswa", groupId);
+      if (!savedGroup) {
+        toast({
+          title: "Error",
+          description: "Kelompok tidak ditemukan",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const parsedGroups = JSON.parse(savedGroup.data_kelompok);
+      setGroups(parsedGroups);
+      setSavedGroupId(savedGroup.id);
+      setGroupMethod(savedGroup.metode);
+      setBalanceGender(savedGroup.balance_gender);
+      
+      if (savedGroup.mapel_id) {
+        setSelectedMapel(savedGroup.mapel_id);
+      }
+
+      toast({
+        title: "Berhasil",
+        description: "Kelompok berhasil dimuat",
+      });
+    } catch (error) {
+      console.error("Error loading group:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat kelompok",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteSavedGroup = async (groupId: string) => {
+    try {
+      await indexedDB.delete("kelompok_siswa", groupId);
+      await loadSavedGroups();
+      
+      if (savedGroupId === groupId) {
+        setGroups([]);
+        setSavedGroupId(null);
+        setSelectedSavedGroup("");
+      }
+
+      toast({
+        title: "Berhasil",
+        description: "Kelompok berhasil dihapus",
+      });
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus kelompok",
         variant: "destructive",
       });
     }
@@ -304,6 +381,7 @@ const PembuatKelompok = () => {
 
       if (savedGroupId) {
         await indexedDB.update("kelompok_siswa", groupData.id, groupData);
+        await loadSavedGroups();
         toast({
           title: "Berhasil",
           description: "Kelompok berhasil diperbarui",
@@ -311,6 +389,7 @@ const PembuatKelompok = () => {
       } else {
         await indexedDB.insert("kelompok_siswa", groupData);
         setSavedGroupId(groupData.id);
+        await loadSavedGroups();
         toast({
           title: "Berhasil",
           description: "Kelompok berhasil disimpan",
@@ -477,6 +556,68 @@ const PembuatKelompok = () => {
         title="Pembuat Kelompok"
         description="Acak dan buat kelompok siswa secara otomatis"
       />
+
+      {/* Saved Groups Card */}
+      {selectedKelas && savedGroups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5" />
+              Kelompok Tersimpan
+            </CardTitle>
+            <CardDescription>
+              Muat kelompok yang sudah dibuat sebelumnya
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {savedGroups.map((savedGroup) => {
+                const mapelName = savedGroup.mapel_id && savedGroup.mapel_id !== "none"
+                  ? mataPelajaranOptions.find(m => m.id === savedGroup.mapel_id)?.nama_mata_pelajaran
+                  : null;
+                const isCurrent = savedGroupId === savedGroup.id;
+                
+                return (
+                  <div 
+                    key={savedGroup.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      isCurrent ? "border-primary bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium">{savedGroup.nama_kelompok}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {savedGroup.jumlah_kelompok} kelompok • {new Date(savedGroup.tanggal_dibuat).toLocaleDateString("id-ID")}
+                        {mapelName && ` • ${mapelName}`}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSavedGroup(savedGroup.id);
+                          loadGroup(savedGroup.id);
+                        }}
+                        disabled={isCurrent}
+                      >
+                        {isCurrent ? "Dimuat" : "Muat"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteSavedGroup(savedGroup.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Configuration Card */}
       <Card>
