@@ -333,10 +333,10 @@ export function AppSidebar() {
       : "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground";
 
   return (
-    <Sidebar className={`${collapsed ? "w-14" : "w-64"} relative overflow-hidden`} collapsible="icon">
+    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
       {/* Batik Pattern Background */}
       <div 
-        className="absolute inset-0 opacity-20 pointer-events-none z-0"
+        className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage: `
             radial-gradient(circle at 15% 45%, transparent 18%, hsl(var(--sidebar-foreground) / 0.08) 19%, hsl(var(--sidebar-foreground) / 0.08) 21%, transparent 22%),
@@ -352,6 +352,7 @@ export function AppSidebar() {
           backgroundPosition: '0 0, 45px 45px, 20px 20px, 65px 65px, 0 0, 15px 15px, 0 0, 25px 25px'
         }}
       />
+      
       <SidebarHeader className="border-b border-sidebar-border p-4 relative z-10">
         <div 
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
