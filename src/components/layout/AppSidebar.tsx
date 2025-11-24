@@ -371,7 +371,10 @@ export function AppSidebar() {
         
         {!collapsed && (
           <>
-            <div className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg">
+            <div 
+              className="flex items-center gap-3 mt-4 p-3 bg-sidebar-accent/50 rounded-lg cursor-pointer hover:bg-sidebar-accent transition-colors"
+              onClick={() => navigate('/akun/profil')}
+            >
               <Avatar className="h-8 w-8 border-2 border-primary">
                 <AvatarImage 
                   src={userProfile?.avatar_url?.startsWith('opfs://') ? avatarBlobUrl || '' : userProfile?.avatar_url}
@@ -392,7 +395,10 @@ export function AppSidebar() {
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 hover:bg-sidebar-accent"
-                  onClick={collapseAll}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    collapseAll();
+                  }}
                   title="Tutup semua menu"
                 >
                   <ChevronsUp className="h-3.5 w-3.5" />
@@ -401,7 +407,10 @@ export function AppSidebar() {
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 hover:bg-sidebar-accent"
-                  onClick={expandAll}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    expandAll();
+                  }}
                   title="Buka semua menu"
                 >
                   <ChevronsDown className="h-3.5 w-3.5" />
