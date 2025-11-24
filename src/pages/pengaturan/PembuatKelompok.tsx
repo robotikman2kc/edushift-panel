@@ -55,6 +55,37 @@ const PembuatKelompok = () => {
   const [selectedSavedGroup, setSelectedSavedGroup] = useState<string>("");
   const [keterangan, setKeterangan] = useState<string>("");
 
+  // Load saved filters from localStorage on mount
+  useEffect(() => {
+    const savedFilters = localStorage.getItem("pembuat_kelompok_filters");
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        if (filters.selectedKelas) setSelectedKelas(filters.selectedKelas);
+        if (filters.selectedMapel) setSelectedMapel(filters.selectedMapel);
+        if (filters.groupMethod) setGroupMethod(filters.groupMethod);
+        if (filters.groupCount) setGroupCount(filters.groupCount);
+        if (filters.groupSize) setGroupSize(filters.groupSize);
+        if (filters.balanceGender !== undefined) setBalanceGender(filters.balanceGender);
+      } catch (error) {
+        console.error("Error loading saved filters:", error);
+      }
+    }
+  }, []);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    const filters = {
+      selectedKelas,
+      selectedMapel,
+      groupMethod,
+      groupCount,
+      groupSize,
+      balanceGender,
+    };
+    localStorage.setItem("pembuat_kelompok_filters", JSON.stringify(filters));
+  }, [selectedKelas, selectedMapel, groupMethod, groupCount, groupSize, balanceGender]);
+
   useEffect(() => {
     loadKelas();
     loadMataPelajaran();
