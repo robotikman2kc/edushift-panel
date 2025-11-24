@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { Shuffle, Users, Copy, Download, RefreshCw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Siswa {
@@ -17,6 +18,7 @@ interface Siswa {
   nisn: string;
   nama_siswa: string;
   kelas_id: string;
+  jenis_kelamin: "Laki-laki" | "Perempuan";
 }
 
 interface Kelas {
@@ -37,6 +39,7 @@ const PembuatKelompok = () => {
   const [groupMethod, setGroupMethod] = useState<"by-count" | "by-size">("by-count");
   const [groupCount, setGroupCount] = useState<number>(4);
   const [groupSize, setGroupSize] = useState<number>(5);
+  const [balanceGender, setBalanceGender] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -101,38 +104,82 @@ const PembuatKelompok = () => {
     setLoading(true);
 
     try {
-      const shuffledSiswa = shuffleArray(siswaList);
       let newGroups: Group[] = [];
 
-      if (groupMethod === "by-count") {
-        // Bagi berdasarkan jumlah kelompok
-        const actualGroupCount = Math.min(groupCount, siswaList.length);
-        const baseSize = Math.floor(siswaList.length / actualGroupCount);
-        const remainder = siswaList.length % actualGroupCount;
+      if (balanceGender) {
+        // Separate students by gender
+        const lakiLaki = siswaList.filter(s => s.jenis_kelamin === "Laki-laki");
+        const perempuan = siswaList.filter(s => s.jenis_kelamin === "Perempuan");
 
-        let currentIndex = 0;
-        for (let i = 0; i < actualGroupCount; i++) {
-          const size = baseSize + (i < remainder ? 1 : 0);
+        // Shuffle each gender group
+        const shuffledLakiLaki = shuffleArray(lakiLaki);
+        const shuffledPerempuan = shuffleArray(perempuan);
+
+        // Determine number of groups
+        const numGroups = groupMethod === "by-count" 
+          ? Math.min(groupCount, siswaList.length)
+          : Math.ceil(siswaList.length / groupSize);
+
+        // Initialize groups
+        for (let i = 0; i < numGroups; i++) {
           newGroups.push({
             groupNumber: i + 1,
-            members: shuffledSiswa.slice(currentIndex, currentIndex + size),
+            members: [],
           });
-          currentIndex += size;
         }
-      } else {
-        // Bagi berdasarkan ukuran kelompok
-        const actualGroupSize = Math.min(groupSize, siswaList.length);
-        let currentIndex = 0;
-        let groupNumber = 1;
 
-        while (currentIndex < shuffledSiswa.length) {
-          const members = shuffledSiswa.slice(currentIndex, currentIndex + actualGroupSize);
-          newGroups.push({
-            groupNumber,
-            members,
-          });
-          currentIndex += actualGroupSize;
-          groupNumber++;
+        // Distribute males evenly
+        shuffledLakiLaki.forEach((siswa, index) => {
+          const groupIndex = index % numGroups;
+          newGroups[groupIndex].members.push(siswa);
+        });
+
+        // Distribute females evenly
+        shuffledPerempuan.forEach((siswa, index) => {
+          const groupIndex = index % numGroups;
+          newGroups[groupIndex].members.push(siswa);
+        });
+
+        // Shuffle members within each group
+        newGroups = newGroups.map(group => ({
+          ...group,
+          members: shuffleArray(group.members)
+        }));
+
+      } else {
+        // Original random distribution
+        const shuffledSiswa = shuffleArray(siswaList);
+
+        if (groupMethod === "by-count") {
+          // Bagi berdasarkan jumlah kelompok
+          const actualGroupCount = Math.min(groupCount, siswaList.length);
+          const baseSize = Math.floor(siswaList.length / actualGroupCount);
+          const remainder = siswaList.length % actualGroupCount;
+
+          let currentIndex = 0;
+          for (let i = 0; i < actualGroupCount; i++) {
+            const size = baseSize + (i < remainder ? 1 : 0);
+            newGroups.push({
+              groupNumber: i + 1,
+              members: shuffledSiswa.slice(currentIndex, currentIndex + size),
+            });
+            currentIndex += size;
+          }
+        } else {
+          // Bagi berdasarkan ukuran kelompok
+          const actualGroupSize = Math.min(groupSize, siswaList.length);
+          let currentIndex = 0;
+          let groupNumber = 1;
+
+          while (currentIndex < shuffledSiswa.length) {
+            const members = shuffledSiswa.slice(currentIndex, currentIndex + actualGroupSize);
+            newGroups.push({
+              groupNumber,
+              members,
+            });
+            currentIndex += actualGroupSize;
+            groupNumber++;
+          }
         }
       }
 
@@ -360,6 +407,28 @@ const PembuatKelompok = () => {
                 </p>
               </div>
             )}
+
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2 h-10">
+                <Checkbox 
+                  id="balance-gender" 
+                  checked={balanceGender}
+                  onCheckedChange={(checked) => setBalanceGender(checked as boolean)}
+                />
+                <label
+                  htmlFor="balance-gender"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Ratakan Distribusi Gender
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {balanceGender 
+                  ? "Siswa laki-laki dan perempuan akan didistribusikan merata ke setiap kelompok"
+                  : "Siswa akan diacak tanpa mempertimbangkan gender"
+                }
+              </p>
+            </div>
           </div>
 
           <Separator />
@@ -400,12 +469,24 @@ const PembuatKelompok = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groups.map((group) => (
+              {groups.map((group) => {
+                const lakiLakiCount = group.members.filter(m => m.jenis_kelamin === "Laki-laki").length;
+                const perempuanCount = group.members.filter(m => m.jenis_kelamin === "Perempuan").length;
+                
+                return (
                 <Card key={group.groupNumber} className="border-2">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center justify-between">
                       Kelompok {group.groupNumber}
-                      <Badge variant="secondary">{group.members.length} siswa</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{group.members.length} siswa</Badge>
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          L: {lakiLakiCount}
+                        </Badge>
+                        <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">
+                          P: {perempuanCount}
+                        </Badge>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -413,20 +494,31 @@ const PembuatKelompok = () => {
                       {group.members.map((member, idx) => (
                         <div
                           key={member.id}
-                          className="flex items-start gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+                          className={`flex items-start gap-2 p-2 rounded-md transition-colors ${
+                            member.jenis_kelamin === "Laki-laki" 
+                              ? "bg-blue-50 hover:bg-blue-100 border border-blue-200" 
+                              : "bg-pink-50 hover:bg-pink-100 border border-pink-200"
+                          }`}
                         >
-                          <span className="text-xs font-medium text-muted-foreground min-w-[20px]">
+                          <span className={`text-xs font-medium min-w-[20px] ${
+                            member.jenis_kelamin === "Laki-laki" ? "text-blue-600" : "text-pink-600"
+                          }`}>
                             {idx + 1}.
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{member.nama_siswa}</p>
+                            <p className={`text-sm font-medium truncate ${
+                              member.jenis_kelamin === "Laki-laki" ? "text-blue-900" : "text-pink-900"
+                            }`}>
+                              {member.nama_siswa}
+                            </p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              );
+              })}
             </div>
           </CardContent>
         </Card>
