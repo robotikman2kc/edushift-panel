@@ -428,10 +428,6 @@ export function TopBar() {
                   <User className="mr-2 h-4 w-4" />
                   <span>Profil</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Pengaturan</span>
-                </DropdownMenuItem>
                 
                 {/* Show Refresh Database in dropdown on mobile */}
                 <DropdownMenuSeparator className="md:hidden" />
