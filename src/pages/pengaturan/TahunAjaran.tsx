@@ -118,6 +118,7 @@ export default function TahunAjaran() {
         }
         
         toast({
+          variant: "success",
           title: "Berhasil",
           description: `Tahun ajaran ${newYear} berhasil dibuat dengan ${kelasLama.length} kelas`
         });
@@ -132,6 +133,7 @@ export default function TahunAjaran() {
         });
         
         toast({
+          variant: "success",
           title: "Berhasil",
           description: `Tahun ajaran ${newYear} berhasil dibuat`
         });
@@ -157,6 +159,7 @@ export default function TahunAjaran() {
     try {
       await setActiveTahunAjaran(tahunAjaran);
       toast({
+        variant: "success",
         title: "Berhasil",
         description: `Tahun ajaran ${tahunAjaran} diaktifkan`
       });

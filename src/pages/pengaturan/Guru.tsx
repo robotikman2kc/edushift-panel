@@ -199,6 +199,7 @@ const Guru = () => {
       // Tampilkan hasil import
       if (successCount > 0) {
         toast({
+          variant: "success",
           title: "Import Berhasil",
           description: `${successCount} guru berhasil diimport${errorCount > 0 ? `, ${errorCount} gagal` : ''}`,
         });

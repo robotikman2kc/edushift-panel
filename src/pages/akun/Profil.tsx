@@ -130,6 +130,7 @@ const Profil = () => {
       window.dispatchEvent(new Event('profileUpdated'));
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Profil berhasil diperbarui"
       });
@@ -202,6 +203,7 @@ const Profil = () => {
       window.dispatchEvent(new Event('profileUpdated'));
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Foto profil berhasil diperbarui"
       });
@@ -242,6 +244,7 @@ const Profil = () => {
       window.dispatchEvent(new Event('profileUpdated'));
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Foto profil berhasil dihapus"
       });

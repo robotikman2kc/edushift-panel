@@ -175,6 +175,7 @@ const Kelas = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Kelas baru berhasil ditambahkan",
       });
@@ -205,6 +206,7 @@ const Kelas = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Data kelas berhasil diperbarui",
       });
@@ -226,6 +228,7 @@ const Kelas = () => {
       if (result.error) throw new Error(result.error);
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Kelas berhasil dihapus",
       });

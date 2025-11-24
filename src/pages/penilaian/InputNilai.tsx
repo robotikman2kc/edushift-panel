@@ -360,6 +360,7 @@ const InputNilai = () => {
     setGrades(newGrades);
     
     toast({
+      variant: "success",
       title: "Berhasil",
       description: `Nilai ${bulkGrade} telah diisi untuk semua siswa`,
     });
@@ -473,6 +474,7 @@ const InputNilai = () => {
 
       if (successCount > 0) {
         toast({
+          variant: "success",
           title: "Berhasil",
           description: `${successCount} nilai berhasil disimpan${errorCount > 0 ? `, ${errorCount} nilai gagal disimpan` : ''}`,
         });
@@ -520,6 +522,7 @@ const InputNilai = () => {
         });
       } else {
         toast({
+          variant: "success",
           title: "Berhasil",
           description: "Kategori penilaian berhasil ditambahkan",
         });

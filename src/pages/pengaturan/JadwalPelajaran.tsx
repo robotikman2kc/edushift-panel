@@ -328,6 +328,7 @@ export default function JadwalPelajaran() {
       await indexedDB.insert("jadwal_pelajaran", newSchedule);
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: conflictingSchedules.length > 0 
           ? `Jadwal berhasil ditambahkan (${conflictingSchedules.length} jadwal lama dihapus)`
@@ -360,6 +361,7 @@ export default function JadwalPelajaran() {
       }
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: `${schedulesToDelete.length} jadwal berhasil dihapus`,
       });
@@ -380,6 +382,7 @@ export default function JadwalPelajaran() {
     try {
       await indexedDB.delete("jadwal_pelajaran", id);
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Jadwal berhasil dihapus",
       });
@@ -402,6 +405,7 @@ export default function JadwalPelajaran() {
       });
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Pengaturan waktu berhasil disimpan",
       });
@@ -425,6 +429,7 @@ export default function JadwalPelajaran() {
       await indexedDB.insert("pengaturan", { key: "break2_end", value: break2End });
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Pengaturan jam istirahat berhasil disimpan",
       });
@@ -524,6 +529,7 @@ export default function JadwalPelajaran() {
                   await setActiveAcademicSemester(activeSemester);
                   setCalendarActiveSemester(activeSemester);
                   toast({
+                    variant: "success",
                     title: "Berhasil",
                     description: `Semester ${activeSemester} berhasil diaktifkan untuk kalender`,
                   });
@@ -961,6 +967,7 @@ export default function JadwalPelajaran() {
                   await saveWorkdaySettings({ includeSaturday: checked });
                   setWorkdays(getWorkdays());
                   toast({
+                    variant: "success",
                     title: "Berhasil",
                     description: checked 
                       ? "Sabtu diaktifkan sebagai hari kerja (6 hari)" 

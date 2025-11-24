@@ -87,6 +87,7 @@ const BackupRestore = () => {
       URL.revokeObjectURL(url);
 
       toast({
+        variant: "success",
         title: "Export Berhasil",
         description: `Data ${displayName} berhasil diekspor`
       });
@@ -153,6 +154,7 @@ const BackupRestore = () => {
       setLastBackupDate(backupTime);
 
       toast({
+        variant: "success",
         title: "Backup Berhasil",
         description: "Data berhasil dibackup dan diunduh"
       });
@@ -219,6 +221,7 @@ const BackupRestore = () => {
       fetchStats();
 
       toast({
+        variant: "success",
         title: "Restore Berhasil",
         description: "Data berhasil dipulihkan dari backup"
       });
