@@ -142,6 +142,19 @@ const PembuatKelompok = () => {
         const shuffledLakiLaki = shuffleArray(lakiLaki);
         const shuffledPerempuan = shuffleArray(perempuan);
 
+        // Combine and interleave to ensure even distribution
+        const interleavedStudents: Siswa[] = [];
+        const maxLength = Math.max(shuffledLakiLaki.length, shuffledPerempuan.length);
+        
+        for (let i = 0; i < maxLength; i++) {
+          if (i < shuffledLakiLaki.length) {
+            interleavedStudents.push(shuffledLakiLaki[i]);
+          }
+          if (i < shuffledPerempuan.length) {
+            interleavedStudents.push(shuffledPerempuan[i]);
+          }
+        }
+
         // Initialize groups
         for (let i = 0; i < numGroups; i++) {
           newGroups.push({
@@ -150,37 +163,13 @@ const PembuatKelompok = () => {
           });
         }
 
-        // Distribute males more evenly
-        const baseMalePerGroup = Math.floor(lakiLaki.length / numGroups);
-        const remainderMale = lakiLaki.length % numGroups;
-        
-        let maleIndex = 0;
-        for (let i = 0; i < numGroups; i++) {
-          const malesForThisGroup = baseMalePerGroup + (i < remainderMale ? 1 : 0);
-          for (let j = 0; j < malesForThisGroup; j++) {
-            if (maleIndex < shuffledLakiLaki.length) {
-              newGroups[i].members.push(shuffledLakiLaki[maleIndex]);
-              maleIndex++;
-            }
-          }
-        }
+        // Distribute students round-robin for most even distribution
+        interleavedStudents.forEach((siswa, index) => {
+          const groupIndex = index % numGroups;
+          newGroups[groupIndex].members.push(siswa);
+        });
 
-        // Distribute females more evenly
-        const baseFemalePerGroup = Math.floor(perempuan.length / numGroups);
-        const remainderFemale = perempuan.length % numGroups;
-        
-        let femaleIndex = 0;
-        for (let i = 0; i < numGroups; i++) {
-          const femalesForThisGroup = baseFemalePerGroup + (i < remainderFemale ? 1 : 0);
-          for (let j = 0; j < femalesForThisGroup; j++) {
-            if (femaleIndex < shuffledPerempuan.length) {
-              newGroups[i].members.push(shuffledPerempuan[femaleIndex]);
-              femaleIndex++;
-            }
-          }
-        }
-
-        // Shuffle members within each group
+        // Shuffle members within each group to randomize order
         newGroups = newGroups.map(group => ({
           ...group,
           members: shuffleArray(group.members)
