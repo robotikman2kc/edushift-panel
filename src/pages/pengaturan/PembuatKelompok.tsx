@@ -142,16 +142,23 @@ const PembuatKelompok = () => {
         const shuffledLakiLaki = shuffleArray(lakiLaki);
         const shuffledPerempuan = shuffleArray(perempuan);
 
-        // Combine and interleave to ensure even distribution
+        // Interleave males and females proportionally to maintain ratio
         const interleavedStudents: Siswa[] = [];
-        const maxLength = Math.max(shuffledLakiLaki.length, shuffledPerempuan.length);
-        
-        for (let i = 0; i < maxLength; i++) {
-          if (i < shuffledLakiLaki.length) {
-            interleavedStudents.push(shuffledLakiLaki[i]);
-          }
-          if (i < shuffledPerempuan.length) {
-            interleavedStudents.push(shuffledPerempuan[i]);
+        const maleRatio = lakiLaki.length / siswaList.length;
+        let maleIndex = 0;
+        let femaleIndex = 0;
+
+        for (let i = 0; i < siswaList.length; i++) {
+          const expectedMales = (i + 1) * maleRatio;
+          const currentMales = maleIndex;
+          
+          // Add male if we haven't reached expected ratio yet
+          if (currentMales < expectedMales && maleIndex < shuffledLakiLaki.length) {
+            interleavedStudents.push(shuffledLakiLaki[maleIndex++]);
+          } else if (femaleIndex < shuffledPerempuan.length) {
+            interleavedStudents.push(shuffledPerempuan[femaleIndex++]);
+          } else if (maleIndex < shuffledLakiLaki.length) {
+            interleavedStudents.push(shuffledLakiLaki[maleIndex++]);
           }
         }
 
@@ -163,7 +170,7 @@ const PembuatKelompok = () => {
           });
         }
 
-        // Distribute students round-robin for most even distribution
+        // Distribute students round-robin for balanced group sizes
         interleavedStudents.forEach((siswa, index) => {
           const groupIndex = index % numGroups;
           newGroups[groupIndex].members.push(siswa);
