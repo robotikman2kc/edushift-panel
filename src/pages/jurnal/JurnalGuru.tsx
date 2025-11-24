@@ -1007,9 +1007,9 @@ const JurnalGuru = () => {
         title="Jurnal Guru" 
         description="Kelola jurnal kegiatan mengajar"
       >
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-[120px] h-10">
               <SelectValue placeholder="Bulan" />
             </SelectTrigger>
             <SelectContent>
@@ -1028,7 +1028,7 @@ const JurnalGuru = () => {
             </SelectContent>
           </Select>
           <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[100px] h-10">
               <SelectValue placeholder="Tahun" />
             </SelectTrigger>
             <SelectContent>
@@ -1040,7 +1040,7 @@ const JurnalGuru = () => {
             </SelectContent>
           </Select>
           <Select value={filterJenisKegiatan} onValueChange={setFilterJenisKegiatan}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[200px] h-10">
               <SelectValue placeholder="Filter Jenis Kegiatan" />
             </SelectTrigger>
             <SelectContent>
@@ -1060,7 +1060,7 @@ const JurnalGuru = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" className="h-10">
                 <Plus className="h-4 w-4 mr-2" />
                 Tambah Jenis Kegiatan
               </Button>
@@ -1132,7 +1132,7 @@ const JurnalGuru = () => {
               </Form>
             </DialogContent>
           </Dialog>
-          <Button onClick={handleAddNew}>
+          <Button onClick={handleAddNew} className="h-10">
             <Plus className="h-4 w-4 mr-2" />
             Tambah Jurnal
           </Button>
