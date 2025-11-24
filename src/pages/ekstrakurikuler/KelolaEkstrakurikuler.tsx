@@ -14,6 +14,7 @@ const HARI_OPTIONS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Min
 
 export default function KelolaEkstrakurikuler() {
   const [eskulId, setEskulId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     nama_eskul: "",
     pembimbing: "",
@@ -28,18 +29,23 @@ export default function KelolaEkstrakurikuler() {
   }, []);
 
   const loadData = async () => {
-    const eskuls = await eskulDB.select('ekstrakurikuler');
-    if (eskuls.length > 0) {
-      const eskul = eskuls[0];
-      setEskulId(eskul.id);
-      setFormData({
-        nama_eskul: eskul.nama_eskul,
-        pembimbing: eskul.pembimbing,
-        hari_pertemuan: eskul.hari_pertemuan,
-        jam_pertemuan: eskul.jam_pertemuan,
-        deskripsi: eskul.deskripsi || "",
-        status: eskul.status
-      });
+    try {
+      setIsLoading(true);
+      const eskuls = await eskulDB.select('ekstrakurikuler');
+      if (eskuls.length > 0) {
+        const eskul = eskuls[0];
+        setEskulId(eskul.id);
+        setFormData({
+          nama_eskul: eskul.nama_eskul,
+          pembimbing: eskul.pembimbing,
+          hari_pertemuan: eskul.hari_pertemuan,
+          jam_pertemuan: eskul.jam_pertemuan,
+          deskripsi: eskul.deskripsi || "",
+          status: eskul.status
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,6 +77,25 @@ export default function KelolaEkstrakurikuler() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Pengaturan Ekstrakurikuler"
+          description="Kelola pengaturan ekstrakurikuler sekolah"
+        />
+        <Card className="p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-3">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+              <p className="text-sm text-muted-foreground">Memuat data...</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -78,8 +103,8 @@ export default function KelolaEkstrakurikuler() {
         description="Kelola pengaturan ekstrakurikuler sekolah"
       />
 
-      <Card className="p-6">
-        <div className="grid gap-6 max-w-2xl">
+      <Card className="p-4 sm:p-6">
+        <div className="grid gap-6 w-full max-w-3xl mx-auto">
           <div className="grid gap-2">
             <Label htmlFor="nama_eskul">Nama Ekstrakurikuler *</Label>
             <Input
@@ -100,7 +125,7 @@ export default function KelolaEkstrakurikuler() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="hari_pertemuan">Hari Pertemuan *</Label>
               <Select
@@ -158,8 +183,8 @@ export default function KelolaEkstrakurikuler() {
             </Select>
           </div>
 
-          <div className="flex justify-end">
-            <Button onClick={handleSubmit}>
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSubmit} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
               Simpan Pengaturan
             </Button>
