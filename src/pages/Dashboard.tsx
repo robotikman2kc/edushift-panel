@@ -44,6 +44,9 @@ const Dashboard = () => {
   const { isInstallable, isInstalled, updateAvailable, installApp, updateApp } = usePWA();
   const { toast } = useToast();
   
+  // Load user profile
+  const [userProfile, setUserProfile] = useState<any>(null);
+  
   // Load selected date from localStorage
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const saved = localStorage.getItem('selectedDate');
@@ -63,6 +66,32 @@ const Dashboard = () => {
   const [nextMonthNotes, setNextMonthNotes] = useState<any[]>([]);
   const [loadingNextMonthNotes, setLoadingNextMonthNotes] = useState(true);
   const [currentPeriode, setCurrentPeriode] = useState<any>(null);
+
+  // Load user profile from localStorage
+  useEffect(() => {
+    const loadProfile = () => {
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        try {
+          setUserProfile(JSON.parse(savedProfile));
+        } catch (error) {
+          console.error('Error loading profile:', error);
+        }
+      }
+    };
+
+    loadProfile();
+
+    // Listen for profile updates
+    const handleProfileUpdate = () => {
+      loadProfile();
+    };
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   // Use cached data for static entities
   const { data: siswaData, loading: loadingSiswa } = useStaticDataCache('siswa', 'siswa');
@@ -354,7 +383,7 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <PageHeader 
           title="Dashboard" 
-          description="Selamat datang di Sistem Administrasi Sekolah"
+          description={`Selamat datang ${userProfile?.nama || 'Admin'}`}
         />
         <div className="flex items-center gap-2">
           {/* Stats Popover Button */}
