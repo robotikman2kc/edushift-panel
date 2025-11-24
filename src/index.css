@@ -128,10 +128,10 @@ All colors MUST be HSL.
 .floating-form-pattern {
   background-color: hsl(var(--background));
   background-image: 
-    radial-gradient(circle, hsl(var(--muted-foreground) / 0.08) 1px, transparent 1px),
-    radial-gradient(circle, hsl(var(--muted-foreground) / 0.06) 1px, transparent 1px),
-    radial-gradient(circle at 20% 50%, hsl(var(--muted) / 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, hsl(var(--muted) / 0.25) 0%, transparent 50%);
-  background-size: 24px 24px, 24px 24px, 100% 100%, 100% 100%;
-  background-position: 0 0, 12px 12px, 0 0, 0 0;
+    radial-gradient(circle, hsl(var(--muted-foreground) / 0.15) 1.5px, transparent 1.5px),
+    radial-gradient(circle, hsl(var(--muted-foreground) / 0.12) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 20% 50%, hsl(var(--muted) / 0.5) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, hsl(var(--muted) / 0.45) 0%, transparent 50%);
+  background-size: 20px 20px, 20px 20px, 100% 100%, 100% 100%;
+  background-position: 0 0, 10px 10px, 0 0, 0 0;
 }
