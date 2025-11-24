@@ -209,6 +209,7 @@ export interface KelompokSiswa extends BaseRecord {
   metode: 'by-count' | 'by-size';
   balance_gender: boolean;
   data_kelompok: string;
+  keterangan?: string;
 }
 
 export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'periode_non_pembelajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul' | 'app_settings' | 'kelompok_siswa';
