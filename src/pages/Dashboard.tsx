@@ -699,10 +699,10 @@ const Dashboard = () => {
                         {calendarNotes.map((note) => (
                           <div 
                             key={note.id}
-                            className={`p-2 border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-muted/50 hover:shadow-md ${
+                            className={`p-2 border rounded-lg transition-colors duration-200 cursor-pointer ${
                               note.type === 'holiday' 
-                                ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
-                                : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
+                                ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900 hover:shadow-md' 
+                                : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900 hover:shadow-md'
                             }`}
                             onClick={() => {
                               const noteDate = new Date(note.tanggal);
@@ -750,12 +750,12 @@ const Dashboard = () => {
                         {nextMonthNotes.map((note, index) => (
                           <div 
                             key={note.id || index}
-                            className={`p-2 border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-muted/50 hover:shadow-md ${
+                            className={`p-2 border rounded-lg transition-colors duration-200 cursor-pointer ${
                               note.type === 'holiday' 
-                                ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
+                                ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900 hover:shadow-md' 
                                 : note.type === 'periode'
-                                ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
-                                : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
+                                ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 hover:shadow-md'
+                                : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900 hover:shadow-md'
                             }`}
                             onClick={() => {
                               const noteDate = new Date(note.tanggal);
