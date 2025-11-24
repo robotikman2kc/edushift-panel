@@ -1,0 +1,460 @@
+import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
+import { indexedDB } from "@/lib/indexedDB";
+import { Shuffle, Users, Copy, Download, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface Siswa {
+  id: string;
+  nisn: string;
+  nama_lengkap: string;
+  kelas_id: string;
+}
+
+interface Kelas {
+  id: string;
+  nama_kelas: string;
+}
+
+interface Group {
+  groupNumber: number;
+  members: Siswa[];
+}
+
+const PembuatKelompok = () => {
+  const [kelasOptions, setKelasOptions] = useState<Kelas[]>([]);
+  const [selectedKelas, setSelectedKelas] = useState<string>("");
+  const [siswaList, setSiswaList] = useState<Siswa[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [groupMethod, setGroupMethod] = useState<"by-count" | "by-size">("by-count");
+  const [groupCount, setGroupCount] = useState<number>(4);
+  const [groupSize, setGroupSize] = useState<number>(5);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadKelas();
+  }, []);
+
+  useEffect(() => {
+    if (selectedKelas) {
+      loadSiswa();
+    }
+  }, [selectedKelas]);
+
+  const loadKelas = async () => {
+    try {
+      const kelasData = await indexedDB.select("kelas");
+      setKelasOptions(kelasData.sort((a: any, b: any) => a.nama_kelas.localeCompare(b.nama_kelas)));
+    } catch (error) {
+      console.error("Error loading kelas:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat data kelas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadSiswa = async () => {
+    try {
+      const allSiswa = await indexedDB.select("siswa");
+      const filteredSiswa = allSiswa.filter((s: Siswa) => s.kelas_id === selectedKelas);
+      setSiswaList(filteredSiswa);
+      setGroups([]);
+    } catch (error) {
+      console.error("Error loading siswa:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat data siswa",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  const createGroups = () => {
+    if (siswaList.length === 0) {
+      toast({
+        title: "Tidak Ada Siswa",
+        description: "Pilih kelas yang memiliki siswa terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const shuffledSiswa = shuffleArray(siswaList);
+      let newGroups: Group[] = [];
+
+      if (groupMethod === "by-count") {
+        // Bagi berdasarkan jumlah kelompok
+        const actualGroupCount = Math.min(groupCount, siswaList.length);
+        const baseSize = Math.floor(siswaList.length / actualGroupCount);
+        const remainder = siswaList.length % actualGroupCount;
+
+        let currentIndex = 0;
+        for (let i = 0; i < actualGroupCount; i++) {
+          const size = baseSize + (i < remainder ? 1 : 0);
+          newGroups.push({
+            groupNumber: i + 1,
+            members: shuffledSiswa.slice(currentIndex, currentIndex + size),
+          });
+          currentIndex += size;
+        }
+      } else {
+        // Bagi berdasarkan ukuran kelompok
+        const actualGroupSize = Math.min(groupSize, siswaList.length);
+        let currentIndex = 0;
+        let groupNumber = 1;
+
+        while (currentIndex < shuffledSiswa.length) {
+          const members = shuffledSiswa.slice(currentIndex, currentIndex + actualGroupSize);
+          newGroups.push({
+            groupNumber,
+            members,
+          });
+          currentIndex += actualGroupSize;
+          groupNumber++;
+        }
+      }
+
+      setGroups(newGroups);
+      toast({
+        title: "Berhasil",
+        description: `${newGroups.length} kelompok telah dibuat`,
+      });
+    } catch (error) {
+      console.error("Error creating groups:", error);
+      toast({
+        title: "Error",
+        description: "Gagal membuat kelompok",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (groups.length === 0) return;
+
+    const selectedKelasName = kelasOptions.find(k => k.id === selectedKelas)?.nama_kelas || "";
+    let text = `DAFTAR KELOMPOK - ${selectedKelasName}\n`;
+    text += `${"=".repeat(50)}\n\n`;
+
+    groups.forEach((group) => {
+      text += `KELOMPOK ${group.groupNumber} (${group.members.length} siswa)\n`;
+      group.members.forEach((member, idx) => {
+        text += `${idx + 1}. ${member.nama_lengkap} (${member.nisn})\n`;
+      });
+      text += "\n";
+    });
+
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Berhasil",
+      description: "Daftar kelompok berhasil disalin ke clipboard",
+    });
+  };
+
+  const exportToPDF = async () => {
+    if (groups.length === 0) return;
+
+    setLoading(true);
+
+    try {
+      const jsPDF = (await import("jspdf")).jsPDF;
+      const autoTable = (await import("jspdf-autotable")).default;
+
+      const { getCustomPDFTemplate } = await import("@/lib/exportUtils");
+      const template = getCustomPDFTemplate("attendance");
+
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let currentY = template.layout.margins.top;
+
+      doc.setFont(template.styling.fontFamily);
+
+      // Title
+      doc.setFontSize(template.styling.fontSize.title);
+      doc.setTextColor(0, 0, 0);
+      const selectedKelasName = kelasOptions.find(k => k.id === selectedKelas)?.nama_kelas || "";
+      const title = "DAFTAR KELOMPOK";
+      const titleWidth = doc.getTextWidth(title);
+      doc.text(title, (pageWidth - titleWidth) / 2, currentY);
+      currentY += 6;
+
+      doc.setFontSize(template.styling.fontSize.subtitle);
+      const subtitle = selectedKelasName;
+      const subtitleWidth = doc.getTextWidth(subtitle);
+      doc.text(subtitle, (pageWidth - subtitleWidth) / 2, currentY);
+      currentY += 10;
+
+      // Draw each group
+      groups.forEach((group) => {
+        // Check if we need a new page
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = template.layout.margins.top;
+        }
+
+        // Group header
+        doc.setFontSize(template.styling.fontSize.header);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`KELOMPOK ${group.groupNumber}`, template.layout.margins.left, currentY);
+        currentY += 5;
+
+        // Members table
+        const tableData = group.members.map((member, idx) => [
+          idx + 1,
+          member.nisn,
+          member.nama_lengkap,
+        ]);
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [["No", "NISN", "Nama Lengkap"]],
+          body: tableData,
+          theme: "grid",
+          styles: {
+            fontSize: 9,
+            cellPadding: 2,
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
+          },
+          headStyles: {
+            fillColor: template.styling.primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+            halign: "center",
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
+          },
+          columnStyles: {
+            0: { halign: "center", cellWidth: 15 },
+            1: { halign: "left", cellWidth: 35 },
+            2: { halign: "left" },
+          },
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 8;
+      });
+
+      const fileName = `kelompok_${selectedKelasName.toLowerCase().replace(/\s+/g, "_")}_${new Date().getTime()}.pdf`;
+      doc.save(fileName);
+
+      toast({
+        title: "Export Berhasil",
+        description: "Daftar kelompok berhasil diekspor ke PDF",
+      });
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast({
+        title: "Export Gagal",
+        description: "Terjadi kesalahan saat mengekspor PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Pembuat Kelompok"
+        description="Acak dan buat kelompok siswa secara otomatis"
+      />
+
+      {/* Configuration Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Konfigurasi</CardTitle>
+          <CardDescription>Pilih kelas dan tentukan cara pembagian kelompok</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Pilih Kelas</Label>
+              <Select value={selectedKelas} onValueChange={setSelectedKelas}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {kelasOptions.map((kelas) => (
+                    <SelectItem key={kelas.id} value={kelas.id}>
+                      {kelas.nama_kelas}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedKelas && siswaList.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Total siswa: {siswaList.length}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Metode Pembagian</Label>
+              <Select value={groupMethod} onValueChange={(value: any) => setGroupMethod(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="by-count">Berdasarkan Jumlah Kelompok</SelectItem>
+                  <SelectItem value="by-size">Berdasarkan Ukuran Kelompok</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {groupMethod === "by-count" ? (
+              <div className="space-y-2">
+                <Label>Jumlah Kelompok</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max={siswaList.length}
+                  value={groupCount}
+                  onChange={(e) => setGroupCount(parseInt(e.target.value) || 1)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Siswa akan dibagi ke dalam {groupCount} kelompok
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Ukuran per Kelompok</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max={siswaList.length}
+                  value={groupSize}
+                  onChange={(e) => setGroupSize(parseInt(e.target.value) || 1)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Setiap kelompok akan berisi {groupSize} siswa
+                </p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="flex gap-2">
+            <Button
+              onClick={createGroups}
+              disabled={!selectedKelas || siswaList.length === 0 || loading}
+              className="flex-1 md:flex-none"
+            >
+              <Shuffle className="mr-2 h-4 w-4" />
+              {groups.length > 0 ? "Acak Ulang" : "Buat Kelompok"}
+            </Button>
+            {groups.length > 0 && (
+              <>
+                <Button variant="outline" onClick={copyToClipboard}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Salin
+                </Button>
+                <Button variant="outline" onClick={exportToPDF} disabled={loading}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export PDF
+                </Button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Groups Display */}
+      {groups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Hasil Kelompok ({groups.length} kelompok)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {groups.map((group) => (
+                <Card key={group.groupNumber} className="border-2">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center justify-between">
+                      Kelompok {group.groupNumber}
+                      <Badge variant="secondary">{group.members.length} siswa</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {group.members.map((member, idx) => (
+                        <div
+                          key={member.id}
+                          className="flex items-start gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <span className="text-xs font-medium text-muted-foreground min-w-[20px]">
+                            {idx + 1}.
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{member.nama_lengkap}</p>
+                            <p className="text-xs text-muted-foreground">{member.nisn}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {!selectedKelas && (
+        <Alert>
+          <Users className="h-4 w-4" />
+          <AlertDescription>
+            Pilih kelas untuk memulai membuat kelompok
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {selectedKelas && siswaList.length === 0 && (
+        <Alert>
+          <Users className="h-4 w-4" />
+          <AlertDescription>
+            Tidak ada siswa di kelas ini
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+};
+
+export default PembuatKelompok;
