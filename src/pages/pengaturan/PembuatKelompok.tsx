@@ -185,6 +185,12 @@ const PembuatKelompok = () => {
 
         console.log('Final group sizes:', newGroups.map(g => `${g.groupNumber}: ${g.members.length}`));
 
+        // Sort groups by member count (descending) and reassign group numbers
+        newGroups.sort((a, b) => b.members.length - a.members.length);
+        newGroups.forEach((group, index) => {
+          group.groupNumber = index + 1;
+        });
+
       } else {
         // Original random distribution with better balancing
         const shuffledSiswa = shuffleArray(siswaList);
