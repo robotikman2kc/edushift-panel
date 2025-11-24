@@ -226,7 +226,9 @@ const PembuatKelompok = () => {
     if (groups.length === 0) return;
 
     const selectedKelasName = kelasOptions.find(k => k.id === selectedKelas)?.nama_kelas || "";
-    const selectedMapelName = mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || "";
+    const selectedMapelName = selectedMapel && selectedMapel !== "none" 
+      ? mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || ""
+      : "";
     
     let text = `DAFTAR KELOMPOK - ${selectedKelasName}\n`;
     if (selectedMapelName) {
@@ -288,7 +290,9 @@ const PembuatKelompok = () => {
       currentY += 8;
 
       // Mata Pelajaran info
-      const selectedMapelName = mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || "";
+      const selectedMapelName = selectedMapel && selectedMapel !== "none"
+        ? mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || ""
+        : "";
       if (selectedMapelName) {
         doc.setFontSize(template.styling.fontSize.header);
         const mapelText = `Mata Pelajaran: ${selectedMapelName}`;
@@ -409,7 +413,7 @@ const PembuatKelompok = () => {
                   <SelectValue placeholder="Pilih mata pelajaran" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tidak ada</SelectItem>
+                  <SelectItem value="none">Tidak ada</SelectItem>
                   {mataPelajaranOptions.map((mapel) => (
                     <SelectItem key={mapel.id} value={mapel.id}>
                       {mapel.nama_mata_pelajaran}
