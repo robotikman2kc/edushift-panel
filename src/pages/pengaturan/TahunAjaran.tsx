@@ -200,6 +200,7 @@ export default function TahunAjaran() {
                   <Badge 
                     className="ml-1 bg-emerald-500 text-white hover:bg-emerald-600 border-0"
                   >
+                    <CheckCircle2 className="mr-1 h-3 w-3" />
                     Aktif
                   </Badge>
                 )}
