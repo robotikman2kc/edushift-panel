@@ -128,6 +128,11 @@ const PembuatKelompok = () => {
     try {
       let newGroups: Group[] = [];
 
+      // Determine number of groups
+      const numGroups = groupMethod === "by-count" 
+        ? Math.min(groupCount, siswaList.length)
+        : Math.ceil(siswaList.length / groupSize);
+
       if (balanceGender) {
         // Separate students by gender
         const lakiLaki = siswaList.filter(s => s.jenis_kelamin === "Laki-laki");
@@ -137,11 +142,6 @@ const PembuatKelompok = () => {
         const shuffledLakiLaki = shuffleArray(lakiLaki);
         const shuffledPerempuan = shuffleArray(perempuan);
 
-        // Determine number of groups
-        const numGroups = groupMethod === "by-count" 
-          ? Math.min(groupCount, siswaList.length)
-          : Math.ceil(siswaList.length / groupSize);
-
         // Initialize groups
         for (let i = 0; i < numGroups; i++) {
           newGroups.push({
@@ -150,17 +150,35 @@ const PembuatKelompok = () => {
           });
         }
 
-        // Distribute males evenly
-        shuffledLakiLaki.forEach((siswa, index) => {
-          const groupIndex = index % numGroups;
-          newGroups[groupIndex].members.push(siswa);
-        });
+        // Distribute males more evenly
+        const baseMalePerGroup = Math.floor(lakiLaki.length / numGroups);
+        const remainderMale = lakiLaki.length % numGroups;
+        
+        let maleIndex = 0;
+        for (let i = 0; i < numGroups; i++) {
+          const malesForThisGroup = baseMalePerGroup + (i < remainderMale ? 1 : 0);
+          for (let j = 0; j < malesForThisGroup; j++) {
+            if (maleIndex < shuffledLakiLaki.length) {
+              newGroups[i].members.push(shuffledLakiLaki[maleIndex]);
+              maleIndex++;
+            }
+          }
+        }
 
-        // Distribute females evenly
-        shuffledPerempuan.forEach((siswa, index) => {
-          const groupIndex = index % numGroups;
-          newGroups[groupIndex].members.push(siswa);
-        });
+        // Distribute females more evenly
+        const baseFemalePerGroup = Math.floor(perempuan.length / numGroups);
+        const remainderFemale = perempuan.length % numGroups;
+        
+        let femaleIndex = 0;
+        for (let i = 0; i < numGroups; i++) {
+          const femalesForThisGroup = baseFemalePerGroup + (i < remainderFemale ? 1 : 0);
+          for (let j = 0; j < femalesForThisGroup; j++) {
+            if (femaleIndex < shuffledPerempuan.length) {
+              newGroups[i].members.push(shuffledPerempuan[femaleIndex]);
+              femaleIndex++;
+            }
+          }
+        }
 
         // Shuffle members within each group
         newGroups = newGroups.map(group => ({
@@ -169,11 +187,11 @@ const PembuatKelompok = () => {
         }));
 
       } else {
-        // Original random distribution
+        // Original random distribution with better balancing
         const shuffledSiswa = shuffleArray(siswaList);
 
         if (groupMethod === "by-count") {
-          // Bagi berdasarkan jumlah kelompok
+          // Bagi berdasarkan jumlah kelompok dengan distribusi merata
           const actualGroupCount = Math.min(groupCount, siswaList.length);
           const baseSize = Math.floor(siswaList.length / actualGroupCount);
           const remainder = siswaList.length % actualGroupCount;
