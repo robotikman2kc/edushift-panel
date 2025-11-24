@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { indexedDB } from "@/lib/indexedDB";
 import { Shuffle, Users, Copy, Download, RefreshCw, Save, Trash2, FolderOpen } from "lucide-react";
@@ -52,6 +53,7 @@ const PembuatKelompok = () => {
   const [savedGroupId, setSavedGroupId] = useState<string | null>(null);
   const [savedGroups, setSavedGroups] = useState<any[]>([]);
   const [selectedSavedGroup, setSelectedSavedGroup] = useState<string>("");
+  const [keterangan, setKeterangan] = useState<string>("");
 
   useEffect(() => {
     loadKelas();
@@ -101,6 +103,7 @@ const PembuatKelompok = () => {
       setGroups([]);
       setSavedGroupId(null);
       setSelectedSavedGroup("");
+      setKeterangan("");
     } catch (error) {
       console.error("Error loading siswa:", error);
       toast({
@@ -140,6 +143,7 @@ const PembuatKelompok = () => {
       setSavedGroupId(savedGroup.id);
       setGroupMethod(savedGroup.metode);
       setBalanceGender(savedGroup.balance_gender);
+      setKeterangan(savedGroup.keterangan || "");
       
       if (savedGroup.mapel_id) {
         setSelectedMapel(savedGroup.mapel_id);
@@ -310,6 +314,7 @@ const PembuatKelompok = () => {
 
       setGroups(newGroups);
       setSavedGroupId(null); // Reset saved status when creating new groups
+      setKeterangan(""); // Reset keterangan when creating new groups
       toast({
         title: "Berhasil",
         description: `${newGroups.length} kelompok telah dibuat`,
@@ -377,6 +382,7 @@ const PembuatKelompok = () => {
         metode: groupMethod,
         balance_gender: balanceGender,
         data_kelompok: JSON.stringify(groups),
+        keterangan: keterangan || undefined,
       };
 
       if (savedGroupId) {
@@ -590,6 +596,11 @@ const PembuatKelompok = () => {
                         {savedGroup.jumlah_kelompok} kelompok • {new Date(savedGroup.tanggal_dibuat).toLocaleDateString("id-ID")}
                         {mapelName && ` • ${mapelName}`}
                       </div>
+                      {savedGroup.keterangan && (
+                        <div className="text-xs text-muted-foreground mt-1 italic">
+                          {savedGroup.keterangan}
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -734,6 +745,20 @@ const PembuatKelompok = () => {
                 }
               </p>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="keterangan">Keterangan (Opsional)</Label>
+            <Textarea
+              id="keterangan"
+              placeholder="Tambahkan keterangan tentang kelompok ini..."
+              value={keterangan}
+              onChange={(e) => setKeterangan(e.target.value)}
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">
+              Catatan tambahan tentang kelompok, misalnya tujuan atau konteks pembuatan
+            </p>
           </div>
 
           <Separator />
