@@ -303,19 +303,35 @@ const PembuatKelompok = () => {
         currentY += 2;
       }
 
-      // Draw each group
-      groups.forEach((group) => {
+      // Draw groups in 2 columns
+      const leftColumnX = template.layout.margins.left;
+      const rightColumnX = pageWidth / 2 + 5;
+      const columnWidth = (pageWidth - template.layout.margins.left - template.layout.margins.right - 10) / 2;
+      
+      let leftY = currentY;
+      let rightY = currentY;
+      
+      groups.forEach((group, index) => {
+        const isLeftColumn = index % 2 === 0;
+        const columnX = isLeftColumn ? leftColumnX : rightColumnX;
+        let currentYPos = isLeftColumn ? leftY : rightY;
+        
         // Check if we need a new page
-        if (currentY > 250) {
+        if (currentYPos > 240) {
           doc.addPage();
-          currentY = template.layout.margins.top;
+          currentYPos = template.layout.margins.top;
+          if (isLeftColumn) {
+            leftY = currentYPos;
+            rightY = currentYPos;
+          }
         }
 
         // Group header
-        doc.setFontSize(template.styling.fontSize.header);
+        doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
-        doc.text(`KELOMPOK ${group.groupNumber}`, template.layout.margins.left, currentY);
-        currentY += 5;
+        doc.setFont(template.styling.fontFamily, 'bold');
+        doc.text(`KELOMPOK ${group.groupNumber}`, columnX, currentYPos);
+        currentYPos += 5;
 
         // Members table
         const tableData = group.members.map((member, idx) => [
@@ -324,31 +340,39 @@ const PembuatKelompok = () => {
         ]);
 
         autoTable(doc, {
-          startY: currentY,
+          startY: currentYPos,
           head: [["No", "Nama Lengkap"]],
           body: tableData,
           theme: "grid",
+          margin: { left: columnX },
+          tableWidth: columnWidth,
           styles: {
-            fontSize: 9,
-            cellPadding: 2,
+            fontSize: 8,
+            cellPadding: 1.5,
             lineColor: [0, 0, 0],
             lineWidth: 0.1,
           },
           headStyles: {
             fillColor: template.styling.primaryColor,
             textColor: [255, 255, 255],
-            fontStyle: "bold",
-            halign: "center",
+            fontStyle: 'bold',
+            halign: 'center',
             lineColor: [0, 0, 0],
             lineWidth: 0.1,
           },
           columnStyles: {
-            0: { halign: "center", cellWidth: 15 },
+            0: { halign: "center", cellWidth: 10 },
             1: { halign: "left" },
           },
         });
 
-        currentY = (doc as any).lastAutoTable.finalY + 8;
+        const finalY = (doc as any).lastAutoTable.finalY + 6;
+        
+        if (isLeftColumn) {
+          leftY = finalY;
+        } else {
+          rightY = finalY;
+        }
       });
 
       const fileName = `kelompok_${selectedKelasName.toLowerCase().replace(/\s+/g, "_")}_${new Date().getTime()}.pdf`;
