@@ -66,18 +66,38 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
       </CardHeader>
       <CardContent>
         {currentPeriode ? (
-          <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <div className={`p-4 rounded-lg border ${
+            currentPeriode.jenis === 'libur'
+              ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50'
+              : 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
+          }`}>
             <div className="flex items-start gap-3">
-              <CalendarOff className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <CalendarOff className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                currentPeriode.jenis === 'libur'
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-blue-600 dark:text-blue-400'
+              }`} />
               <div className="flex-1">
-                <p className="font-semibold text-sm text-blue-900 dark:text-blue-100 mb-1">
+                <p className={`font-semibold text-sm mb-1 ${
+                  currentPeriode.jenis === 'libur'
+                    ? 'text-red-900 dark:text-red-100'
+                    : 'text-blue-900 dark:text-blue-100'
+                }`}>
                   {currentPeriode.nama}
                 </p>
-                <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                <p className={`text-xs mb-2 ${
+                  currentPeriode.jenis === 'libur'
+                    ? 'text-red-700 dark:text-red-300'
+                    : 'text-blue-700 dark:text-blue-300'
+                }`}>
                   {format(new Date(currentPeriode.tanggal_mulai), "dd MMM yyyy", { locale: idLocale })} - {format(new Date(currentPeriode.tanggal_selesai), "dd MMM yyyy", { locale: idLocale })}
                 </p>
                 {currentPeriode.keterangan && (
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                  <p className={`text-xs ${
+                    currentPeriode.jenis === 'libur'
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-blue-600 dark:text-blue-400'
+                  }`}>
                     {currentPeriode.keterangan}
                   </p>
                 )}
