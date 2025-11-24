@@ -1,4 +1,5 @@
 import * as React from "react"
+import { toast as sonnerToast } from "sonner"
 
 import type {
   ToastActionElement,
@@ -139,8 +140,19 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ variant, title, description, ...props }: Toast) {
   const id = genId()
+
+  // Convert to Sonner format
+  const message = description || title || "";
+  
+  if (variant === "success") {
+    sonnerToast.success(message);
+  } else if (variant === "destructive") {
+    sonnerToast.error(message);
+  } else {
+    sonnerToast(message);
+  }
 
   const update = (props: ToasterToast) =>
     dispatch({
@@ -154,6 +166,9 @@ function toast({ ...props }: Toast) {
     toast: {
       ...props,
       id,
+      variant,
+      title,
+      description,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss()
