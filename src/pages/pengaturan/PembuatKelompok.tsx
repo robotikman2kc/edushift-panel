@@ -142,31 +142,41 @@ const PembuatKelompok = () => {
         const shuffledLakiLaki = shuffleArray(lakiLaki);
         const shuffledPerempuan = shuffleArray(perempuan);
 
-        // Initialize groups
+        // Distribute males with base + remainder logic
+        const maleGroups: Siswa[][] = [];
+        const maleBase = Math.floor(lakiLaki.length / numGroups);
+        const maleRemainder = lakiLaki.length % numGroups;
+        
+        let maleIndex = 0;
         for (let i = 0; i < numGroups; i++) {
-          newGroups.push({
-            groupNumber: i + 1,
-            members: [],
-          });
+          const size = maleBase + (i < maleRemainder ? 1 : 0);
+          maleGroups.push(shuffledLakiLaki.slice(maleIndex, maleIndex + size));
+          maleIndex += size;
         }
 
-        // Distribute males round-robin
-        shuffledLakiLaki.forEach((siswa, index) => {
-          const groupIndex = index % numGroups;
-          newGroups[groupIndex].members.push(siswa);
-        });
+        // Distribute females with base + remainder logic
+        const femaleGroups: Siswa[][] = [];
+        const femaleBase = Math.floor(perempuan.length / numGroups);
+        const femaleRemainder = perempuan.length % numGroups;
+        
+        let femaleIndex = 0;
+        for (let i = 0; i < numGroups; i++) {
+          const size = femaleBase + (i < femaleRemainder ? 1 : 0);
+          femaleGroups.push(shuffledPerempuan.slice(femaleIndex, femaleIndex + size));
+          femaleIndex += size;
+        }
 
-        // Distribute females round-robin
-        shuffledPerempuan.forEach((siswa, index) => {
-          const groupIndex = index % numGroups;
-          newGroups[groupIndex].members.push(siswa);
-        });
+        // Reverse female distribution to balance group sizes
+        femaleGroups.reverse();
 
-        // Shuffle members within each group to randomize order
-        newGroups = newGroups.map(group => ({
-          ...group,
-          members: shuffleArray(group.members)
-        }));
+        // Combine males and females into groups
+        for (let i = 0; i < numGroups; i++) {
+          const combinedMembers = [...maleGroups[i], ...femaleGroups[i]];
+          newGroups.push({
+            groupNumber: i + 1,
+            members: shuffleArray(combinedMembers), // Shuffle to randomize order within group
+          });
+        }
 
       } else {
         // Original random distribution with better balancing
