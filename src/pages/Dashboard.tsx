@@ -705,7 +705,11 @@ const Dashboard = () => {
                                 : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
                             }`}
                             onClick={() => {
-                              localStorage.setItem('selectedDate', new Date(note.tanggal).toISOString());
+                              const noteDate = new Date(note.tanggal);
+                              localStorage.setItem('calendar_month_view', JSON.stringify({
+                                year: noteDate.getFullYear(),
+                                month: noteDate.getMonth()
+                              }));
                               navigate('/kalender');
                             }}
                           >
@@ -754,7 +758,11 @@ const Dashboard = () => {
                                 : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'
                             }`}
                             onClick={() => {
-                              localStorage.setItem('selectedDate', new Date(note.tanggal).toISOString());
+                              const noteDate = new Date(note.tanggal);
+                              localStorage.setItem('calendar_month_view', JSON.stringify({
+                                year: noteDate.getFullYear(),
+                                month: noteDate.getMonth()
+                              }));
                               navigate('/kalender');
                             }}
                           >

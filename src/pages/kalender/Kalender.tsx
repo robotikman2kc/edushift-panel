@@ -37,15 +37,21 @@ interface CalendarData {
 
 export default function Kalender() {
   const { toast } = useToast();
-  // Load date from localStorage or use current date
+  // Load month view from localStorage or use current date
   const [currentDate, setCurrentDate] = useState(() => {
-    const saved = localStorage.getItem('selectedDate');
-    return saved ? new Date(saved) : new Date();
+    const saved = localStorage.getItem('calendar_month_view');
+    if (saved) {
+      try {
+        const { year, month } = JSON.parse(saved);
+        localStorage.removeItem('calendar_month_view'); // Clear after reading
+        return new Date(year, month, 1);
+      } catch (error) {
+        console.error('Error parsing calendar_month_view:', error);
+      }
+    }
+    return new Date();
   });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
-    const saved = localStorage.getItem('selectedDate');
-    return saved ? new Date(saved) : new Date();
-  });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [calendarData, setCalendarData] = useState<Map<string, CalendarData>>(new Map());
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<{ id: string; catatan: string; warna?: string } | null>(null);
