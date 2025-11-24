@@ -441,8 +441,13 @@ const JurnalGuru = () => {
       
       let autoCreatedCount = 0;
       
-      // Process each periode
+      // Process each periode - HANYA yang kategori 'libur' (Libur Semester)
       for (const periode of allPeriode) {
+        // Filter: hanya proses periode dengan jenis 'libur' (Libur Semester)
+        if (periode.jenis !== 'libur') {
+          continue; // Skip periode yang bukan libur semester
+        }
+        
         // Parse dates properly to avoid timezone issues
         const [startYear, startMonth, startDay] = periode.tanggal_mulai.split('-').map(Number);
         const [endYear, endMonth, endDay] = periode.tanggal_selesai.split('-').map(Number);
