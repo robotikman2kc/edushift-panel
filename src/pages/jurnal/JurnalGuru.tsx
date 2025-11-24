@@ -382,6 +382,7 @@ const JurnalGuru = () => {
       
       if (autoCreatedCount > 0) {
         toast({
+          variant: "success",
           title: "Jurnal Otomatis Dibuat",
           description: `${autoCreatedCount} entri jurnal untuk hari libur nasional berhasil dibuat otomatis`,
         });
@@ -486,6 +487,7 @@ const JurnalGuru = () => {
       
       if (autoCreatedCount > 0) {
         toast({
+          variant: "success",
           title: "Jurnal Otomatis Dibuat",
           description: `${autoCreatedCount} entri jurnal untuk periode non-pembelajaran berhasil dibuat otomatis`,
         });
@@ -604,6 +606,7 @@ const JurnalGuru = () => {
       if (result.error) throw new Error(result.error);
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Jurnal berhasil ditambahkan dari template",
       });
@@ -938,6 +941,7 @@ const JurnalGuru = () => {
       if (result.error) throw new Error(result.error);
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Jurnal koreksi berhasil ditambahkan",
       });
@@ -991,6 +995,7 @@ const JurnalGuru = () => {
       if (result.error) throw new Error(result.error);
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Jurnal berhasil ditambahkan",
       });
@@ -1428,6 +1433,7 @@ const JurnalGuru = () => {
                             };
                             indexedDB.insert("jurnal", jurnalData).then(() => {
                               toast({
+                                variant: "success",
                                 title: "Berhasil",
                                 description: "Jurnal kegiatan sekolah berhasil ditambahkan",
                               });
@@ -1462,6 +1468,7 @@ const JurnalGuru = () => {
                           };
                           indexedDB.insert("jurnal", jurnalData).then(() => {
                             toast({
+                              variant: "success",
                               title: "Berhasil",
                               description: "Jurnal kegiatan sekolah berhasil ditambahkan",
                             });
