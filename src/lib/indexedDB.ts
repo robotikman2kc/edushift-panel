@@ -200,7 +200,18 @@ export interface AppSettings extends BaseRecord {
   description?: string;
 }
 
-export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'periode_non_pembelajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul' | 'app_settings';
+export interface KelompokSiswa extends BaseRecord {
+  kelas_id: string;
+  mapel_id?: string | null;
+  nama_kelompok: string;
+  tanggal_dibuat: string;
+  jumlah_kelompok: number;
+  metode: 'by-count' | 'by-size';
+  balance_gender: boolean;
+  data_kelompok: string;
+}
+
+export type TableName = 'users' | 'guru' | 'mata_pelajaran' | 'kelas' | 'siswa' | 'jenis_kegiatan' | 'jurnal' | 'kehadiran' | 'jenis_penilaian' | 'nilai_siswa' | 'jam_pelajaran' | 'jadwal_pelajaran' | 'pengaturan' | 'activity_log' | 'agenda_mengajar' | 'catatan_kalender' | 'hari_libur' | 'periode_non_pembelajaran' | 'ekstrakurikuler' | 'anggota_eskul' | 'kehadiran_eskul' | 'nilai_eskul' | 'app_settings' | 'kelompok_siswa';
 
 // Generate UUID function
 function generateId(): string {
@@ -214,7 +225,7 @@ function getCurrentTimestamp(): string {
 
 class IndexedDBManager {
   private dbName = 'SekolahDB';
-  private dbVersion = 9; // Increment version for new table
+  private dbVersion = 10; // Increment version for kelompok_siswa table
   private db: IDBDatabase | null = null;
 
   async initDB(): Promise<void> {
@@ -232,7 +243,7 @@ class IndexedDBManager {
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create object stores for each table
-        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'periode_non_pembelajaran', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul', 'app_settings'];
+        const tables: TableName[] = ['users', 'guru', 'mata_pelajaran', 'kelas', 'siswa', 'jenis_kegiatan', 'jurnal', 'kehadiran', 'jenis_penilaian', 'nilai_siswa', 'jam_pelajaran', 'jadwal_pelajaran', 'pengaturan', 'activity_log', 'agenda_mengajar', 'catatan_kalender', 'hari_libur', 'periode_non_pembelajaran', 'ekstrakurikuler', 'anggota_eskul', 'kehadiran_eskul', 'nilai_eskul', 'app_settings', 'kelompok_siswa'];
         
         tables.forEach(tableName => {
           if (!db.objectStoreNames.contains(tableName)) {
