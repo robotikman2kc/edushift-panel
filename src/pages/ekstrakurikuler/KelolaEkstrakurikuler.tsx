@@ -104,7 +104,7 @@ export default function KelolaEkstrakurikuler() {
       />
 
       <Card className="p-4 sm:p-6">
-        <div className="grid gap-6 w-full max-w-3xl mx-auto">
+        <div className="grid gap-6 max-w-2xl">
           <div className="grid gap-2">
             <Label htmlFor="nama_eskul">Nama Ekstrakurikuler *</Label>
             <Input
