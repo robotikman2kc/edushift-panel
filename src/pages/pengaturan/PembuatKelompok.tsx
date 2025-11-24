@@ -26,6 +26,11 @@ interface Kelas {
   nama_kelas: string;
 }
 
+interface MataPelajaran {
+  id: string;
+  nama_mata_pelajaran: string;
+}
+
 interface Group {
   groupNumber: number;
   members: Siswa[];
@@ -33,7 +38,9 @@ interface Group {
 
 const PembuatKelompok = () => {
   const [kelasOptions, setKelasOptions] = useState<Kelas[]>([]);
+  const [mataPelajaranOptions, setMataPelajaranOptions] = useState<MataPelajaran[]>([]);
   const [selectedKelas, setSelectedKelas] = useState<string>("");
+  const [selectedMapel, setSelectedMapel] = useState<string>("");
   const [siswaList, setSiswaList] = useState<Siswa[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [groupMethod, setGroupMethod] = useState<"by-count" | "by-size">("by-count");
@@ -44,6 +51,7 @@ const PembuatKelompok = () => {
 
   useEffect(() => {
     loadKelas();
+    loadMataPelajaran();
   }, []);
 
   useEffect(() => {
@@ -61,6 +69,20 @@ const PembuatKelompok = () => {
       toast({
         title: "Error",
         description: "Gagal memuat data kelas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadMataPelajaran = async () => {
+    try {
+      const mapelData = await indexedDB.select("mata_pelajaran");
+      setMataPelajaranOptions(mapelData.sort((a: any, b: any) => a.nama_mata_pelajaran.localeCompare(b.nama_mata_pelajaran)));
+    } catch (error) {
+      console.error("Error loading mata pelajaran:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat data mata pelajaran",
         variant: "destructive",
       });
     }
@@ -204,7 +226,12 @@ const PembuatKelompok = () => {
     if (groups.length === 0) return;
 
     const selectedKelasName = kelasOptions.find(k => k.id === selectedKelas)?.nama_kelas || "";
+    const selectedMapelName = mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || "";
+    
     let text = `DAFTAR KELOMPOK - ${selectedKelasName}\n`;
+    if (selectedMapelName) {
+      text += `Mata Pelajaran: ${selectedMapelName}\n`;
+    }
     text += `${"=".repeat(50)}\n\n`;
 
     groups.forEach((group) => {
@@ -258,7 +285,19 @@ const PembuatKelompok = () => {
       const subtitle = selectedKelasName;
       const subtitleWidth = doc.getTextWidth(subtitle);
       doc.text(subtitle, (pageWidth - subtitleWidth) / 2, currentY);
-      currentY += 10;
+      currentY += 8;
+
+      // Mata Pelajaran info
+      const selectedMapelName = mataPelajaranOptions.find(m => m.id === selectedMapel)?.nama_mata_pelajaran || "";
+      if (selectedMapelName) {
+        doc.setFontSize(template.styling.fontSize.header);
+        const mapelText = `Mata Pelajaran: ${selectedMapelName}`;
+        const mapelWidth = doc.getTextWidth(mapelText);
+        doc.text(mapelText, (pageWidth - mapelWidth) / 2, currentY);
+        currentY += 10;
+      } else {
+        currentY += 2;
+      }
 
       // Draw each group
       groups.forEach((group) => {
@@ -364,17 +403,37 @@ const PembuatKelompok = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Metode Pembagian</Label>
-              <Select value={groupMethod} onValueChange={(value: any) => setGroupMethod(value)}>
+              <Label>Mata Pelajaran (Opsional)</Label>
+              <Select value={selectedMapel} onValueChange={setSelectedMapel}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Pilih mata pelajaran" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="by-count">Berdasarkan Jumlah Kelompok</SelectItem>
-                  <SelectItem value="by-size">Berdasarkan Ukuran Kelompok</SelectItem>
+                  <SelectItem value="">Tidak ada</SelectItem>
+                  {mataPelajaranOptions.map((mapel) => (
+                    <SelectItem key={mapel.id} value={mapel.id}>
+                      {mapel.nama_mata_pelajaran}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="text-sm text-muted-foreground">
+                Akan ditampilkan di PDF
+              </p>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Metode Pembagian</Label>
+            <Select value={groupMethod} onValueChange={(value: any) => setGroupMethod(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="by-count">Berdasarkan Jumlah Kelompok</SelectItem>
+                <SelectItem value="by-size">Berdasarkan Ukuran Kelompok</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
