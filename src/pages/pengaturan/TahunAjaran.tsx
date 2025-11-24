@@ -198,10 +198,8 @@ export default function TahunAjaran() {
                 </CardTitle>
                 {stat.isActive && (
                   <Badge 
-                    variant="secondary" 
-                    className="ml-1 bg-emerald-100 text-emerald-700 border-emerald-300 font-medium dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-700"
+                    className="ml-1 bg-emerald-500 text-white hover:bg-emerald-600 border-0"
                   >
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
                     Aktif
                   </Badge>
                 )}
