@@ -470,23 +470,11 @@ const PembuatKelompok = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {groups.map((group) => {
-                const lakiLakiCount = group.members.filter(m => m.jenis_kelamin === "Laki-laki").length;
-                const perempuanCount = group.members.filter(m => m.jenis_kelamin === "Perempuan").length;
-                
                 return (
                 <Card key={group.groupNumber} className="border-2">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center justify-between">
+                    <CardTitle className="text-base">
                       Kelompok {group.groupNumber}
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{group.members.length} siswa</Badge>
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          L: {lakiLakiCount}
-                        </Badge>
-                        <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">
-                          P: {perempuanCount}
-                        </Badge>
-                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
