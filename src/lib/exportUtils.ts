@@ -477,9 +477,14 @@ export const generatePDFBlob = (
         const teacherJabatan = template.teacherInfo?.jabatan_sekolah;
         
         // Use custom signature date if provided, otherwise use current date
-        const signatureDate = template.signatureDate 
-          ? formatDateIndonesia(new Date(template.signatureDate))
-          : formatDateIndonesia(new Date());
+        // Parse date string correctly to avoid timezone offset
+        let signatureDate: string;
+        if (template.signatureDate) {
+          const [year, month, day] = template.signatureDate.split('-').map(Number);
+          signatureDate = formatDateIndonesia(new Date(year, month - 1, day));
+        } else {
+          signatureDate = formatDateIndonesia(new Date());
+        }
         
         doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
         doc.text('Pegawai Yang Dinilai,', rightColumnX, signatureStartY + 5);
@@ -498,9 +503,14 @@ export const generatePDFBlob = (
         const signerNIP = template.teacherInfo?.nip;
         
         // Use custom signature date if provided, otherwise use current date
-        const signatureDate = template.signatureDate 
-          ? formatDateIndonesia(new Date(template.signatureDate))
-          : formatDateIndonesia(new Date());
+        // Parse date string correctly to avoid timezone offset
+        let signatureDate: string;
+        if (template.signatureDate) {
+          const [year, month, day] = template.signatureDate.split('-').map(Number);
+          signatureDate = formatDateIndonesia(new Date(year, month - 1, day));
+        } else {
+          signatureDate = formatDateIndonesia(new Date());
+        }
         
         const rightColumnX = pageWidth - 80;
         doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
@@ -518,9 +528,14 @@ export const generatePDFBlob = (
         const signerNIP = template.teacherInfo?.nip;
         
         // Use custom signature date if provided, otherwise use current date
-        const signatureDate = template.signatureDate 
-          ? formatDateIndonesia(new Date(template.signatureDate))
-          : formatDateIndonesia(new Date());
+        // Parse date string correctly to avoid timezone offset
+        let signatureDate: string;
+        if (template.signatureDate) {
+          const [year, month, day] = template.signatureDate.split('-').map(Number);
+          signatureDate = formatDateIndonesia(new Date(year, month - 1, day));
+        } else {
+          signatureDate = formatDateIndonesia(new Date());
+        }
         
         const rightColumnX = pageWidth - 80;
         doc.text(`${signatureLocation}, ${signatureDate}`, rightColumnX, signatureStartY);
