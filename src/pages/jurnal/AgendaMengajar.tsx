@@ -39,6 +39,21 @@ import { id as localeId } from 'date-fns/locale';
 import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
+// Helper function to format date in Indonesian with 2-digit day
+const formatDateIndonesia = (date: Date | string): string => {
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+};
+
 interface AgendaMengajar {
   id: string;
   tanggal: string;
@@ -433,7 +448,7 @@ const AgendaMengajar = () => {
       const exportData = agendaList.map((agenda, index) => ({
         'No': index + 1,
         'Hari': getNamaHari(agenda.tanggal),
-        'Tanggal': format(new Date(agenda.tanggal), 'dd MMM yyyy', { locale: localeId }),
+        'Tanggal': formatDateIndonesia(agenda.tanggal),
         'Kelas': getKelasName(agenda.kelas_id),
         'Mata Pelajaran': getMataPelajaranName(agenda.mata_pelajaran_id),
         'Jenis Pembelajaran': agenda.jenis_pembelajaran || '-',
@@ -473,9 +488,12 @@ const AgendaMengajar = () => {
       };
       
       if (signatureDate) {
+        const year = signatureDate.getFullYear();
+        const month = String(signatureDate.getMonth() + 1).padStart(2, '0');
+        const day = String(signatureDate.getDate()).padStart(2, '0');
         customTemplate = {
           ...customTemplate,
-          signatureDate: signatureDate.toISOString().split('T')[0],
+          signatureDate: `${year}-${month}-${day}`,
         };
       }
 
@@ -758,7 +776,7 @@ const AgendaMengajar = () => {
                       <TableCell>{startIndex + index + 1}</TableCell>
                       <TableCell>{getNamaHari(agenda.tanggal)}</TableCell>
                       <TableCell>
-                        {format(new Date(agenda.tanggal), 'dd MMM yyyy', { locale: localeId })}
+                        {formatDateIndonesia(agenda.tanggal)}
                       </TableCell>
                       <TableCell>{getKelasName(agenda.kelas_id)}</TableCell>
                       <TableCell>{getMataPelajaranName(agenda.mata_pelajaran_id)}</TableCell>
