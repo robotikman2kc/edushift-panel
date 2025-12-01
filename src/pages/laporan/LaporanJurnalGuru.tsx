@@ -18,7 +18,7 @@ const formatDateIndonesia = (date: Date | string): string => {
   ];
   
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const day = dateObj.getDate();
+  const day = String(dateObj.getDate()).padStart(2, '0');
   const month = months[dateObj.getMonth()];
   const year = dateObj.getFullYear();
   
