@@ -169,10 +169,14 @@ const LaporanJurnalGuru = () => {
       let template = getCustomPDFTemplate('journal');
       
       // Add signature date to template
+      // Use local date components to avoid timezone offset
       if (signatureDate) {
+        const year = signatureDate.getFullYear();
+        const month = String(signatureDate.getMonth() + 1).padStart(2, '0');
+        const day = String(signatureDate.getDate()).padStart(2, '0');
         template = {
           ...template,
-          signatureDate: signatureDate.toISOString().split('T')[0],
+          signatureDate: `${year}-${month}-${day}`,
         };
       }
       
