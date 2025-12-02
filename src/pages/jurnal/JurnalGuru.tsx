@@ -966,10 +966,17 @@ const JurnalGuru = () => {
       let volume = 1;
       let satuan = "kegiatan";
 
-      if (template === "upacara" && subType === "senin") {
+      if (template === "upacara") {
         const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
         jenisKegiatanId = upacaraKegiatan?.id || jenisKegiatan[0]?.id || "";
-        uraian = "Upacara Bendera Hari Senin";
+        
+        if (subType === "senin") {
+          uraian = "Upacara Bendera Hari Senin";
+        } else if (subType === "peringatan" && customText) {
+          uraian = `Upacara Peringatan ${customText}`;
+        } else {
+          uraian = "Upacara";
+        }
         satuan = "kali";
       } else if (template === "rapat") {
         const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
@@ -1300,13 +1307,12 @@ const JurnalGuru = () => {
                   <Input
                     id="upacara-peringatan"
                     placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
-                    onKeyDown={(e) => {
+                    onKeyDown={async (e) => {
                       if (e.key === "Enter") {
                         const value = (e.target as HTMLInputElement).value.trim();
                         if (value) {
                           setShowUpacaraDialog(false);
-                          handleAddNew();
-                          setTimeout(() => applyTemplate("upacara", value), 100);
+                          await saveQuickJurnal("upacara", "peringatan", value);
                           (e.target as HTMLInputElement).value = "";
                         }
                       }
@@ -1314,13 +1320,12 @@ const JurnalGuru = () => {
                   />
                   <Button
                     variant="outline"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       const input = document.getElementById("upacara-peringatan") as HTMLInputElement;
                       const value = input?.value.trim();
                       if (value) {
                         setShowUpacaraDialog(false);
-                        handleAddNew();
-                        setTimeout(() => applyTemplate("upacara", value), 100);
+                        await saveQuickJurnal("upacara", "peringatan", value);
                         input.value = "";
                       }
                     }}
