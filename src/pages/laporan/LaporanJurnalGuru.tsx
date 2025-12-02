@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Download, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { indexedDB } from "@/lib/indexedDB";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { generatePDFBlob, getCustomPDFTemplate } from "@/lib/exportUtils";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
@@ -39,7 +39,6 @@ const LaporanJurnalGuru = () => {
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   const [currentExportMonth, setCurrentExportMonth] = useState<{ month: number; monthName: string } | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
-  const { toast } = useToast();
 
   const monthNames = [
     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -94,11 +93,7 @@ const LaporanJurnalGuru = () => {
       setMonthsData(monthsWithData);
     } catch (error) {
       console.error("Error fetching months data:", error);
-      toast({
-        title: "Error",
-        description: "Gagal memuat data jurnal",
-        variant: "destructive",
-      });
+      toast.error("Gagal memuat data jurnal");
     } finally {
       setLoading(false);
     }
@@ -123,11 +118,7 @@ const LaporanJurnalGuru = () => {
       });
 
       if (filteredJurnal.length === 0) {
-        toast({
-          title: "Tidak Ada Data",
-          description: "Tidak ada jurnal untuk periode ini",
-          variant: "destructive",
-        });
+        toast.error("Tidak ada jurnal untuk periode ini");
         return;
       }
 
@@ -204,17 +195,10 @@ const LaporanJurnalGuru = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: "Berhasil",
-        description: "Laporan berhasil didownload",
-      });
+      toast.success("Laporan berhasil didownload");
     } catch (error) {
       console.error("Error downloading report:", error);
-      toast({
-        title: "Error",
-        description: "Gagal mendownload laporan",
-        variant: "destructive",
-      });
+      toast.error("Gagal mendownload laporan");
     }
   };
 
