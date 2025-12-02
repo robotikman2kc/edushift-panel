@@ -131,6 +131,7 @@ const JurnalGuru = () => {
   const [showJurnalDialog, setShowJurnalDialog] = useState(false);
   const [showKegiatanDialog, setShowKegiatanDialog] = useState(false);
   const [showRapatDialog, setShowRapatDialog] = useState(false);
+  const [showUpacaraDialog, setShowUpacaraDialog] = useState(false);
   const [filterJenisKegiatan, setFilterJenisKegiatan] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>(new Date().getMonth().toString());
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
@@ -1264,7 +1265,7 @@ const JurnalGuru = () => {
             </Dialog>
             
             
-            <Dialog>
+            <Dialog open={showUpacaraDialog} onOpenChange={setShowUpacaraDialog}>
               <DialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
                   Upacara
@@ -1280,6 +1281,7 @@ const JurnalGuru = () => {
                 <div className="flex flex-col gap-3">
                   <Button
                     onClick={async () => {
+                      setShowUpacaraDialog(false);
                       await saveQuickJurnal("upacara", "senin");
                     }}
                   >
@@ -1300,8 +1302,9 @@ const JurnalGuru = () => {
                     placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        const value = (e.target as HTMLInputElement).value;
+                        const value = (e.target as HTMLInputElement).value.trim();
                         if (value) {
+                          setShowUpacaraDialog(false);
                           handleAddNew();
                           setTimeout(() => applyTemplate("upacara", value), 100);
                           (e.target as HTMLInputElement).value = "";
@@ -1313,9 +1316,11 @@ const JurnalGuru = () => {
                     variant="outline"
                     onClick={(e) => {
                       const input = document.getElementById("upacara-peringatan") as HTMLInputElement;
-                      if (input?.value) {
+                      const value = input?.value.trim();
+                      if (value) {
+                        setShowUpacaraDialog(false);
                         handleAddNew();
-                        setTimeout(() => applyTemplate("upacara", input.value), 100);
+                        setTimeout(() => applyTemplate("upacara", value), 100);
                         input.value = "";
                       }
                     }}
