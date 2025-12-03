@@ -34,7 +34,23 @@ export function TopBar() {
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     // Load from localStorage on mount
     const saved = localStorage.getItem('selectedDate');
-    return saved ? new Date(saved) : new Date();
+    if (saved) {
+      const savedDate = new Date(saved);
+      const today = new Date();
+      // Reset to today if saved date is from a different day (past)
+      const isSameDay = 
+        savedDate.getFullYear() === today.getFullYear() &&
+        savedDate.getMonth() === today.getMonth() &&
+        savedDate.getDate() === today.getDate();
+      
+      if (!isSameDay && savedDate < today) {
+        // Clear old date and return today
+        localStorage.removeItem('selectedDate');
+        return today;
+      }
+      return savedDate;
+    }
+    return new Date();
   });
   const [showBackupWarning, setShowBackupWarning] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState(0);
