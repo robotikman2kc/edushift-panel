@@ -387,6 +387,7 @@ export function DataTable({
       
       if (success) {
         toast({
+          variant: "success",
           title: "Export Berhasil",
           description: "Data berhasil diekspor ke PDF",
         });
@@ -414,6 +415,7 @@ export function DataTable({
       
       if (success) {
         toast({
+          variant: "success",
           title: "Export Berhasil",
           description: "Data berhasil diekspor ke Excel",
         });
@@ -475,6 +477,7 @@ export function DataTable({
       XLSX.writeFile(wb, fileName);
       
       toast({
+        variant: "success",
         title: "Template Downloaded",
         description: `Template Excel berhasil diunduh: ${fileName}`,
       });
@@ -542,6 +545,7 @@ export function DataTable({
           setIsImportDialogOpen(false);
           
           toast({
+            variant: "success",
             title: "Import Berhasil",
             description: `${parsedData.length} data berhasil diimpor dari Excel`,
           });
