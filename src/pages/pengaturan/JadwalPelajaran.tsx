@@ -30,7 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Settings as SettingsIcon, Trash2, CheckCircle2, CalendarDays } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { indexedDB } from "@/lib/indexedDB";
 import { getActiveTahunAjaran, getActiveSemester, setActiveSemester as setActiveAcademicSemester } from "@/lib/academicYearUtils";
 import { getWorkdaySettings, saveWorkdaySettings, getWorkdays, initializeWorkdaySettings } from "@/lib/workdaySettings";
@@ -66,7 +66,6 @@ interface MataPelajaran {
 }
 
 export default function JadwalPelajaran() {
-  const { toast } = useToast();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
@@ -222,11 +221,7 @@ export default function JadwalPelajaran() {
       setMataPelajaranList(mataPelajaranData);
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast({
-        title: "Error",
-        description: "Gagal memuat data",
-        variant: "destructive",
-      });
+      toast.error("Gagal memuat data");
     } finally {
       setLoading(false);
     }
@@ -257,11 +252,7 @@ export default function JadwalPelajaran() {
 
   const handleAddSchedule = async () => {
     if (!selectedDay || !selectedJamKe || !selectedKelas || !selectedMataPelajaran) {
-      toast({
-        title: "Error",
-        description: "Semua field harus diisi",
-        variant: "destructive",
-      });
+      toast.error("Semua field harus diisi");
       return;
     }
 
@@ -327,13 +318,9 @@ export default function JadwalPelajaran() {
 
       await indexedDB.insert("jadwal_pelajaran", newSchedule);
       
-      toast({
-        variant: "success",
-        title: "Berhasil",
-        description: conflictingSchedules.length > 0 
-          ? `Jadwal berhasil ditambahkan (${conflictingSchedules.length} jadwal lama dihapus)`
-          : "Jadwal berhasil ditambahkan",
-      });
+      toast.success(conflictingSchedules.length > 0 
+        ? `Jadwal berhasil ditambahkan (${conflictingSchedules.length} jadwal lama dihapus)`
+        : "Jadwal berhasil ditambahkan");
       
       setShowAddDialog(false);
       setShowConflictDialog(false);
@@ -342,11 +329,7 @@ export default function JadwalPelajaran() {
       fetchData(year, semester);
     } catch (error) {
       console.error("Error adding schedule:", error);
-      toast({
-        title: "Error",
-        description: "Gagal menambahkan jadwal",
-        variant: "destructive",
-      });
+      toast.error("Gagal menambahkan jadwal");
     }
   };
 
@@ -360,40 +343,24 @@ export default function JadwalPelajaran() {
         await indexedDB.delete("jadwal_pelajaran", id);
       }
       
-      toast({
-        variant: "success",
-        title: "Berhasil",
-        description: `${schedulesToDelete.length} jadwal berhasil dihapus`,
-      });
+      toast.success(`${schedulesToDelete.length} jadwal berhasil dihapus`);
       
       setShowDeleteAllDialog(false);
       fetchData();
     } catch (error) {
       console.error("Error deleting all schedules:", error);
-      toast({
-        title: "Error",
-        description: "Gagal menghapus jadwal",
-        variant: "destructive",
-      });
+      toast.error("Gagal menghapus jadwal");
     }
   };
 
   const handleDeleteSchedule = async (id: string) => {
     try {
       await indexedDB.delete("jadwal_pelajaran", id);
-      toast({
-        variant: "success",
-        title: "Berhasil",
-        description: "Jadwal berhasil dihapus",
-      });
+      toast.success("Jadwal berhasil dihapus");
       fetchData();
     } catch (error) {
       console.error("Error deleting schedule:", error);
-      toast({
-        title: "Error",
-        description: "Gagal menghapus jadwal",
-        variant: "destructive",
-      });
+      toast.error("Gagal menghapus jadwal");
     }
   };
 
@@ -404,20 +371,12 @@ export default function JadwalPelajaran() {
         value: minutesPerJP.toString(),
       });
       
-      toast({
-        variant: "success",
-        title: "Berhasil",
-        description: "Pengaturan waktu berhasil disimpan",
-      });
+      toast.success("Pengaturan waktu berhasil disimpan");
       
       setShowTimeSettingsDialog(false);
     } catch (error) {
       console.error("Error saving settings:", error);
-      toast({
-        title: "Error",
-        description: "Gagal menyimpan pengaturan",
-        variant: "destructive",
-      });
+      toast.error("Gagal menyimpan pengaturan");
     }
   };
 
@@ -428,21 +387,13 @@ export default function JadwalPelajaran() {
       await indexedDB.insert("pengaturan", { key: "break2_start", value: break2Start });
       await indexedDB.insert("pengaturan", { key: "break2_end", value: break2End });
       
-      toast({
-        variant: "success",
-        title: "Berhasil",
-        description: "Pengaturan jam istirahat berhasil disimpan",
-      });
+      toast.success("Pengaturan jam istirahat berhasil disimpan");
       
       setShowBreakSettingsDialog(false);
       fetchData();
     } catch (error) {
       console.error("Error saving break settings:", error);
-      toast({
-        title: "Error",
-        description: "Gagal menyimpan pengaturan jam istirahat",
-        variant: "destructive",
-      });
+      toast.error("Gagal menyimpan pengaturan jam istirahat");
     }
   };
 
@@ -528,17 +479,9 @@ export default function JadwalPelajaran() {
                 try {
                   await setActiveAcademicSemester(activeSemester);
                   setCalendarActiveSemester(activeSemester);
-                  toast({
-                    variant: "success",
-                    title: "Berhasil",
-                    description: `Semester ${activeSemester} berhasil diaktifkan untuk kalender`,
-                  });
+                  toast.success(`Semester ${activeSemester} berhasil diaktifkan untuk kalender`);
                 } catch (error) {
-                  toast({
-                    title: "Error",
-                    description: "Gagal mengaktifkan semester",
-                    variant: "destructive",
-                  });
+                  toast.error("Gagal mengaktifkan semester");
                 }
               }}
             >
@@ -966,13 +909,9 @@ export default function JadwalPelajaran() {
                   setIncludeSaturday(checked);
                   await saveWorkdaySettings({ includeSaturday: checked });
                   setWorkdays(getWorkdays());
-                  toast({
-                    variant: "success",
-                    title: "Berhasil",
-                    description: checked 
-                      ? "Sabtu diaktifkan sebagai hari kerja (6 hari)" 
-                      : "Sabtu dinonaktifkan sebagai hari kerja (5 hari)",
-                  });
+                  toast.success(checked 
+                    ? "Sabtu diaktifkan sebagai hari kerja (6 hari)" 
+                    : "Sabtu dinonaktifkan sebagai hari kerja (5 hari)");
                 }}
               />
             </div>
