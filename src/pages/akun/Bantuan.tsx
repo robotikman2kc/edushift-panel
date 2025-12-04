@@ -46,6 +46,7 @@ const Bantuan = () => {
   const handleSaveNotes = () => {
     localStorage.setItem("developer_notes", developerNotes);
     toast({
+      variant: "success",
       title: "Catatan Tersimpan",
       description: "Catatan pengembang berhasil disimpan",
     });

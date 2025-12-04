@@ -162,6 +162,7 @@ const ManajemenData = () => {
       }
 
       toast({
+        variant: "success",
         title: "Berhasil Dihapus",
         description: `Semua ${displayName} berhasil dihapus`
       });

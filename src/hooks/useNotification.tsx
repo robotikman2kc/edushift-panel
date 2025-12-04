@@ -55,6 +55,7 @@ export const useNotification = () => {
     // Check if permission was already granted
     if (currentPermission === 'granted') {
       toast({
+        variant: "success",
         title: "Izin Sudah Diberikan",
         description: "Notifikasi sudah aktif",
       });
@@ -79,6 +80,7 @@ export const useNotification = () => {
 
       if (result === 'granted') {
         toast({
+          variant: "success",
           title: "Izin Diberikan",
           description: "Notifikasi telah diaktifkan",
         });
