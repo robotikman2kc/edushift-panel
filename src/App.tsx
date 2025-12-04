@@ -100,7 +100,7 @@ const App = () => {
             <Route path="/*" element={
               <DashboardLayout>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Dashboard />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   
                   {/* Pengaturan Routes */}
