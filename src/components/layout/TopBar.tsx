@@ -101,6 +101,7 @@ export function TopBar() {
     const handleOnline = () => {
       setIsOnline(true);
       toast({
+        variant: "success",
         title: "Koneksi Tersambung",
         description: "Anda kembali online",
       });
@@ -247,6 +248,7 @@ export function TopBar() {
     try {
       await indexedDB.initializeDefaultData();
       toast({
+        variant: "success",
         title: "Database di-refresh",
         description: "Database berhasil di-refresh dengan data default.",
       });

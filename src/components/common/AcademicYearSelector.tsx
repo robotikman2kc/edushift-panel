@@ -30,6 +30,7 @@ export function AcademicYearSelector() {
       setActiveTahunAjaranState(newYear);
       
       toast({
+        variant: "success",
         title: "Tahun Ajaran Berubah",
         description: `Sekarang menampilkan data tahun ajaran ${newYear}`,
       });

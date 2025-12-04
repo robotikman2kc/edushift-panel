@@ -106,6 +106,7 @@ export function DeleteYearDataDialog({
       }
       
       toast({
+        variant: "success",
         title: "Berhasil",
         description: `Data tahun ajaran ${tahunAjaran} berhasil dihapus`,
       });

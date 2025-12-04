@@ -74,6 +74,7 @@ const BackupGoogleDrive = () => {
       });
 
       toast({
+        variant: "success",
         title: "Berhasil",
         description: "Pengaturan backup berhasil disimpan",
       });
@@ -106,6 +107,7 @@ const BackupGoogleDrive = () => {
       
       if (result.success) {
         toast({
+          variant: "success",
           title: "Koneksi Berhasil",
           description: "Webhook URL valid dan terhubung dengan Google Drive",
         });
@@ -139,6 +141,7 @@ const BackupGoogleDrive = () => {
       
       if (result.success) {
         toast({
+          variant: "success",
           title: "Backup Berhasil",
           description: `Data berhasil dibackup ke Google Drive (${result.fileName})`,
         });

@@ -133,6 +133,7 @@ const Dashboard = () => {
   const handleInstall = async () => {
     await installApp();
     toast({
+      variant: "success",
       title: "Aplikasi Terinstal",
       description: "EduShift Panel telah ditambahkan ke layar utama Anda.",
     });
@@ -141,6 +142,7 @@ const Dashboard = () => {
   const handleUpdate = () => {
     updateApp();
     toast({
+      variant: "success",
       title: "Memperbarui Aplikasi",
       description: "Aplikasi akan dimuat ulang untuk menerapkan pembaruan...",
     });
