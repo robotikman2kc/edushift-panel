@@ -147,6 +147,14 @@ const JurnalGuru = () => {
   const [templateName, setTemplateName] = useState("");
   const [showTemplateConfirmDialog, setShowTemplateConfirmDialog] = useState(false);
   const [selectedTemplateToApply, setSelectedTemplateToApply] = useState<CustomTemplate | null>(null);
+  const [showPermanentTemplateConfirm, setShowPermanentTemplateConfirm] = useState(false);
+  const [pendingPermanentTemplate, setPendingPermanentTemplate] = useState<{
+    jenisKegiatan: string;
+    uraian: string;
+    volume: number;
+    satuan: string;
+    jenisKegiatanId: string;
+  } | null>(null);
   const { toast } = useToast();
 
   const jurnalForm = useForm<JurnalFormData>({
@@ -618,6 +626,57 @@ const JurnalGuru = () => {
       setSelectedTemplateToApply(null);
     } catch (error) {
       console.error("Error applying template:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan jurnal",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openPermanentTemplateConfirm = (
+    jenisKegiatan: string,
+    uraian: string,
+    volume: number,
+    satuan: string,
+    jenisKegiatanId: string
+  ) => {
+    setPendingPermanentTemplate({
+      jenisKegiatan,
+      uraian,
+      volume,
+      satuan,
+      jenisKegiatanId,
+    });
+    setShowPermanentTemplateConfirm(true);
+  };
+
+  const savePermanentTemplate = async () => {
+    if (!pendingPermanentTemplate) return;
+    
+    try {
+      const jurnalData = {
+        tanggal: format(new Date(), "yyyy-MM-dd"),
+        jenis_kegiatan_id: pendingPermanentTemplate.jenisKegiatanId,
+        uraian_kegiatan: pendingPermanentTemplate.uraian,
+        volume: pendingPermanentTemplate.volume,
+        satuan_hasil: pendingPermanentTemplate.satuan,
+      };
+
+      const result = await indexedDB.insert("jurnal", jurnalData);
+      if (result.error) throw new Error(result.error);
+      
+      toast({
+        variant: "success",
+        title: "Berhasil",
+        description: "Jurnal berhasil ditambahkan",
+      });
+
+      fetchData();
+      setShowPermanentTemplateConfirm(false);
+      setPendingPermanentTemplate(null);
+    } catch (error) {
+      console.error("Error saving permanent template:", error);
       toast({
         title: "Error",
         description: "Gagal menyimpan jurnal",
@@ -1201,8 +1260,15 @@ const JurnalGuru = () => {
                           if (e.key === "Enter") {
                             const value = (e.target as HTMLInputElement).value.trim();
                             if (value) {
+                              const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
                               setShowRapatDialog(false);
-                              saveQuickJurnal("rapat", "pembinaan", value);
+                              openPermanentTemplateConfirm(
+                                rapatKegiatan?.nama_kegiatan || "Rapat",
+                                `Pembinaan Oleh ${value}`,
+                                1,
+                                "kali",
+                                rapatKegiatan?.id || jenisKegiatan[0]?.id || ""
+                              );
                               (e.target as HTMLInputElement).value = "";
                             }
                           }
@@ -1213,8 +1279,15 @@ const JurnalGuru = () => {
                           const input = document.getElementById("rapat-pembinaan") as HTMLInputElement;
                           const value = input?.value.trim();
                           if (value) {
+                            const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
                             setShowRapatDialog(false);
-                            saveQuickJurnal("rapat", "pembinaan", value);
+                            openPermanentTemplateConfirm(
+                              rapatKegiatan?.nama_kegiatan || "Rapat",
+                              `Pembinaan Oleh ${value}`,
+                              1,
+                              "kali",
+                              rapatKegiatan?.id || jenisKegiatan[0]?.id || ""
+                            );
                             input.value = "";
                           }
                         }}
@@ -1245,8 +1318,15 @@ const JurnalGuru = () => {
                           if (e.key === "Enter") {
                             const value = (e.target as HTMLInputElement).value.trim();
                             if (value) {
+                              const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
                               setShowRapatDialog(false);
-                              saveQuickJurnal("rapat", "biasa", value);
+                              openPermanentTemplateConfirm(
+                                rapatKegiatan?.nama_kegiatan || "Rapat",
+                                `Rapat ${value}`,
+                                1,
+                                "kali",
+                                rapatKegiatan?.id || jenisKegiatan[0]?.id || ""
+                              );
                               (e.target as HTMLInputElement).value = "";
                             }
                           }
@@ -1257,8 +1337,15 @@ const JurnalGuru = () => {
                           const input = document.getElementById("rapat-biasa") as HTMLInputElement;
                           const value = input?.value.trim();
                           if (value) {
+                            const rapatKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("rapat"));
                             setShowRapatDialog(false);
-                            saveQuickJurnal("rapat", "biasa", value);
+                            openPermanentTemplateConfirm(
+                              rapatKegiatan?.nama_kegiatan || "Rapat",
+                              `Rapat ${value}`,
+                              1,
+                              "kali",
+                              rapatKegiatan?.id || jenisKegiatan[0]?.id || ""
+                            );
                             input.value = "";
                           }
                         }}
@@ -1287,9 +1374,16 @@ const JurnalGuru = () => {
                 </DialogHeader>
                 <div className="flex flex-col gap-3">
                   <Button
-                    onClick={async () => {
+                    onClick={() => {
+                      const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
                       setShowUpacaraDialog(false);
-                      await saveQuickJurnal("upacara", "senin");
+                      openPermanentTemplateConfirm(
+                        upacaraKegiatan?.nama_kegiatan || "Upacara",
+                        "Upacara Bendera Hari Senin",
+                        1,
+                        "kali",
+                        upacaraKegiatan?.id || jenisKegiatan[0]?.id || ""
+                      );
                     }}
                   >
                     Upacara Hari Senin
@@ -1307,12 +1401,19 @@ const JurnalGuru = () => {
                   <Input
                     id="upacara-peringatan"
                     placeholder="Peringatan khusus (contoh: Hari Kemerdekaan)"
-                    onKeyDown={async (e) => {
+                    onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const value = (e.target as HTMLInputElement).value.trim();
                         if (value) {
+                          const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
                           setShowUpacaraDialog(false);
-                          await saveQuickJurnal("upacara", "peringatan", value);
+                          openPermanentTemplateConfirm(
+                            upacaraKegiatan?.nama_kegiatan || "Upacara",
+                            `Upacara Peringatan ${value}`,
+                            1,
+                            "kali",
+                            upacaraKegiatan?.id || jenisKegiatan[0]?.id || ""
+                          );
                           (e.target as HTMLInputElement).value = "";
                         }
                       }
@@ -1320,12 +1421,19 @@ const JurnalGuru = () => {
                   />
                   <Button
                     variant="outline"
-                    onClick={async (e) => {
+                    onClick={() => {
                       const input = document.getElementById("upacara-peringatan") as HTMLInputElement;
                       const value = input?.value.trim();
                       if (value) {
+                        const upacaraKegiatan = jenisKegiatan.find(k => k.nama_kegiatan.toLowerCase().includes("upacara"));
                         setShowUpacaraDialog(false);
-                        await saveQuickJurnal("upacara", "peringatan", value);
+                        openPermanentTemplateConfirm(
+                          upacaraKegiatan?.nama_kegiatan || "Upacara",
+                          `Upacara Peringatan ${value}`,
+                          1,
+                          "kali",
+                          upacaraKegiatan?.id || jenisKegiatan[0]?.id || ""
+                        );
                         input.value = "";
                       }
                     }}
@@ -1394,7 +1502,21 @@ const JurnalGuru = () => {
                       const kelasId = kelasSelect?.dataset.kelasId;
                       
                       if (mapelId && kelasId) {
-                        saveKoreksiJurnal(mapelId, kelasId);
+                        const administrasiKegiatan = jenisKegiatan.find(k => 
+                          k.nama_kegiatan.toLowerCase().includes("administrasi")
+                        );
+                        const mapel = mataPelajaran.find(m => m.id === mapelId);
+                        const kelasData = kelas.find(k => k.id === kelasId);
+                        
+                        if (mapel && kelasData) {
+                          openPermanentTemplateConfirm(
+                            administrasiKegiatan?.nama_kegiatan || "Administrasi",
+                            `Mengkoreksi Tugas/Soal ${mapel.nama_mata_pelajaran} - Kelas ${kelasData.nama_kelas}`,
+                            1,
+                            "Paket",
+                            administrasiKegiatan?.id || jenisKegiatan[0]?.id || ""
+                          );
+                        }
                       } else {
                         toast({
                           title: "Error",
@@ -1435,29 +1557,14 @@ const JurnalGuru = () => {
                             const kegiatanSekolahKegiatan = jenisKegiatan.find(k => 
                               k.nama_kegiatan.toLowerCase().includes("kegiatan sekolah")
                             );
-                            const jurnalData = {
-                              tanggal: format(new Date(), "yyyy-MM-dd"),
-                              jenis_kegiatan_id: kegiatanSekolahKegiatan?.id || jenisKegiatan[0]?.id || "",
-                              uraian_kegiatan: value,
-                              volume: 1,
-                              satuan_hasil: "kali",
-                            };
-                            indexedDB.insert("jurnal", jurnalData).then(() => {
-                              toast({
-                                variant: "success",
-                                title: "Berhasil",
-                                description: "Jurnal kegiatan sekolah berhasil ditambahkan",
-                              });
-                              fetchData();
-                              (e.target as HTMLInputElement).value = "";
-                            }).catch((error) => {
-                              console.error("Error:", error);
-                              toast({
-                                title: "Error",
-                                description: "Gagal menyimpan jurnal",
-                                variant: "destructive",
-                              });
-                            });
+                            openPermanentTemplateConfirm(
+                              kegiatanSekolahKegiatan?.nama_kegiatan || "Kegiatan Sekolah",
+                              value,
+                              1,
+                              "kali",
+                              kegiatanSekolahKegiatan?.id || jenisKegiatan[0]?.id || ""
+                            );
+                            (e.target as HTMLInputElement).value = "";
                           }
                         }
                       }}
@@ -1470,29 +1577,14 @@ const JurnalGuru = () => {
                           const kegiatanSekolahKegiatan = jenisKegiatan.find(k => 
                             k.nama_kegiatan.toLowerCase().includes("kegiatan sekolah")
                           );
-                          const jurnalData = {
-                            tanggal: format(new Date(), "yyyy-MM-dd"),
-                            jenis_kegiatan_id: kegiatanSekolahKegiatan?.id || jenisKegiatan[0]?.id || "",
-                            uraian_kegiatan: value,
-                            volume: 1,
-                            satuan_hasil: "kali",
-                          };
-                          indexedDB.insert("jurnal", jurnalData).then(() => {
-                            toast({
-                              variant: "success",
-                              title: "Berhasil",
-                              description: "Jurnal kegiatan sekolah berhasil ditambahkan",
-                            });
-                            fetchData();
-                            input.value = "";
-                          }).catch((error) => {
-                            console.error("Error:", error);
-                            toast({
-                              title: "Error",
-                              description: "Gagal menyimpan jurnal",
-                              variant: "destructive",
-                            });
-                          });
+                          openPermanentTemplateConfirm(
+                            kegiatanSekolahKegiatan?.nama_kegiatan || "Kegiatan Sekolah",
+                            value,
+                            1,
+                            "kali",
+                            kegiatanSekolahKegiatan?.id || jenisKegiatan[0]?.id || ""
+                          );
+                          input.value = "";
                         }
                       }}
                     >
@@ -1826,20 +1918,22 @@ const JurnalGuru = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              Anda akan menambahkan jurnal dengan template "{selectedTemplateToApply?.nama}".
-              <div className="mt-4 space-y-2 p-4 bg-muted rounded-md text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium">Uraian:</span>
-                  <span className="text-foreground">{selectedTemplateToApply?.uraian}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Volume:</span>
-                  <span className="text-foreground">{selectedTemplateToApply?.volume} {selectedTemplateToApply?.satuan}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Tanggal:</span>
-                  <span className="text-foreground">{format(new Date(), "dd/MM/yyyy")}</span>
+            <AlertDialogDescription asChild>
+              <div>
+                <p className="mb-4">Anda akan menambahkan jurnal dengan template "{selectedTemplateToApply?.nama}".</p>
+                <div className="space-y-2 p-4 bg-muted rounded-md text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Uraian:</span>
+                    <span className="text-foreground">{selectedTemplateToApply?.uraian}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Volume:</span>
+                    <span className="text-foreground">{selectedTemplateToApply?.volume} {selectedTemplateToApply?.satuan}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Tanggal:</span>
+                    <span className="text-foreground">{format(new Date(), "dd/MM/yyyy")}</span>
+                  </div>
                 </div>
               </div>
             </AlertDialogDescription>
@@ -1847,6 +1941,44 @@ const JurnalGuru = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={applyCustomTemplate}>
+              Tambahkan ke Jurnal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Template Confirmation Dialog */}
+      <AlertDialog open={showPermanentTemplateConfirm} onOpenChange={setShowPermanentTemplateConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Template</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <p className="mb-4">Anda akan menambahkan jurnal dengan template "{pendingPermanentTemplate?.jenisKegiatan}".</p>
+                <div className="space-y-2 p-4 bg-muted rounded-md text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Jenis Kegiatan:</span>
+                    <span className="text-foreground">{pendingPermanentTemplate?.jenisKegiatan}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Uraian:</span>
+                    <span className="text-foreground">{pendingPermanentTemplate?.uraian}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Volume:</span>
+                    <span className="text-foreground">{pendingPermanentTemplate?.volume} {pendingPermanentTemplate?.satuan}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Tanggal:</span>
+                    <span className="text-foreground">{format(new Date(), "dd/MM/yyyy")}</span>
+                  </div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={savePermanentTemplate}>
               Tambahkan ke Jurnal
             </AlertDialogAction>
           </AlertDialogFooter>
