@@ -15,13 +15,29 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 type SortColumn = 'nisn' | 'nama_siswa' | 'tingkat' | 'nama_kelas' | 'status';
 type SortDirection = 'asc' | 'desc';
 
+const FILTER_STORAGE_KEY = 'kehadiran_eskul_filters';
+
 export default function KehadiranEskulPage() {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
   const [anggotaEskul, setAnggotaEskul] = useState<AnggotaEskul[]>([]);
   const [filteredAnggota, setFilteredAnggota] = useState<AnggotaEskul[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [selectedTingkat, setSelectedTingkat] = useState<string>("all");
-  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+  const [selectedTingkat, setSelectedTingkat] = useState<string>(() => {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (saved) {
+      const filters = JSON.parse(saved);
+      return filters.tingkat || "all";
+    }
+    return "all";
+  });
+  const [selectedKelas, setSelectedKelas] = useState<string>(() => {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (saved) {
+      const filters = JSON.parse(saved);
+      return filters.kelas || "all";
+    }
+    return "all";
+  });
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: KehadiranEskul}>({});
   const [loading, setLoading] = useState(false);
@@ -29,6 +45,14 @@ export default function KehadiranEskulPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const tingkatOptions = ["X", "XI", "XII"];
+
+  // Save filters to localStorage
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({
+      tingkat: selectedTingkat,
+      kelas: selectedKelas
+    }));
+  }, [selectedTingkat, selectedKelas]);
 
   useEffect(() => {
     loadEskulData();
@@ -54,6 +78,20 @@ export default function KehadiranEskulPage() {
     
     setFilteredAnggota(filtered);
   }, [anggotaEskul, selectedTingkat, selectedKelas]);
+
+  // Auto-select first kelas when tingkat changes
+  useEffect(() => {
+    if (selectedTingkat && selectedTingkat !== "all" && anggotaEskul.length > 0) {
+      const kelasForTingkat = [...new Set(anggotaEskul
+        .filter(a => a.tingkat === selectedTingkat)
+        .map(a => a.nama_kelas))]
+        .sort();
+      
+      if (kelasForTingkat.length > 0) {
+        setSelectedKelas(kelasForTingkat[0]);
+      }
+    }
+  }, [selectedTingkat, anggotaEskul]);
 
   const loadEskulData = async () => {
     const eskuls = await eskulDB.select('ekstrakurikuler');
