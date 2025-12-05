@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/common/DataTable";
@@ -8,6 +8,8 @@ import { AlertCircle, ArrowUp, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +28,43 @@ export default function KelolaAnggota() {
   const [selectedAnggota, setSelectedAnggota] = useState<AnggotaEskul[]>([]);
   const [showToggleStatusDialog, setShowToggleStatusDialog] = useState(false);
   const [selectedAnggotaForToggle, setSelectedAnggotaForToggle] = useState<AnggotaEskul | null>(null);
+  const [selectedTingkat, setSelectedTingkat] = useState<string>("all");
+  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+
+  const tingkatOptions = ["X", "XI", "XII"];
+
+  // Get unique kelas options based on selected tingkat
+  const kelasOptions = useMemo(() => {
+    let filtered = anggota;
+    if (selectedTingkat !== "all") {
+      filtered = anggota.filter(a => a.tingkat === selectedTingkat);
+    }
+    return [...new Set(filtered.map(a => a.nama_kelas))].sort();
+  }, [anggota, selectedTingkat]);
+
+  // Auto-select first kelas when tingkat changes
+  useEffect(() => {
+    if (selectedTingkat !== "all" && kelasOptions.length > 0) {
+      setSelectedKelas(kelasOptions[0]);
+    } else if (selectedTingkat === "all") {
+      setSelectedKelas("all");
+    }
+  }, [selectedTingkat, kelasOptions]);
+
+  // Filter anggota based on selected filters
+  const filteredAnggota = useMemo(() => {
+    let filtered = anggota;
+    
+    if (selectedTingkat !== "all") {
+      filtered = filtered.filter(a => a.tingkat === selectedTingkat);
+    }
+    
+    if (selectedKelas !== "all") {
+      filtered = filtered.filter(a => a.nama_kelas === selectedKelas);
+    }
+    
+    return filtered;
+  }, [anggota, selectedTingkat, selectedKelas]);
 
   useEffect(() => {
     loadData();
@@ -319,7 +358,7 @@ export default function KelolaAnggota() {
 
 
   // Format data untuk tampilan tabel dengan action buttons
-  const formattedAnggota = anggota.map((item, index) => ({
+  const formattedAnggota = filteredAnggota.map((item, index) => ({
     ...item,
     no: index + 1,
     aksi: (
@@ -373,7 +412,41 @@ export default function KelolaAnggota() {
       />
 
       <Card className="p-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="space-y-2">
+            <Label>Filter Tingkat</Label>
+            <Select value={selectedTingkat} onValueChange={setSelectedTingkat}>
+              <SelectTrigger className="w-[140px] bg-background">
+                <SelectValue placeholder="Semua Tingkat" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Semua Tingkat</SelectItem>
+                {tingkatOptions.map((tingkat) => (
+                  <SelectItem key={tingkat} value={tingkat}>
+                    {tingkat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Filter Kelas</Label>
+            <Select value={selectedKelas} onValueChange={setSelectedKelas}>
+              <SelectTrigger className="w-[160px] bg-background">
+                <SelectValue placeholder="Semua Kelas" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Semua Kelas</SelectItem>
+                {kelasOptions.map((kelas) => (
+                  <SelectItem key={kelas} value={kelas}>
+                    {kelas}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Button 
             onClick={handleNaikKelas}
             variant="default"
