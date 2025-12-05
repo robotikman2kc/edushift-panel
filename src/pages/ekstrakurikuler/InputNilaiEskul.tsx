@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { eskulDB } from "@/lib/eskulDB";
 import { getActiveTahunAjaran } from "@/lib/academicYearUtils";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Save, FileText, AlertCircle } from "lucide-react";
+import { Save, FileText, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
 const GRADE_OPTIONS = ["A", "B", "C", "D", "E"];
+
+type SortColumn = 'nisn' | 'nama_siswa' | 'nama_kelas' | 'nilai';
+type SortDirection = 'asc' | 'desc';
 
 interface NilaiEskul {
   id?: string;
@@ -33,6 +36,8 @@ const InputNilaiEskul = () => {
   const [grades, setGrades] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('nama_siswa');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     loadEskulData();
@@ -360,6 +365,43 @@ const InputNilaiEskul = () => {
     }
   }, [eskul]);
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-4 w-4 ml-1" />
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
+  const sortedAnggota = useMemo(() => {
+    return [...anggotaList].sort((a, b) => {
+      let aVal: string;
+      let bVal: string;
+
+      if (sortColumn === 'nilai') {
+        aVal = grades[a.id] || '';
+        bVal = grades[b.id] || '';
+      } else {
+        aVal = String(a[sortColumn] || '').toLowerCase();
+        bVal = String(b[sortColumn] || '').toLowerCase();
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [anggotaList, sortColumn, sortDirection, grades]);
+
   if (!eskul) {
     return (
       <div className="space-y-6">
@@ -484,14 +526,42 @@ const InputNilaiEskul = () => {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-3">No</th>
-                        <th className="text-left p-3">NISN</th>
-                        <th className="text-left p-3">Nama Siswa</th>
-                        <th className="text-left p-3">Kelas</th>
-                        <th className="text-center p-3">Nilai</th>
+                        <th 
+                          className="text-left p-3 cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => handleSort('nisn')}
+                        >
+                          <div className="flex items-center">
+                            NISN {getSortIcon('nisn')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-3 cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => handleSort('nama_siswa')}
+                        >
+                          <div className="flex items-center">
+                            Nama Siswa {getSortIcon('nama_siswa')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-3 cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => handleSort('nama_kelas')}
+                        >
+                          <div className="flex items-center">
+                            Kelas {getSortIcon('nama_kelas')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-center p-3 cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => handleSort('nilai')}
+                        >
+                          <div className="flex items-center justify-center">
+                            Nilai {getSortIcon('nilai')}
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {anggotaList.map((anggota, index) => (
+                      {sortedAnggota.map((anggota, index) => (
                         <tr key={anggota.id} className="border-b hover:bg-muted/50">
                           <td className="p-3">{index + 1}</td>
                           <td className="p-3">{anggota.nisn}</td>
