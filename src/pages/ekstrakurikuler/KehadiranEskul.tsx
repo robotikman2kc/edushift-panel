@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { eskulDB } from "@/lib/eskulDB";
 import { KehadiranEskul, AnggotaEskul, Ekstrakurikuler } from "@/lib/indexedDB";
-import { Save, Calendar, CheckCheck, Clock, UserX, AlertCircle } from "lucide-react";
+import { Save, Calendar, CheckCheck, Clock, UserX, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+type SortColumn = 'nisn' | 'nama_siswa' | 'tingkat' | 'nama_kelas' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 export default function KehadiranEskulPage() {
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
@@ -22,6 +25,8 @@ export default function KehadiranEskulPage() {
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: KehadiranEskul}>({});
   const [loading, setLoading] = useState(false);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('nama_siswa');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -191,6 +196,43 @@ export default function KehadiranEskulPage() {
         .map(a => a.nama_kelas))]
         .sort()
     : [...new Set(anggotaEskul.map(a => a.nama_kelas))].sort();
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-4 w-4 ml-1" />
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
+  const sortedAnggota = useMemo(() => {
+    return [...filteredAnggota].sort((a, b) => {
+      let aVal: string;
+      let bVal: string;
+
+      if (sortColumn === 'status') {
+        aVal = attendance[a.id] || '';
+        bVal = attendance[b.id] || '';
+      } else {
+        aVal = String(a[sortColumn] || '').toLowerCase();
+        bVal = String(b[sortColumn] || '').toLowerCase();
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredAnggota, sortColumn, sortDirection, attendance]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -388,16 +430,51 @@ export default function KehadiranEskulPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>No</TableHead>
-                      <TableHead>NISN</TableHead>
-                      <TableHead>Nama Siswa</TableHead>
-                      <TableHead>Tingkat</TableHead>
-                      <TableHead>Kelas</TableHead>
-                      <TableHead className="text-center">Status Kehadiran</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('nisn')}
+                      >
+                        <div className="flex items-center">
+                          NISN {getSortIcon('nisn')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('nama_siswa')}
+                      >
+                        <div className="flex items-center">
+                          Nama Siswa {getSortIcon('nama_siswa')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('tingkat')}
+                      >
+                        <div className="flex items-center">
+                          Tingkat {getSortIcon('tingkat')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('nama_kelas')}
+                      >
+                        <div className="flex items-center">
+                          Kelas {getSortIcon('nama_kelas')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('status')}
+                      >
+                        <div className="flex items-center justify-center">
+                          Status {getSortIcon('status')}
+                        </div>
+                      </TableHead>
                       <TableHead className="text-center">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAnggota.map((anggota, index) => (
+                    {sortedAnggota.map((anggota, index) => (
                       <TableRow key={anggota.id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium">{anggota.nisn}</TableCell>
