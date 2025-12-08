@@ -21,6 +21,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const FILTER_STORAGE_KEY = 'kelola_anggota_eskul_filters';
+
 export default function KelolaAnggota() {
   const [anggota, setAnggota] = useState<AnggotaEskul[]>([]);
   const [eskul, setEskul] = useState<Ekstrakurikuler | null>(null);
@@ -28,10 +30,32 @@ export default function KelolaAnggota() {
   const [selectedAnggota, setSelectedAnggota] = useState<AnggotaEskul[]>([]);
   const [showToggleStatusDialog, setShowToggleStatusDialog] = useState(false);
   const [selectedAnggotaForToggle, setSelectedAnggotaForToggle] = useState<AnggotaEskul | null>(null);
-  const [selectedTingkat, setSelectedTingkat] = useState<string>("all");
-  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+  const [selectedTingkat, setSelectedTingkat] = useState<string>(() => {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (saved) {
+      const filters = JSON.parse(saved);
+      return filters.tingkat || "all";
+    }
+    return "all";
+  });
+  const [selectedKelas, setSelectedKelas] = useState<string>(() => {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (saved) {
+      const filters = JSON.parse(saved);
+      return filters.kelas || "all";
+    }
+    return "all";
+  });
 
   const tingkatOptions = ["X", "XI", "XII"];
+
+  // Save filters to localStorage
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({
+      tingkat: selectedTingkat,
+      kelas: selectedKelas
+    }));
+  }, [selectedTingkat, selectedKelas]);
 
   // Get unique kelas options based on selected tingkat
   const kelasOptions = useMemo(() => {
@@ -42,9 +66,14 @@ export default function KelolaAnggota() {
     return [...new Set(filtered.map(a => a.nama_kelas))].sort();
   }, [anggota, selectedTingkat]);
 
-  // Auto-select first kelas when tingkat changes
+  // Auto-select first kelas when tingkat changes (only if not loading from localStorage)
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   useEffect(() => {
-    if (selectedTingkat !== "all" && kelasOptions.length > 0) {
+    if (isInitialLoad && anggota.length > 0) {
+      setIsInitialLoad(false);
+      return;
+    }
+    if (selectedTingkat !== "all" && kelasOptions.length > 0 && !isInitialLoad) {
       setSelectedKelas(kelasOptions[0]);
     } else if (selectedTingkat === "all") {
       setSelectedKelas("all");
