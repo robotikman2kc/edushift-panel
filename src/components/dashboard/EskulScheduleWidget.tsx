@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { eskulDB } from "@/lib/eskulDB";
 import { Ekstrakurikuler } from "@/lib/indexedDB";
 import { indexedDB } from "@/lib/indexedDB";
-import { Users, Clock, Calendar, CalendarOff } from "lucide-react";
+import { Users, Clock, Calendar, CalendarOff, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { isWorkday } from "@/lib/workdaySettings";
 
 interface EskulScheduleWidgetProps {
   selectedDate: Date;
@@ -51,8 +52,11 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
     }
   };
 
-  // Don't show if no ekstrakurikuler and no active periode
-  if (todayEskul.length === 0 && !currentPeriode) {
+  // Check if it's a weekend (not a workday)
+  const isWeekend = !isWorkday(selectedDate);
+
+  // Don't show if no ekstrakurikuler and no active periode and not weekend
+  if (todayEskul.length === 0 && !currentPeriode && !isWeekend) {
     return null;
   }
 
@@ -65,7 +69,16 @@ export function EskulScheduleWidget({ selectedDate }: EskulScheduleWidgetProps) 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {currentPeriode ? (
+        {isWeekend ? (
+          // Weekend - show this first before periode check
+          <div className="flex items-center justify-center py-8 text-muted-foreground">
+            <div className="text-center">
+              <CalendarDays className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-medium">Akhir Pekan</p>
+              <p className="text-xs mt-1">Tidak ada jadwal ekstrakurikuler</p>
+            </div>
+          </div>
+        ) : currentPeriode ? (
           <div className={`p-4 rounded-lg border ${
             currentPeriode.jenis === 'libur'
               ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50'
