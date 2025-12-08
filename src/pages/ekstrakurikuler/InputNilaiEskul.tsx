@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExportDateDialog } from "@/components/common/ExportDateDialog";
 
 const GRADE_OPTIONS = ["A", "B", "C", "D", "E"];
+const FILTER_STORAGE_KEY = 'input_nilai_eskul_filters';
 
 type SortColumn = 'nisn' | 'nama_siswa' | 'nama_kelas' | 'nilai';
 type SortDirection = 'asc' | 'desc';
@@ -30,14 +31,36 @@ interface NilaiEskul {
 const InputNilaiEskul = () => {
   const [eskul, setEskul] = useState<any>(null);
   const [activeTahunAjaran, setActiveTahunAjaran] = useState<string>("");
-  const [selectedSemester, setSelectedSemester] = useState<string>("1");
-  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+  const [selectedSemester, setSelectedSemester] = useState<string>(() => {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (saved) {
+      const filters = JSON.parse(saved);
+      return filters.semester || "1";
+    }
+    return "1";
+  });
+  const [selectedKelas, setSelectedKelas] = useState<string>(() => {
+    const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (saved) {
+      const filters = JSON.parse(saved);
+      return filters.kelas || "all";
+    }
+    return "all";
+  });
   const [anggotaList, setAnggotaList] = useState<any[]>([]);
   const [grades, setGrades] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const [isExportDateDialogOpen, setIsExportDateDialogOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>('nama_siswa');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Save filters to localStorage
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({
+      semester: selectedSemester,
+      kelas: selectedKelas
+    }));
+  }, [selectedSemester, selectedKelas]);
 
   useEffect(() => {
     loadEskulData();
