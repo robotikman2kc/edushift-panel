@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type SortColumn = 'nisn' | 'nama_siswa' | 'tingkat' | 'nama_kelas' | 'status';
 type SortDirection = 'asc' | 'desc';
+type SortItem = { column: SortColumn; direction: SortDirection };
 
 const FILTER_STORAGE_KEY = 'kehadiran_eskul_filters';
 
@@ -41,8 +42,7 @@ export default function KehadiranEskulPage() {
   const [attendance, setAttendance] = useState<{[key: string]: string}>({});
   const [existingAttendance, setExistingAttendance] = useState<{[key: string]: KehadiranEskul}>({});
   const [loading, setLoading] = useState(false);
-  const [sortColumn, setSortColumn] = useState<SortColumn>('nama_siswa');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortStack, setSortStack] = useState<SortItem[]>([{ column: 'nama_siswa', direction: 'asc' }]);
 
   const tingkatOptions = ["X", "XI", "XII"];
 
@@ -236,41 +236,62 @@ export default function KehadiranEskulPage() {
     : [...new Set(anggotaEskul.map(a => a.nama_kelas))].sort();
 
   const handleSort = (column: SortColumn) => {
-    if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
+    setSortStack(prev => {
+      const existingIndex = prev.findIndex(s => s.column === column);
+      
+      if (existingIndex === 0) {
+        // If it's the primary sort, toggle direction
+        const newDirection: SortDirection = prev[0].direction === 'asc' ? 'desc' : 'asc';
+        return [{ column, direction: newDirection }, ...prev.slice(1)];
+      } else if (existingIndex > 0) {
+        // If it exists but not primary, move to front with asc
+        const newStack = prev.filter(s => s.column !== column);
+        return [{ column, direction: 'asc' as SortDirection }, ...newStack];
+      } else {
+        // New column, add to front and keep max 3 levels
+        return [{ column, direction: 'asc' as SortDirection }, ...prev].slice(0, 3);
+      }
+    });
   };
 
   const getSortIcon = (column: SortColumn) => {
-    if (sortColumn !== column) {
-      return <ArrowUpDown className="h-4 w-4 ml-1" />;
+    const sortItem = sortStack.find(s => s.column === column);
+    const sortIndex = sortStack.findIndex(s => s.column === column);
+    
+    if (!sortItem) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
     }
-    return sortDirection === 'asc' 
-      ? <ArrowUp className="h-4 w-4 ml-1" />
-      : <ArrowDown className="h-4 w-4 ml-1" />;
+    
+    return (
+      <span className="flex items-center">
+        {sortItem.direction === 'asc' 
+          ? <ArrowUp className="h-4 w-4 ml-1" />
+          : <ArrowDown className="h-4 w-4 ml-1" />}
+        {sortIndex > 0 && <span className="text-xs text-muted-foreground ml-0.5">{sortIndex + 1}</span>}
+      </span>
+    );
   };
 
   const sortedAnggota = useMemo(() => {
     return [...filteredAnggota].sort((a, b) => {
-      let aVal: string;
-      let bVal: string;
+      for (const { column, direction } of sortStack) {
+        let aVal: string;
+        let bVal: string;
 
-      if (sortColumn === 'status') {
-        aVal = attendance[a.id] || '';
-        bVal = attendance[b.id] || '';
-      } else {
-        aVal = String(a[sortColumn] || '').toLowerCase();
-        bVal = String(b[sortColumn] || '').toLowerCase();
+        if (column === 'status') {
+          aVal = attendance[a.id] || '';
+          bVal = attendance[b.id] || '';
+        } else {
+          aVal = String(a[column] || '').toLowerCase();
+          bVal = String(b[column] || '').toLowerCase();
+        }
+
+        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
       }
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filteredAnggota, sortColumn, sortDirection, attendance]);
+  }, [filteredAnggota, sortStack, attendance]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
