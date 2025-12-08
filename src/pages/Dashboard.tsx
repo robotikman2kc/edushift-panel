@@ -456,6 +456,15 @@ const Dashboard = () => {
           <CardContent>
             {loadingSchedule ? (
               <LoadingSkeleton type="schedule" count={3} />
+            ) : !isWorkday(selectedDate) ? (
+              // Weekend (not a workday) - show this first before periode check
+              <div className="flex items-center justify-center py-16 text-muted-foreground">
+                <div className="text-center">
+                  <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm font-medium">Akhir Pekan</p>
+                  <p className="text-xs mt-1">Selamat beristirahat!</p>
+                </div>
+              </div>
             ) : currentPeriode ? (
               <div className={`p-4 rounded-lg border ${
                 currentPeriode.jenis === 'libur' 
@@ -507,23 +516,12 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : todaySchedule.length === 0 ? (
-              // Check if it's weekend (not a workday)
-              !isWorkday(selectedDate) ? (
-                <div className="flex items-center justify-center py-16 text-muted-foreground">
-                  <div className="text-center">
-                    <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm font-medium">Akhir Pekan</p>
-                    <p className="text-xs mt-1">Selamat beristirahat!</p>
-                  </div>
-                </div>
-              ) : (
-                <EmptyState
-                  icon={CalendarDays}
-                  title="Tidak ada jadwal hari ini"
-                  description="Jadwal pelajaran untuk hari ini kosong. Nikmati waktu luang Anda atau gunakan untuk persiapan."
-                  variant="minimal"
-                />
-              )
+              <EmptyState
+                icon={CalendarDays}
+                title="Tidak ada jadwal hari ini"
+                description="Jadwal pelajaran untuk hari ini kosong. Nikmati waktu luang Anda atau gunakan untuk persiapan."
+                variant="minimal"
+              />
             ) : (
               <div className="space-y-2">
                 {todaySchedule.map((schedule, index) => (
